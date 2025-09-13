@@ -1,35 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import {useState} from 'react'
 import './App.css'
+import { Snippet } from "./lib/Snippet"
+import { Search } from "./lib/Search"
 
 function App() {
-  const [count, setCount] = useState(0)
+    // const [count, setCount] = useState(0)
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const snippets = [
+        { id: 1, name: 'John', value: 1 },
+        { id: 2, name: 'Michael', value: 2 },
+    ]
+
+    function addScore() {
+        console.log("Adding...")
+    }
+
+    return (
+        <div className="flex">
+            <div className="flex-1 p-4 max-w-140">
+                <ul className="flex flex-col gap-4">
+                    {snippets.map((snippet) =>
+                        <Snippet key={snippet.id} snippet={snippet} />
+                    )}
+                </ul>
+            </div>
+
+            <div className="flex-1 p-4 h-svh sticky top-0">
+                <div className="flex flex-col gap-4 h-full">
+                    <h1 className="text-3xl font-bold">
+                        Hello world!
+                    </h1>
+                    <div>
+                        <button className="btn btn-primary" onClick={addScore}>Add score</button>
+                    </div>
+
+                    <Search/>
+
+                    <div className="flex-1 card bg-base-100 p-4">
+                        <div className="w-full h-full bg-indigo-100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default App

@@ -5,6 +5,7 @@ import {Search} from "./lib/Search"
 import {ConceptMap} from "./lib/ConceptMap.tsx";
 import {snippetsCollection} from "./lib/collection.ts";
 import {useMemo, useState} from "react";
+import {OpenSnippets, RecentSnippets} from "./lib/SnippetItem.tsx";
 
 function App() {
     const {data: snippets} = useLiveQuery((q) =>
@@ -46,19 +47,25 @@ function App() {
         openSnippet(newSnippet)
     }
 
-    function scrollToLink(snippet) {
-        setTimeout(
-            () => document.getElementById(snippet.name)?.scrollIntoView({behavior: 'smooth'}),
-            50
-        )
+    function updateSnippet(snippet) {
+        snippetsCollection.update(snippet.id, (draft) => {
+            draft.value = 55;
+        })
+    }
+
+    function deleteSnippet(snippet) {
+        snippetsCollection.delete(snippet.id)
     }
 
     function openSnippet(snippet) {
         if (!openNames.includes(snippet.name)) {
             setOpenNames([snippet.name, ...openNames]);
         }
+        setTimeout(() => scrollTo(snippet))
+    }
 
-        scrollToLink(snippet);
+    function scrollTo(snippet) {
+        document.getElementById(snippet.name)?.scrollIntoView({behavior: 'smooth'})
     }
 
     function closeSnippet(snippet) {
@@ -69,10 +76,11 @@ function App() {
         <div className="flex px-4 gap-6 flex-col items-center lg:items-start lg:flex-row">
             <div
                 className="flex-none order-2 lg:order-1 mx-auto w-full max-w-[calc(65ch+3rem)] lg:w-[calc(65ch+3rem)] py-4">
-                <SnippetList snippets={openSnippets} closeSnippet={closeSnippet}/>
+                <SnippetList snippets={openSnippets} closeSnippet={closeSnippet}
+                             updateSnippet={updateSnippet} deleteSnippet={deleteSnippet}/>
             </div>
 
-            <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh">
+            <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh overflow-y-scroll">
                 <div className="flex flex-col gap-3 h-full">
                     <div className="filter justify-end">
                         <input className="btn btn-sm btn-ghost filter-reset" type="radio" name="bag" aria-label="All"/>
@@ -82,27 +90,35 @@ function App() {
                                aria-label="Personal"/>
                     </div>
 
-                    <div>
-                        <h1 className="text-4xl font-serif">Snippet wiki</h1>
-                        <h2 className="text-xl">A collaborative knowledge base for students</h2>
+                    <div className="flex items-top gap-6">
+                        <img src="/logo.svg" alt="snippetswiki logo" className="h-12" />
+                        <div>
+                            <h1 className="text-4xl font-serif my-1">Snippet wiki</h1>
+                            <h2 className="text-xl text-base-content/70">Collaborative knowledge building</h2>
+                        </div>
                     </div>
 
-                    <div className="flex gap-1 items-center">
-                        <button className="btn btn-square btn-ghost" onClick={addSnippet}>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                                 stroke="currentColor" className="size-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                            </svg>
-                        </button>
+                    <div className="flex items-center gap-4">
+                        <div className="flex gap-1">
+                            <button className="btn btn-square btn-ghost" onClick={addSnippet}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                     stroke="currentColor" className="size-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                </svg>
+                            </button>
 
-                        <label aria-label="Upload file" className="btn btn-square btn-ghost">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                                 stroke="currentColor" className="size-6">
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/>
-                            </svg>
-                            <input className="hidden" type="file"/>
-                        </label>
+                            <label aria-label="Upload file" className="btn btn-square btn-ghost">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                     stroke="currentColor" className="size-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                          d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/>
+                                </svg>
+                                <input className="hidden" type="file"/>
+                            </label>
+                        </div>
+
+                        <Search/>
+
 
                         {/*<div className="inline-grid *:[grid-area:1/1]">*/}
                         {/*    <div className="status status-lg status-error animate-ping"></div>*/}
@@ -110,74 +126,26 @@ function App() {
                         {/*</div>*/}
                     </div>
 
-                    <div>
-                        <Search/>
+                    <div className="ms-1">
                     </div>
 
                     <div className="flex-1 tabs tabs-lift tabs-sm">
                         <input type="radio" name="my_tabs_3" className="tab" aria-label="Open"/>
                         <div className="tab-content bg-base-100 border-base-300 p-4">
-                            <ul>
-                                {openSnippets.map((snippet) => (
-                                    <li key={snippet.id} className="flex items-center gap-1">
-                                        <button className="btn btn-square btn-sm btn-ghost"
-                                                onClick={() => closeSnippet(snippet)}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                 strokeWidth={1.5} stroke="currentColor" className="size-4">
-                                                <path strokeLinecap="round" strokeLinejoin="round"
-                                                      d="M6 18 18 6M6 6l12 12"/>
-                                            </svg>
-                                        </button>
-                                        <a className="text-blue-500"
-                                           href={`#${snippet.name}`}
-                                           onClick={(e) => {
-                                               e.preventDefault();
-                                               scrollToLink(snippet)
-                                           }}>
-                                            {snippet.name || "<untitled>"}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
+                            <OpenSnippets snippets={openSnippets}
+                                          openSnippet={openSnippet} closeSnippet={closeSnippet}/>
                         </div>
 
                         <input type="radio" name="my_tabs_3" className="tab" aria-label="Recent" defaultChecked/>
                         <div className="tab-content bg-base-100 border-base-300 p-4">
-                            {snippetsByDate.keys().map((snippetDate) => (
-                                <div key={snippetDate} className="grid auto-cols-max" style={{ gridTemplateColumns: '8rem auto' }}>
-                                    <div className="flex items-center h-8">
-                                        <div className="text-base-content/50">{snippetDate}</div>
-                                    </div>
-                                    <ul className="mb-1">
-                                        {Array.from(snippetsByDate.get(snippetDate)).map((snippet) => (
-                                            <li key={snippet.id} className="flex items-center gap-2 h-8">
-                                                <a className="text-blue-500"
-                                                   href={`#${snippet.name}`}
-                                                   onClick={(e) => {
-                                                       e.preventDefault();
-                                                       openSnippet(snippet)
-                                                   }}>
-                                                    {snippet.name || "<untitled>"}
-                                                </a>
-                                                {openSnippets.includes(snippet) && <button className="btn btn-square btn-sm btn-ghost"
-                                                                                           onClick={() => closeSnippet(snippet)}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                         strokeWidth={1.5} stroke="currentColor" className="size-4">
-                                                        <path strokeLinecap="round" strokeLinejoin="round"
-                                                              d="M6 18 18 6M6 6l12 12"/>
-                                                    </svg>
-                                                </button>}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
+                            <RecentSnippets snippetsByDate={snippetsByDate} openSnippets={openSnippets}
+                                            openSnippet={openSnippet} closeSnippet={closeSnippet}/>
                         </div>
 
                         <input type="radio" name="my_tabs_3" className="tab hidden xl:flex" aria-label="Map"/>
                         <div className="tab-content bg-base-100 border-base-300 p-4">
-                            <div className="w-full h-full bg-indigo-100/30">
-                                <ConceptMap/>
+                            <div className="w-full h-full bg-base-200">
+                                {snippets.length && <ConceptMap snippets={snippets}/>}
                             </div>
                         </div>
                     </div>

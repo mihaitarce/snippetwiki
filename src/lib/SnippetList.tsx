@@ -1,17 +1,7 @@
 import {snippetsCollection} from "./collection.ts";
 import {SnippetEditor} from "./SnippetEditor.tsx";
 
-export function SnippetList({snippets, closeSnippet}) {
-    function updateSnippet(snippet) {
-        snippetsCollection.update(snippet.id, (draft) => {
-            draft.value = 55;
-        })
-    }
-
-    function deleteSnippet(snippet) {
-        snippetsCollection.delete(snippet.id)
-    }
-
+export function SnippetList({snippets, updateSnippet, deleteSnippet, closeSnippet}) {
     return (
         <ul className="flex flex-col gap-6">
             {snippets.map((snippet) =>

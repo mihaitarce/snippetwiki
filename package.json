@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@milkdown/crepe": "^7.15.5",
+    "@milkdown/kit": "^7.15.5",
+    "@milkdown/react": "^7.15.5",
     "@tailwindcss/postcss": "^4.1.13",
     "@tanstack/electric-db-collection": "^0.1.19",
     "@tanstack/react-db": "^0.1.17",

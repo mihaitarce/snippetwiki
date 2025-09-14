@@ -4,7 +4,7 @@ import {electricCollectionOptions} from "@tanstack/electric-db-collection";
 export const scoresCollection = createCollection(
     electricCollectionOptions({
         shapeOptions: {
-            url: `${window.location}api/v1/shape`,
+            url: `${window.location}api/electric/v1/shape`,
             params: {
                 table: 'scores'
             }

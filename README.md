@@ -67,3 +67,10 @@ export default tseslint.config([
   },
 ])
 ```
+
+
+# Icons
+
+Logo: https://www.svgrepo.com/svg/190058/notes-notepad
+
+Heroicons

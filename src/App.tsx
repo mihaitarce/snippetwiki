@@ -26,16 +26,6 @@ function App() {
         }
     }, [snippets, openNames]);
 
-    const snippetsByDate = useMemo(() => {
-        if (snippets) {
-            return Map.groupBy(snippets, snippet => {
-                return snippet.modified.slice(0, 10)
-            })
-        } else {
-            return new Map()
-        }
-    }, [snippets])
-
     function addSnippet() {
         const newSnippet = {
             id: crypto.randomUUID(),
@@ -119,7 +109,6 @@ function App() {
 
                         <Search/>
 
-
                         {/*<div className="inline-grid *:[grid-area:1/1]">*/}
                         {/*    <div className="status status-lg status-error animate-ping"></div>*/}
                         {/*    <div className="status status-lg status-error"></div>*/}
@@ -138,7 +127,7 @@ function App() {
 
                         <input type="radio" name="my_tabs_3" className="tab" aria-label="Recent" defaultChecked/>
                         <div className="tab-content bg-base-100 border-base-300 p-4">
-                            <RecentSnippets snippetsByDate={snippetsByDate} openSnippets={openSnippets}
+                            <RecentSnippets snippets={snippets} openSnippets={openSnippets}
                                             openSnippet={openSnippet} closeSnippet={closeSnippet}/>
                         </div>
 

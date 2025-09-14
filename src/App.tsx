@@ -1,29 +1,28 @@
-import {useState} from 'react'
 import './App.css'
-import { Snippet } from "./lib/Snippet"
-import { Search } from "./lib/Search"
+import {Search} from "./lib/Search"
+import {scoresCollection} from "./lib/collection.ts";
+import {useLiveQuery} from "@tanstack/react-db";
+import { SnippetList } from "./lib/SnippetList.tsx";
 
 function App() {
-    // const [count, setCount] = useState(0)
-
-    const snippets = [
-        { id: 1, name: 'John', value: 1 },
-        { id: 2, name: 'Michael', value: 2 },
-        { id: 3, name: 'Sarah', value: 3 },
-    ]
+    const { data: snippets } = useLiveQuery((q) =>
+        q.from({ score: scoresCollection })
+            // .where(({ score }) => eq(todo.completed, false))
+            .orderBy(({ score }) => score.value, 'desc')
+    );
 
     function addScore() {
-        console.log("Adding...")
+        scoresCollection.insert({
+            id: crypto.randomUUID(),
+            name: 'Mihai',
+            value: 100
+        });
     }
 
     return (
         <div className="flex">
             <div className="flex-1 p-4 max-w-[65ch]">
-                <ul className="flex flex-col gap-4">
-                    {snippets.map((snippet) =>
-                        <Snippet key={snippet.id} snippet={snippet} />
-                    )}
-                </ul>
+                <SnippetList snippets={snippets} />
             </div>
 
             <div className="flex-1 p-4 h-svh sticky top-0">
@@ -38,7 +37,8 @@ function App() {
                     <Search/>
 
                     <div className="flex-1 card bg-base-100 p-4">
-                        <div className="w-full h-full bg-indigo-100"></div>
+                        <div className="w-full h-full bg-indigo-100">
+                        </div>
                     </div>
                 </div>
             </div>

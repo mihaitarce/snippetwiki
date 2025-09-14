@@ -9,6 +9,7 @@ function App() {
     const snippets = [
         { id: 1, name: 'John', value: 1 },
         { id: 2, name: 'Michael', value: 2 },
+        { id: 3, name: 'Sarah', value: 3 },
     ]
 
     function addScore() {
@@ -17,7 +18,7 @@ function App() {
 
     return (
         <div className="flex">
-            <div className="flex-1 p-4 max-w-140">
+            <div className="flex-1 p-4 max-w-[65ch]">
                 <ul className="flex flex-col gap-4">
                     {snippets.map((snippet) =>
                         <Snippet key={snippet.id} snippet={snippet} />

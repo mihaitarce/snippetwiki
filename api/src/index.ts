@@ -1,11 +1,10 @@
-import 'dotenv/config';
 import { eq } from 'drizzle-orm';
-import { scoresTable } from './db/schema';
+import { snippetsTable } from './db/schema.ts';
+import {db, generateTxId} from "./db/index.ts";
 
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import {db, generateTxId} from "./db/index";
 
 
 const app = new Hono()
@@ -13,7 +12,7 @@ const app = new Hono()
 app.use('/snippets/*', cors())
 
 app.get('/snippets/', async (c) => {
-	const scores = await db.select().from(scoresTable);
+	const scores = await db.select().from(snippetsTable);
 	return c.json(scores);
 })
 
@@ -22,7 +21,7 @@ app.post('/snippets/', async (c) => {
 
 		let result = {}
 		await db.transaction(async (tx) => {
-			result.snippet = await tx.insert(scoresTable).values(score).returning();
+			result.snippet = await tx.insert(snippetsTable).values(score).returning();
 			result.txid = await generateTxId(tx);
 		})
 
@@ -35,7 +34,7 @@ app.put('/snippets/:id', async (c) => {
 
 	let result = {}
 	await db.transaction(async (tx) => {
-		result.snippet = await tx.update(scoresTable).set(score).where(eq(scoresTable.id, id)).returning();
+		result.snippet = await tx.update(snippetsTable).set(score).where(eq(snippetsTable.id, id)).returning();
 		result.txid = await generateTxId(tx);
 	})
 
@@ -47,7 +46,7 @@ app.delete('/snippets/:id', async (c) => {
 
 	let result = {}
 	await db.transaction(async (tx) => {
-		await tx.delete(scoresTable).where(eq(scoresTable.id, id));
+		await tx.delete(snippetsTable).where(eq(snippetsTable.id, id));
 		result.txid = await generateTxId(tx)
 	})
 	return c.json(result);

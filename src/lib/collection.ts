@@ -1,12 +1,12 @@
 import {createCollection} from '@tanstack/react-db'
 import {electricCollectionOptions} from "@tanstack/electric-db-collection";
 
-export const scoresCollection = createCollection(
+export const snippetsCollection = createCollection(
     electricCollectionOptions({
         shapeOptions: {
-            url: `${window.location}api/electric/v1/shape`,
+            url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
             params: {
-                table: 'scores'
+                table: 'snippets'
             }
         },
         getKey: (item) => item.id,

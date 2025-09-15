@@ -31,7 +31,7 @@ function App() {
         const newSnippet = {
             id: crypto.randomUUID(),
             title: 'Mihai',
-            modified: new Date().toISOString(),
+            modified: new Date().toISOString()
         }
         snippetsCollection.insert(newSnippet);
         openSnippet(newSnippet)
@@ -45,6 +45,7 @@ function App() {
 
     function deleteSnippet(snippet) {
         snippetsCollection.delete(snippet.id)
+        closeSnippet(snippet)
     }
 
     function openSnippet(snippet) {

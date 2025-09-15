@@ -10,7 +10,7 @@ export const snippetsTable = pgTable('snippets', {
     modified: timestamp({mode: 'string'}).notNull().defaultNow(),
 
     draft_title: varchar(),
-    draft_created: timestamp(),
+    draft_created: timestamp({mode: 'string'}),
 });
 
 export const snippetsRelations = relations(snippetsTable, ({many}) => ({
@@ -30,7 +30,7 @@ export const revisionsTable = pgTable('revisions', {
     content_type: contentTypeEnum().default('text/markdown').notNull(),
     revision: integer().notNull(),
     file: boolean().default(false),
-    created: timestamp().defaultNow(),
+    created: timestamp({mode: 'string'}).notNull().defaultNow(),
 })
 
 export const revisionsRelations = relations(revisionsTable, ({one}) => ({

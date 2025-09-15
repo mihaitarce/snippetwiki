@@ -4,7 +4,7 @@ import '@xyflow/react/dist/style.css';
 
 export function ConceptMap({snippets}) {
     const nodesFromSnippets = snippets.map((snippet, index) => {
-        return { id: snippet.id, position: { x: 0, y: 100 * index }, data: { label: snippet.name } };
+        return { id: snippet.id, position: { x: 0, y: 100 * index }, data: { label: snippet.title } };
     })
     const edgesFromSnippets = [{ id: 'n1-n2', source: snippets[0].id, target: snippets[1].id }]
 

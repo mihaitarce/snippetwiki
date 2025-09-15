@@ -18,12 +18,12 @@ function SnippetCloseButton({snippet, isOpen, closeSnippet}) {
 function SnippetItem({snippet, isOpen, openSnippet, closeSnippet}) {
     return (<>
         <SnippetCloseButton snippet={snippet} isOpen={isOpen} closeSnippet={closeSnippet}/>
-        <a className="text-blue-500" href={`#${snippet.name}`}
+        <a className="text-blue-500" href={`#${snippet.title}`}
            onClick={(e) => {
                e.preventDefault();
                openSnippet(snippet);
            }}>
-            {snippet.name || "<untitled>"}
+            {snippet.title || "<untitled>"}
         </a>
     </>)
 }
@@ -41,12 +41,12 @@ export function OpenSnippets({snippets, openSnippet, closeSnippet}) {
                     </svg>
                 </button>
                 <a className="text-blue-500"
-                   href={`#${snippet.name}`}
+                   href={`#${snippet.title}`}
                    onClick={(e) => {
                        e.preventDefault();
                        openSnippet(snippet)
                    }}>
-                    {snippet.name || "<untitled>"}
+                    {snippet.title || "<untitled>"}
                 </a>
             </li>
         ))}

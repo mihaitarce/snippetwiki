@@ -22,7 +22,7 @@ function App() {
         if (snippets === undefined) {
             return []
         } else {
-            return openNames.map(name => snippets.find(snippet => snippet.name === name))
+            return openNames.map(name => snippets.find(snippet => snippet.title === name))
                 .filter(snippet => snippet !== undefined);
         }
     }, [snippets, openNames]);
@@ -30,8 +30,7 @@ function App() {
     function addSnippet() {
         const newSnippet = {
             id: crypto.randomUUID(),
-            name: 'Mihai',
-            value: 100,
+            title: 'Mihai',
             modified: new Date().toISOString(),
         }
         snippetsCollection.insert(newSnippet);
@@ -40,7 +39,7 @@ function App() {
 
     function updateSnippet(snippet) {
         snippetsCollection.update(snippet.id, (draft) => {
-            draft.value = 55;
+            draft.modified = new Date().toISOString();
         })
     }
 
@@ -49,18 +48,18 @@ function App() {
     }
 
     function openSnippet(snippet) {
-        if (!openNames.includes(snippet.name)) {
-            setOpenNames([snippet.name, ...openNames]);
+        if (!openNames.includes(snippet.title)) {
+            setOpenNames([snippet.title, ...openNames]);
         }
         setTimeout(() => scrollTo(snippet))
     }
 
     function scrollTo(snippet) {
-        document.getElementById(snippet.name)?.scrollIntoView({behavior: 'smooth'})
+        document.getElementById(snippet.title)?.scrollIntoView({behavior: 'smooth'})
     }
 
     function closeSnippet(snippet) {
-        setOpenNames(openNames.filter((name) => name !== snippet.name));
+        setOpenNames(openNames.filter((name) => name !== snippet.title));
     }
 
     return (

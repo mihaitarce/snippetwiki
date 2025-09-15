@@ -6,9 +6,9 @@ export function SnippetList({snippets, updateSnippet, deleteSnippet, closeSnippe
     return (
         <ul ref={parent} className="flex flex-col gap-6">
             {snippets.map((snippet) =>
-                <li id={snippet.name} key={snippet.id} className="card bg-base-100 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h1 className="font-serif text-3xl">{snippet.name}: {snippet.value}</h1>
+                <li id={snippet.title} key={snippet.id} className="card bg-base-100 p-6">
+                    <div className="flex items-center justify-between mb-1">
+                        <h1 className="font-serif text-3xl">{snippet.title}</h1>
                         <div className="flex gap-3">
                             <button className="btn btn-square btn-outline btn-error border-0"
                                     onClick={() => deleteSnippet(snippet)}>
@@ -38,6 +38,11 @@ export function SnippetList({snippets, updateSnippet, deleteSnippet, closeSnippe
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                    <div className="mb-1 text-base-content/50">
+                        { new Date(snippet.modified).toDateString() }
+                        &nbsp;
+                        { new Date(snippet.modified).toLocaleTimeString(undefined, {hour: "2-digit", minute: "2-digit"}) }
                     </div>
 
                     <div className="prose prose-headings:font-serif prose-headings:font-normal prose-headings:my-2">

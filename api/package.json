@@ -9,6 +9,7 @@
   "dependencies": {
     "@hono/node-server": "^1.19.2",
     "dotenv": "^17.2.2",
+    "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.5",
     "drizzle-seed": "^0.3.1",
     "hono": "^4.9.7",

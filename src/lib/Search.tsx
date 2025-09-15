@@ -11,10 +11,10 @@ export function Search({snippets, openSnippet}) {
         if (snippets === undefined) {
             return []
         } else {
-            return snippets.filter(snippet => snippet.name.toLowerCase().includes(query.toLowerCase()))
+            return snippets.filter(snippet => snippet.title.toLowerCase().includes(query.toLowerCase()))
                 .toSorted((a: string, b: string) => {
-                    const titleA = a.name.toLowerCase();
-                    const titleB = b.name.toLowerCase();
+                    const titleA = a.title.toLowerCase();
+                    const titleB = b.title.toLowerCase();
 
                     if (titleA < titleB) {
                         return -1;
@@ -83,7 +83,7 @@ export function Search({snippets, openSnippet}) {
                         "bg-primary-content text-primary": selectedResult === index
                     })}
                         onClick={() => snippetSelected(result)}>
-                        <a>{result.name}</a>
+                        <a>{result.title}</a>
                     </li>)}
                 {!results.length && (<div className="text-base-content/50 italic px-2">No matches found</div>)}
             </ul>

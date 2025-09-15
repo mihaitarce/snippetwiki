@@ -70,7 +70,7 @@ export function RecentSnippets({snippets, openSnippets, openSnippet, closeSnippe
             <div className="flex items-center h-8">
                 <div className="text-base-content/50">{snippetDate}</div>
             </div>
-            <ul className="mb-1">
+            <ul>
                 {groupedByDate.get(snippetDate).map((snippet) => (
                     <li key={snippet.id} className="flex items-center gap-2">
                         <SnippetItem snippet={snippet} isOpen={openSnippets.includes(snippet)}

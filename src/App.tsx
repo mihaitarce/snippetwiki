@@ -4,9 +4,12 @@ import {SnippetList} from "./lib/SnippetList.tsx";
 import {Search} from "./lib/Search"
 import {ConceptMap} from "./lib/ConceptMap.tsx";
 import {snippetsCollection} from "./lib/collection.ts";
-import {useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {OpenSnippets, RecentSnippets} from "./lib/SnippetItem.tsx";
 import {AddButton} from "./lib/AddButton.tsx";
+import clsx from "clsx";
+import {Import} from "./lib/Import.tsx";
+import {useAutoAnimate} from "@formkit/auto-animate/react";
 
 function App() {
     const {data: snippets} = useLiveQuery((q) =>
@@ -63,12 +66,79 @@ function App() {
         setOpenNames(openNames.filter((name) => name !== snippet.title));
     }
 
+
+    const [importFiles, setImportFiles] = useState([]);
+
+    function addImportFiles(files) {
+        const addedFiles = []
+        for (const file of files) {
+            console.log(file, importFiles);
+            if (!importFiles.find((f: File) =>
+                f.name === file.name && f.size === file.size && f.type === file.type)) {
+                addedFiles.push(file);
+            }
+        }
+        if (addedFiles.length > 0) {
+            setImportFiles([...importFiles, ...addedFiles]);
+        }
+    }
+
+    const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const dragCounter = useRef(0);
+
+    function handleDragEnter(e: React.DragEvent<HTMLDivElement>) {
+        dragCounter.current = dragCounter.current + 1;
+        setIsDraggingOver(true);
+    }
+
+    function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+        dragCounter.current = dragCounter.current - 1;
+        if (dragCounter.current === 0) {
+            setIsDraggingOver(false);
+        }
+    }
+
+    function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+    }
+
+    function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+        dragCounter.current = 0;
+        setIsDraggingOver(false);
+
+        if (e.dataTransfer?.types.includes('Files')) {
+            addImportFiles(e.dataTransfer.files);
+        }
+    }
+
+    const [parent, enableAnimations] = useAutoAnimate()
+
     return (
-        <div className="flex px-4 gap-6 flex-col items-center lg:items-start lg:flex-row">
+        <div className="flex px-4 gap-6 flex-col items-center lg:items-start lg:flex-row" role="main">
             <div
-                className="flex-none order-2 lg:order-1 mx-auto w-full max-w-[calc(65ch+3rem)] lg:w-[calc(65ch+3rem)] py-4">
-                <SnippetList snippets={openSnippets} closeSnippet={closeSnippet}
-                             updateSnippet={updateSnippet} deleteSnippet={deleteSnippet}/>
+                ref={parent}
+                className={clsx({
+                    "flex-none order-2 lg:order-1 mx-auto w-full max-w-[calc(65ch+3rem)] lg:w-[calc(65ch+3rem)] my-4": true,
+                    "flex flex-col gap-6": true,
+                    "outline-16 outline-success": isDraggingOver,
+                })}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}>
+
+                {importFiles.length > 0 && <Import files={importFiles} cancelImport={() => setImportFiles([])}/>}
+
+                {openSnippets.length > 0 && <SnippetList snippets={openSnippets} closeSnippet={closeSnippet}
+                                                         updateSnippet={updateSnippet} deleteSnippet={deleteSnippet}/>}
+
+                {!importFiles.length && !openSnippets.length && <div className="card p-6">
+                    <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
+                        <img src="/logo.svg" alt="" className="h-[25vh] grayscale opacity-10"/>
+                        <div className="text-base-content/30">No snippets open</div>
+                    </div>
+                </div>}
             </div>
 
             <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh lg:overflow-y-scroll">
@@ -82,7 +152,7 @@ function App() {
                     </div>
 
                     <div className="flex items-top gap-6">
-                        <img src="/logo.svg" alt="snippetswiki logo" className="h-12 lg:grayscale lg:hover:grayscale-0 lg:transition-all" />
+                        <img src="/logo.svg" alt="snippetswiki logo" className="h-12"/>
                         <div>
                             <h1 className="text-4xl font-serif my-1">Snippet wiki</h1>
                             <h2 className="text-xl text-base-content/50">Collaborative knowledge building</h2>
@@ -90,9 +160,9 @@ function App() {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <AddButton addSnippet={addSnippet} />
+                        <AddButton addSnippet={addSnippet} addImportFiles={addImportFiles}/>
 
-                        <Search snippets={snippets} openSnippet={openSnippet} />
+                        <Search snippets={snippets} openSnippet={openSnippet}/>
 
                         {/*<div className="inline-grid *:[grid-area:1/1]">*/}
                         {/*    <div className="status status-lg status-error animate-ping"></div>*/}

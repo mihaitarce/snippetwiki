@@ -1,10 +1,8 @@
 import {useAutoAnimate} from "@formkit/auto-animate/react";
 
 export function SnippetList({snippets, updateSnippet, deleteSnippet, closeSnippet}) {
-    const [parent, enableAnimations] = useAutoAnimate()
-
     return (
-        <ul ref={parent} className="flex flex-col gap-6">
+        <>
             {snippets.map((snippet) =>
                 <li id={snippet.title} key={snippet.id} className="card bg-base-100 p-6">
                     <div className="flex items-center justify-between mb-1">
@@ -61,12 +59,6 @@ export function SnippetList({snippets, updateSnippet, deleteSnippet, closeSnippe
                     {/*<SnippetEditor/>*/}
                 </li>
             )}
-            {(!snippets.length) && <li className="card p-6">
-                <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
-                    <img src="/logo.svg" alt="" className="h-[25vh] grayscale opacity-10"/>
-                    <div className="text-base-content/30">No snippets open</div>
-                </div>
-            </li>}
-        </ul>
+        </>
     )
 }

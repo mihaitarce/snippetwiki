@@ -1,9 +1,10 @@
-import {snippetsCollection} from "./collection.ts";
-import {SnippetEditor} from "./SnippetEditor.tsx";
+import {useAutoAnimate} from "@formkit/auto-animate/react";
 
 export function SnippetList({snippets, updateSnippet, deleteSnippet, closeSnippet}) {
+    const [parent, enableAnimations] = useAutoAnimate()
+
     return (
-        <ul className="flex flex-col gap-6">
+        <ul ref={parent} className="flex flex-col gap-6">
             {snippets.map((snippet) =>
                 <li id={snippet.name} key={snippet.id} className="card bg-base-100 p-6">
                     <div className="flex items-center justify-between mb-4">

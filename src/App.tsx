@@ -6,6 +6,7 @@ import {ConceptMap} from "./lib/ConceptMap.tsx";
 import {snippetsCollection} from "./lib/collection.ts";
 import {useMemo, useState} from "react";
 import {OpenSnippets, RecentSnippets} from "./lib/SnippetItem.tsx";
+import {AddButton} from "./lib/AddButton.tsx";
 
 function App() {
     const {data: snippets} = useLiveQuery((q) =>
@@ -81,41 +82,22 @@ function App() {
                     </div>
 
                     <div className="flex items-top gap-6">
-                        <img src="/logo.svg" alt="snippetswiki logo" className="h-12" />
+                        <img src="/logo.svg" alt="snippetswiki logo" className="h-12 lg:grayscale lg:hover:grayscale-0 lg:transition-all" />
                         <div>
                             <h1 className="text-4xl font-serif my-1">Snippet wiki</h1>
-                            <h2 className="text-xl text-base-content/70">Collaborative knowledge building</h2>
+                            <h2 className="text-xl text-base-content/50">Collaborative knowledge building</h2>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <div className="flex gap-1">
-                            <button className="btn btn-square btn-ghost" onClick={addSnippet}>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                                     stroke="currentColor" className="size-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                                </svg>
-                            </button>
+                    <div className="flex items-center gap-6">
+                        <AddButton addSnippet={addSnippet} />
 
-                            <label aria-label="Upload file" className="btn btn-square btn-ghost">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                                     stroke="currentColor" className="size-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round"
-                                          d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/>
-                                </svg>
-                                <input className="hidden" type="file"/>
-                            </label>
-                        </div>
-
-                        <Search/>
+                        <Search snippets={snippets} openSnippet={openSnippet} />
 
                         {/*<div className="inline-grid *:[grid-area:1/1]">*/}
                         {/*    <div className="status status-lg status-error animate-ping"></div>*/}
                         {/*    <div className="status status-lg status-error"></div>*/}
                         {/*</div>*/}
-                    </div>
-
-                    <div className="ms-1">
                     </div>
 
                     <div className="flex-1 tabs tabs-lift tabs-sm">

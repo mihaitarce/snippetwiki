@@ -62,8 +62,9 @@ export function SnippetList({snippets, updateSnippet, deleteSnippet, closeSnippe
                 </li>
             )}
             {(!snippets.length) && <li className="card p-6">
-                <div className="mx-auto py-24 text-2xl text-base-content/50">
-                    No snippets open
+                <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
+                    <img src="/logo.svg" alt="" className="h-[25vh] grayscale opacity-10"/>
+                    <div className="text-base-content/30">No snippets open</div>
                 </div>
             </li>}
         </ul>

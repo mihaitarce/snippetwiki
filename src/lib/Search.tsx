@@ -78,7 +78,7 @@ export function Search({snippets, openSnippet}) {
             })}>
                 {results.map((result, index) =>
                     <li key={index} className={clsx({
-                        "p-1 truncate": true,
+                        "px-3 py-2 truncate": true,
                         "hover:bg-primary-content/70 hover:text-primary/70": selectedResult !== index,
                         "bg-primary-content text-primary": selectedResult === index
                     })}

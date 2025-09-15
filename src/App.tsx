@@ -71,7 +71,7 @@ function App() {
                              updateSnippet={updateSnippet} deleteSnippet={deleteSnippet}/>
             </div>
 
-            <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh overflow-y-scroll">
+            <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh lg:overflow-y-scroll">
                 <div className="flex flex-col gap-3 h-full">
                     <div className="filter justify-end">
                         <input className="btn btn-sm btn-ghost filter-reset" type="radio" name="bag" aria-label="All"/>
@@ -100,7 +100,7 @@ function App() {
                         {/*</div>*/}
                     </div>
 
-                    <div className="flex-1 tabs tabs-lift tabs-sm">
+                    <div className="flex-1 tabs tabs-lift tabs-sm hidden lg:flex">
                         <input type="radio" name="my_tabs_3" className="tab" aria-label="Open"/>
                         <div className="tab-content bg-base-100 border-base-300 p-4">
                             <OpenSnippets snippets={openSnippets}

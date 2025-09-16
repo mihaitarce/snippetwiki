@@ -15,7 +15,7 @@ function SnippetCloseButton({snippet, isOpen, closeSnippet}) {
     return (<div className="w-8 h-8"></div>)
 }
 
-function SnippetItem({snippet, isOpen, openSnippet, closeSnippet}) {
+function SnippetUtils({snippet, isOpen, openSnippet, closeSnippet}) {
     return (<>
         <SnippetCloseButton snippet={snippet} isOpen={isOpen} closeSnippet={closeSnippet}/>
         <a className="text-blue-500" href={`#${snippet.title}`}
@@ -73,8 +73,8 @@ export function RecentSnippets({snippets, openSnippets, openSnippet, closeSnippe
             <ul>
                 {groupedByDate.get(snippetDate).map((snippet) => (
                     <li key={snippet.id} className="flex items-center gap-2">
-                        <SnippetItem snippet={snippet} isOpen={openSnippets.includes(snippet)}
-                                     openSnippet={openSnippet} closeSnippet={closeSnippet}/>
+                        <SnippetUtils snippet={snippet} isOpen={openSnippets.includes(snippet)}
+                                      openSnippet={openSnippet} closeSnippet={closeSnippet}/>
                     </li>
                 ))}
             </ul>

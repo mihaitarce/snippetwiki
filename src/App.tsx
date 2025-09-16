@@ -4,8 +4,8 @@ import {SnippetList} from "./lib/SnippetList.tsx";
 import {Search} from "./lib/Search"
 import {ConceptMap} from "./lib/ConceptMap.tsx";
 import {snippetsCollection} from "./lib/collection.ts";
-import {useEffect, useMemo, useRef, useState} from "react";
-import {OpenSnippets, RecentSnippets} from "./lib/SnippetItem.tsx";
+import {useMemo, useRef, useState} from "react";
+import {OpenSnippets, RecentSnippets} from "./lib/SnippetUtils.tsx";
 import {AddButton} from "./lib/AddButton.tsx";
 import clsx from "clsx";
 import {Import} from "./lib/Import.tsx";
@@ -19,7 +19,6 @@ function App() {
     );
 
     const [openNames, setOpenNames] = useState(['Zemira', 'Alexandre']);
-    const [editingIDs, setEditingIDs] = useState([]);
 
     const openSnippets = useMemo(() => {
         if (snippets === undefined) {
@@ -66,7 +65,6 @@ function App() {
         setOpenNames(openNames.filter((name) => name !== snippet.title));
     }
 
-
     const [importFiles, setImportFiles] = useState([]);
 
     function addImportFiles(files) {
@@ -87,14 +85,18 @@ function App() {
     const dragCounter = useRef(0);
 
     function handleDragEnter(e: React.DragEvent<HTMLDivElement>) {
-        dragCounter.current = dragCounter.current + 1;
-        setIsDraggingOver(true);
+        if (e.dataTransfer?.types.includes('Files')) {
+            dragCounter.current = dragCounter.current + 1;
+            setIsDraggingOver(true);
+        }
     }
 
     function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-        dragCounter.current = dragCounter.current - 1;
-        if (dragCounter.current === 0) {
-            setIsDraggingOver(false);
+        if (e.dataTransfer?.types.includes('Files')) {
+            dragCounter.current = dragCounter.current - 1;
+            if (dragCounter.current === 0) {
+                setIsDraggingOver(false);
+            }
         }
     }
 
@@ -128,10 +130,12 @@ function App() {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}>
 
-                {importFiles.length > 0 && <Import files={importFiles} cancelImport={() => setImportFiles([])}/>}
+                {importFiles.length > 0 &&
+                    <Import files={importFiles} snippets={snippets} cancelImport={() => setImportFiles([])}/>}
 
-                {openSnippets.length > 0 && <SnippetList snippets={openSnippets} closeSnippet={closeSnippet}
-                                                         updateSnippet={updateSnippet} deleteSnippet={deleteSnippet}/>}
+                {openSnippets.length > 0 &&
+                    <SnippetList snippets={openSnippets} closeSnippet={closeSnippet}
+                                 updateSnippet={updateSnippet} deleteSnippet={deleteSnippet}/>}
 
                 {!importFiles.length && !openSnippets.length && <div className="card p-6">
                     <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">

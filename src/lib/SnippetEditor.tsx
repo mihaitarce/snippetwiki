@@ -5,9 +5,12 @@ import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import {useState} from "react";
 
-function CrepeEditor() {
+function CrepeEditor({content}) {
     const {get} = useEditor((root) => {
-        return new Crepe({root});
+        return new Crepe({
+            root,
+            defaultValue: content
+        });
     });
 
     return <Milkdown/>;
@@ -82,7 +85,7 @@ export function SnippetEditor({snippet, deleteSnippet, discard, save}) {
             </div>
 
             <MilkdownProvider>
-                <CrepeEditor/>
+                <CrepeEditor content={"# Hello\nHello, world"}/>
             </MilkdownProvider>
         </div>
     );

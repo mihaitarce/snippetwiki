@@ -18,7 +18,7 @@ function App() {
             .orderBy(({snippet}) => snippet.modified, 'desc')
     );
 
-    const [openNames, setOpenNames] = useState(['Zemira', 'Alexandre']);
+    const [openNames, setOpenNames] = useState(['bYlFJ4l6tia', 'zq0fi7bwG4vHvCo0hC']);
 
     const openSnippets = useMemo(() => {
         if (snippets === undefined) {

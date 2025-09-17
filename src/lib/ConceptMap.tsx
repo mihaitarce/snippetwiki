@@ -26,15 +26,23 @@ export function ConceptMap({snippets}) {
 
     const proOptions = { hideAttribution: true };
 
+    if (snippets.length === 0) {
+        return (<div className="text-base-content/50">
+            No snippets found
+        </div>)
+    }
+
     return (
-        <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            fitView
-            proOptions={proOptions}
-        />
+        <div className="w-full h-full bg-base-200">
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                fitView
+                proOptions={proOptions}
+            />
+        </div>
     );
 }

@@ -240,7 +240,7 @@ function App() {
                     {!importFiles.length && !openSnippets.length && <div className="card p-6">
                         <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
                             <img src="/logo.svg" alt="" className="h-[25vh] grayscale opacity-10"/>
-                            <div className="text-base-content/30">No snippets open</div>
+                            <div className="text-base-content/30">No open snippets</div>
                         </div>
                     </div>}
                 </div>
@@ -279,7 +279,8 @@ function App() {
                             <input type="radio" name="my_tabs_3" className="tab" aria-label="Open"/>
                             <div className="tab-content bg-base-100 border-base-300 p-4">
                                 <OpenSnippets snippets={openSnippets}
-                                              openSnippet={openSnippet} closeSnippet={closeSnippet}/>
+                                              openSnippet={openSnippet} closeSnippet={closeSnippet}
+                                              closeAllSnippets={closeAllSnippets}/>
                             </div>
 
                             <input type="radio" name="my_tabs_3" className="tab" aria-label="Recent" defaultChecked/>
@@ -290,9 +291,7 @@ function App() {
 
                             <input type="radio" name="my_tabs_3" className="tab hidden xl:flex" aria-label="Map"/>
                             <div className="tab-content bg-base-100 border-base-300 p-4">
-                                <div className="w-full h-full bg-base-200">
-                                    {snippets.length && <ConceptMap snippets={snippets}/>}
-                                </div>
+                                {snippets.length > 1 && <ConceptMap snippets={snippets}/>}
                             </div>
                         </div>
                     </div>

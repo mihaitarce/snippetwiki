@@ -55,15 +55,16 @@ export function OpenSnippets({snippets, openSnippet, closeSnippet}) {
 
 export function RecentSnippets({snippets, openSnippets, openSnippet, closeSnippet}) {
     const groupedByDate = useMemo(() => {
-            return snippets.reduce((acc: Map<string, T[]>, snippet: T) => {
-                const modified = snippet.modified.slice(0, 10)
-                if (!acc.has(modified)) {
-                    acc.set(modified, []);
-                }
-                acc.get(modified).push(snippet);
-                return acc;
-            }, new Map());
-        }, [snippets])
+        // ES2024: return Map.groupBy(snippets, snippet => snippet.modified.slice(0, 10))
+        return snippets.reduce((acc: Map<string, T[]>, snippet: T) => {
+            const modified = snippet.modified.slice(0, 10)
+            if (!acc.has(modified)) {
+                acc.set(modified, []);
+            }
+            acc.get(modified).push(snippet);
+            return acc;
+        }, new Map());
+    }, [snippets])
 
     return (Array.from(groupedByDate.keys()).map((snippetDate) => (
         <div key={snippetDate} className="grid auto-cols-max" style={{gridTemplateColumns: '6.25rem auto'}}>

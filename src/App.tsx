@@ -10,6 +10,7 @@ import {AddButton} from "./lib/AddButton.tsx";
 import clsx from "clsx";
 import {Import} from "./lib/Import.tsx";
 import {useAutoAnimate} from "@formkit/auto-animate/react";
+import {DraftList} from "./lib/DraftList.tsx";
 
 function App() {
     const {data: snippets} = useLiveQuery((q) => {
@@ -67,13 +68,42 @@ function App() {
         }
     }, [snippets, openNames]);
 
-    function addSnippet() {
+    const draftSnippets = useMemo(() => {
+        if (snippets === undefined) {
+            return []
+        } else {
+            return snippets.filter(snippet => snippet.draft_created && !openSnippets.includes(snippet))
+        }
+    }, [snippets, openSnippets]);
+
+    function createSnippet() {
+        const availableTitleBase = 'New article'
+        let availableTitle = undefined
+
+        let index = 1
+        while (true) {
+            const candidateTitle = `${availableTitleBase} ${index}`;
+            if (!snippets.find(article => article.title === candidateTitle)) {
+                availableTitle = candidateTitle;
+                break;
+            }
+
+            index++;
+        }
+
+        const newID = crypto.randomUUID();
         const newSnippet = {
-            id: crypto.randomUUID(),
-            title: 'Mihai',
-            modified: new Date().toISOString()
+            id: newID,
+            title: availableTitle,
+            // tags: [],
+            modified: new Date().toISOString(),
+            draft_title: '',
+            draft_created: new Date().toISOString(),
         }
         snippetsCollection.insert(newSnippet);
+
+        //     const inserted = await z.current.query.article.where('id', newID).one();
+        //     console.log(inserted)
         openSnippet(newSnippet)
     }
 
@@ -88,7 +118,7 @@ function App() {
         }
 
         if (editing) {
-
+            startEditing(snippet)
         }
 
         setTimeout(() => scrollTo(snippet))
@@ -100,6 +130,12 @@ function App() {
 
     function closeSnippet(snippet) {
         setOpenNames(openNames.filter((name) => name !== snippet.title));
+        setEditingIDs(editingIDs.filter((id) => id !== snippet.id));
+    }
+
+    function closeAllSnippets() {
+        setOpenNames([]);
+        setEditingIDs([]);
     }
 
     const [editingIDs, setEditingIDs] = useState([]);
@@ -178,88 +214,92 @@ function App() {
     const [parent, enableAnimations] = useAutoAnimate()
 
     return (
-        <div className="flex px-4 gap-6 flex-col items-center lg:items-start lg:flex-row" role="main">
-            <div
-                ref={parent}
-                className={clsx({
-                    "flex-none order-2 lg:order-1 mx-auto w-full max-w-[calc(65ch+3rem)] lg:w-[calc(65ch+3rem)] my-4": true,
-                    "flex flex-col gap-6": true,
-                    "outline-16 outline-success": isDraggingOver,
-                })}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}>
+        <>
+            <div className="flex px-4 gap-6 flex-col items-center lg:items-start lg:flex-row" role="main">
+                <div
+                    ref={parent}
+                    className={clsx({
+                        "flex-none order-2 lg:order-1 mx-auto w-full max-w-[calc(65ch+3rem)] lg:w-[calc(65ch+3rem)] my-4": true,
+                        "flex flex-col gap-6": true,
+                        "outline-16 outline-success": isDraggingOver,
+                    })}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}>
 
-                {importFiles.length > 0 &&
-                    <Import files={importFiles} snippets={snippets} cancelImport={() => setImportFiles([])}/>}
+                    {importFiles.length > 0 &&
+                        <Import files={importFiles} snippets={snippets} cancelImport={() => setImportFiles([])}/>}
 
-                {openSnippets.length > 0 &&
-                    <SnippetList snippets={openSnippets} editingIDs={editingIDs}
-                                 closeSnippet={closeSnippet}
-                                 startEditing={startEditing} cancelEdit={cancelEdit} saveEdit={saveEdit}
-                                 deleteSnippet={deleteSnippet}/>}
+                    {openSnippets.length > 0 &&
+                        <SnippetList snippets={openSnippets} editingIDs={editingIDs}
+                                     closeSnippet={closeSnippet}
+                                     startEditing={startEditing} cancelEdit={cancelEdit} saveEdit={saveEdit}
+                                     deleteSnippet={deleteSnippet}/>}
 
-                {!importFiles.length && !openSnippets.length && <div className="card p-6">
-                    <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
-                        <img src="/logo.svg" alt="" className="h-[25vh] grayscale opacity-10"/>
-                        <div className="text-base-content/30">No snippets open</div>
-                    </div>
-                </div>}
-            </div>
-
-            <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh lg:overflow-y-scroll">
-                <div className="flex flex-col gap-3 h-full">
-                    <div className="filter justify-end">
-                        <input className="btn btn-sm btn-ghost filter-reset" type="radio" name="bag" aria-label="All"/>
-                        <input className="btn btn-sm" type="radio" name="bag" aria-label="HKU"/>
-                        <input className="btn btn-sm" type="radio" name="bag" aria-label="Dentistry"/>
-                        <input className="btn btn-sm btn-soft btn-warning" type="radio" name="bag"
-                               aria-label="Personal"/>
-                    </div>
-
-                    <div className="flex items-top gap-6">
-                        <img src="/logo.svg" alt="snippetswiki logo" className="h-12"/>
-                        <div>
-                            <h1 className="text-4xl font-serif my-1">Snippet wiki</h1>
-                            <h2 className="text-xl text-base-content/50">Collaborative knowledge building</h2>
+                    {!importFiles.length && !openSnippets.length && <div className="card p-6">
+                        <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
+                            <img src="/logo.svg" alt="" className="h-[25vh] grayscale opacity-10"/>
+                            <div className="text-base-content/30">No snippets open</div>
                         </div>
-                    </div>
+                    </div>}
+                </div>
 
-                    <div className="flex items-center gap-6">
-                        <AddButton addSnippet={addSnippet} addImportFiles={addImportFiles}/>
-
-                        <Search snippets={snippets} openSnippet={openSnippet}/>
-
-                        {/*<div className="inline-grid *:[grid-area:1/1]">*/}
-                        {/*    <div className="status status-lg status-error animate-ping"></div>*/}
-                        {/*    <div className="status status-lg status-error"></div>*/}
-                        {/*</div>*/}
-                    </div>
-
-                    <div className="flex-1 tabs tabs-lift tabs-sm hidden lg:flex">
-                        <input type="radio" name="my_tabs_3" className="tab" aria-label="Open"/>
-                        <div className="tab-content bg-base-100 border-base-300 p-4">
-                            <OpenSnippets snippets={openSnippets}
-                                          openSnippet={openSnippet} closeSnippet={closeSnippet}/>
+                <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh lg:overflow-y-scroll">
+                    <div className="flex flex-col gap-3 h-full">
+                        <div className="filter justify-end">
+                            <input className="btn btn-sm btn-ghost filter-reset" type="radio" name="bag"
+                                   aria-label="All"/>
+                            <input className="btn btn-sm" type="radio" name="bag" aria-label="HKU"/>
+                            <input className="btn btn-sm" type="radio" name="bag" aria-label="Dentistry"/>
+                            <input className="btn btn-sm btn-soft btn-warning" type="radio" name="bag"
+                                   aria-label="Personal"/>
                         </div>
 
-                        <input type="radio" name="my_tabs_3" className="tab" aria-label="Recent" defaultChecked/>
-                        <div className="tab-content bg-base-100 border-base-300 p-4">
-                            <RecentSnippets snippets={snippets} openSnippets={openSnippets}
-                                            openSnippet={openSnippet} closeSnippet={closeSnippet}/>
+                        <div className="flex items-top gap-6">
+                            <img src="/logo.svg" alt="snippetswiki logo" className="h-12"/>
+                            <div>
+                                <h1 className="text-4xl font-serif my-1">Snippet wiki</h1>
+                                <h2 className="text-xl text-base-content/50">Collaborative knowledge building</h2>
+                            </div>
                         </div>
 
-                        <input type="radio" name="my_tabs_3" className="tab hidden xl:flex" aria-label="Map"/>
-                        <div className="tab-content bg-base-100 border-base-300 p-4">
-                            <div className="w-full h-full bg-base-200">
-                                {snippets.length && <ConceptMap snippets={snippets}/>}
+                        <div className="flex items-center gap-6">
+                            <AddButton addSnippet={createSnippet} addImportFiles={addImportFiles}/>
+
+                            <Search snippets={snippets} openSnippet={openSnippet}/>
+
+                            {/*<div className="inline-grid *:[grid-area:1/1]">*/}
+                            {/*    <div className="status status-lg status-error animate-ping"></div>*/}
+                            {/*    <div className="status status-lg status-error"></div>*/}
+                            {/*</div>*/}
+                        </div>
+
+                        <div className="flex-1 tabs tabs-lift tabs-sm hidden lg:flex">
+                            <input type="radio" name="my_tabs_3" className="tab" aria-label="Open"/>
+                            <div className="tab-content bg-base-100 border-base-300 p-4">
+                                <OpenSnippets snippets={openSnippets}
+                                              openSnippet={openSnippet} closeSnippet={closeSnippet}/>
+                            </div>
+
+                            <input type="radio" name="my_tabs_3" className="tab" aria-label="Recent" defaultChecked/>
+                            <div className="tab-content bg-base-100 border-base-300 p-4">
+                                <RecentSnippets snippets={snippets} openSnippets={openSnippets}
+                                                openSnippet={openSnippet} closeSnippet={closeSnippet}/>
+                            </div>
+
+                            <input type="radio" name="my_tabs_3" className="tab hidden xl:flex" aria-label="Map"/>
+                            <div className="tab-content bg-base-100 border-base-300 p-4">
+                                <div className="w-full h-full bg-base-200">
+                                    {snippets.length && <ConceptMap snippets={snippets}/>}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <DraftList drafts={draftSnippets} openSnippet={openSnippet}/>
+        </>
     )
 }
 

@@ -32,6 +32,26 @@ export const snippetsCollection = createCollection(
 );
 
 
+export const latestRevisionsCollection = createCollection(
+    electricCollectionOptions({
+        shapeOptions: {
+            url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
+            params: {
+                table: 'revisions',
+                columns: ['id', 'snippet_id', 'author', 'content_type', 'version', 'file', 'created']
+            }
+        },
+        getKey: (item) => item.id,
+
+        onInsert: async ({transaction}) => {
+            const newItem = transaction.mutations[0].modified;
+            const response = await createRevision(newItem.snippet_id, newItem);
+            return {txid: response.txid};
+        },
+    })
+);
+
+
 const BASE_URL = "http://localhost:5000";
 
 function createSnippet(snippet) {
@@ -40,6 +60,14 @@ function createSnippet(snippet) {
         body: JSON.stringify(snippet)
     }).then(res => res.json())
 }
+
+function createRevision(snippet_id, revision) {
+    return fetch(`${BASE_URL}/snippets/${snippet_id}/revisions/`, {
+        method: "POST",
+        body: JSON.stringify(revision)
+    }).then(res => res.json())
+}
+
 
 function updateSnippet(snippet) {
     return fetch(`${BASE_URL}/snippets/${snippet.id}`, {

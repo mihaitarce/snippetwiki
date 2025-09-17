@@ -1,9 +1,9 @@
 import './App.css'
-import {useLiveQuery} from "@tanstack/react-db";
+import {useLiveQuery, eq, max, and} from "@tanstack/react-db";
 import {SnippetList} from "./lib/SnippetList.tsx";
 import {Search} from "./lib/Search"
 import {ConceptMap} from "./lib/ConceptMap.tsx";
-import {snippetsCollection} from "./lib/collection.ts";
+import {latestRevisionsCollection, snippetsCollection} from "./lib/collection.ts";
 import {useMemo, useRef, useState} from "react";
 import {OpenSnippets, RecentSnippets} from "./lib/SnippetUtils.tsx";
 import {AddButton} from "./lib/AddButton.tsx";
@@ -12,13 +12,51 @@ import {Import} from "./lib/Import.tsx";
 import {useAutoAnimate} from "@formkit/auto-animate/react";
 
 function App() {
-    const {data: snippets} = useLiveQuery((q) =>
-        q.from({snippet: snippetsCollection})
-            // .where(({ score }) => eq(todo.completed, false))
-            .orderBy(({snippet}) => snippet.modified, 'desc')
-    );
+    const {data: snippets} = useLiveQuery((q) => {
+        const latestRevisions = q
+            .from({revision: latestRevisionsCollection})
+            .groupBy(({revision}) => [revision.snippet_id])
+            .select(({revision}) => ({
+                snippet_id: revision.snippet_id,
+                version: max(revision.version)
+            }))
+            .orderBy(({revision}) => revision.version, 'desc')
 
-    const [openNames, setOpenNames] = useState(['bYlFJ4l6tia', 'zq0fi7bwG4vHvCo0hC']);
+        const revisionsMetadata = q
+            .from({revision: latestRevisionsCollection})
+            .select(({revision}) => ({
+                id: revision.id,
+                snippet_id: revision.snippet_id,
+                author: revision.author,
+                content_type: revision.content_type,
+                version: revision.version,
+                file: revision.file,
+                created: revision.created
+            })).orderBy(({revision}) => revision.version, 'desc')
+
+        return q.from({snippet: snippetsCollection})
+            .join({latestRevision: latestRevisions}, ({snippet, latestRevision}) =>
+                eq(snippet.id, latestRevision.snippet_id)
+            )
+            .join({revisionMetadata: revisionsMetadata}, ({latestRevision, revisionMetadata}) =>
+                eq(latestRevision.version, revisionMetadata.version)
+            )
+            .select(({snippet, revisionMetadata}) => {
+                return ({
+                    id: snippet.id,
+                    title: snippet.title,
+                    modified: snippet.modified,
+                    draft_title: snippet.draft_title,
+                    draft_created: snippet.draft_created,
+                    revision__id: revisionMetadata.id,
+                    revision__author: revisionMetadata.author,
+                    revision__version: revisionMetadata.version,
+                })
+            })
+            .orderBy(({snippet}) => snippet.modified, 'desc')
+    });
+
+    const [openNames, setOpenNames] = useState(['n2U1NxoOVAL', 'zq0fi7bwG4vHvCo0hC']);
 
     const openSnippets = useMemo(() => {
         if (snippets === undefined) {
@@ -39,21 +77,20 @@ function App() {
         openSnippet(newSnippet)
     }
 
-    function updateSnippet(snippet) {
-        snippetsCollection.update(snippet.id, (draft) => {
-            draft.modified = new Date().toISOString();
-        })
-    }
-
     function deleteSnippet(snippet) {
         snippetsCollection.delete(snippet.id)
         closeSnippet(snippet)
     }
 
-    function openSnippet(snippet) {
+    function openSnippet(snippet, editing = false) {
         if (!openNames.includes(snippet.title)) {
             setOpenNames([snippet.title, ...openNames]);
         }
+
+        if (editing) {
+
+        }
+
         setTimeout(() => scrollTo(snippet))
     }
 
@@ -63,6 +100,30 @@ function App() {
 
     function closeSnippet(snippet) {
         setOpenNames(openNames.filter((name) => name !== snippet.title));
+    }
+
+    const [editingIDs, setEditingIDs] = useState([]);
+
+    function startEditing(snippet) {
+        if (!editingIDs.includes(snippet.id)) {
+            setEditingIDs([...editingIDs, snippet.id]);
+        }
+    }
+
+    function stopEditing(snippet) {
+        setEditingIDs(editingIDs.filter((id) => id !== snippet.id));
+    }
+
+    function cancelEdit(snippet) {
+        stopEditing(snippet);
+    }
+
+    function saveEdit(snippet) {
+        snippetsCollection.update(snippet.id, (draft) => {
+            draft.modified = new Date().toISOString();
+        })
+
+        stopEditing(snippet);
     }
 
     const [importFiles, setImportFiles] = useState([]);
@@ -134,8 +195,10 @@ function App() {
                     <Import files={importFiles} snippets={snippets} cancelImport={() => setImportFiles([])}/>}
 
                 {openSnippets.length > 0 &&
-                    <SnippetList snippets={openSnippets} closeSnippet={closeSnippet}
-                                 updateSnippet={updateSnippet} deleteSnippet={deleteSnippet}/>}
+                    <SnippetList snippets={openSnippets} editingIDs={editingIDs}
+                                 closeSnippet={closeSnippet}
+                                 startEditing={startEditing} cancelEdit={cancelEdit} saveEdit={saveEdit}
+                                 deleteSnippet={deleteSnippet}/>}
 
                 {!importFiles.length && !openSnippets.length && <div className="card p-6">
                     <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">

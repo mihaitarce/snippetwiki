@@ -1,4 +1,4 @@
-import {pgTable, varchar, uuid, timestamp, text, integer, boolean, pgEnum} from 'drizzle-orm/pg-core';
+import {pgTable, varchar, uuid, timestamp, text, integer, boolean, pgEnum, serial} from 'drizzle-orm/pg-core';
 import {relations} from "drizzle-orm";
 
 export const snippetsTable = pgTable('snippets', {
@@ -21,21 +21,21 @@ export const contentTypeEnum = pgEnum('content_type', ['text/markdown'])
 
 export const revisionsTable = pgTable('revisions', {
     id: uuid('id').primaryKey(),
-    article_id: uuid('article_id').references(
+    snippet_id: uuid('snippet_id').references(
         () => snippetsTable.id,
         {onDelete: 'cascade'}
     ).notNull(),
     author: varchar('author').notNull(),
     content: text().notNull(),
     content_type: contentTypeEnum().default('text/markdown').notNull(),
-    revision: integer().notNull(),
+    version: serial().notNull(),
     file: boolean().default(false),
     created: timestamp({mode: 'string'}).notNull().defaultNow(),
 })
 
 export const revisionsRelations = relations(revisionsTable, ({one}) => ({
-    article: one(snippetsTable, {
-        fields: [revisionsTable.article_id],
+    snippet: one(snippetsTable, {
+        fields: [revisionsTable.snippet_id],
         references: [snippetsTable.id]
     })
 }));

@@ -8,6 +8,32 @@ export function SnippetViewer({snippet, edit, close}) {
     // .orderBy(({snippet}) => snippet.modified, 'desc')
     // );
 
+    // import {Crepe} from "@milkdown/crepe";
+    // import {Editor} from "@milkdown/kit/core";
+    // import {replaceAll} from "@milkdown/kit/utils";
+    // import {listenerCtx} from "@milkdown/plugin-listener";
+    //
+    // let { article } = $props();
+    //
+    // let editor: Editor
+    // let initialized = $state(false)
+    //
+    // async function milkdown(dom) {
+    //     const crepe = new Crepe({root: dom});
+    //     crepe.setReadonly(true);
+    //     editor = crepe.editor;
+    // }
+    //
+    // $effect(() => {
+    //     if (article.latest_revision && editor) {
+    //         editor.config((ctx) => {
+    //             ctx.get(listenerCtx).mounted(replaceAll(article.latest_revision.content));
+    //         });
+    //         editor.create();
+    //         initialized = true;
+    //     }
+    // })
+
     function viewRevisions() {
         // ...
     }
@@ -54,6 +80,7 @@ export function SnippetViewer({snippet, edit, close}) {
         </div>
 
         {snippet.revision__version &&
+            // <div class="w-full viewer" use:milkdown></div>
             <div className="prose prose-headings:font-serif prose-headings:font-normal prose-headings:my-2">
                 <h2>Hello, world!</h2>
                 <p>

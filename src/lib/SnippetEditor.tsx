@@ -13,10 +13,12 @@ function CrepeEditor({content}) {
         });
     });
 
-    return <Milkdown/>;
+    return <div className="textarea z-1 w-full min-h-96">
+        <Milkdown/>
+    </div>;
 };
 
-export function SnippetEditor({snippet, deleteSnippet, discard, save}) {
+export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, save}) {
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     function discardChanges() {
@@ -32,7 +34,7 @@ export function SnippetEditor({snippet, deleteSnippet, discard, save}) {
     }
 
     function saveChanges() {
-        save(snippet)
+        save(snippet, `# Hello\nThe time is ${new Date().toLocaleDateString()}`);
         // save(crepe.getMarkdown(), usersPresent.length > 0)
         //
         // wsProvider.disconnect()
@@ -41,8 +43,13 @@ export function SnippetEditor({snippet, deleteSnippet, discard, save}) {
 
     return (
         <div className="card-body">
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-serif text-3xl">{snippet.title}</h1>
+            <div className="flex flex-wrap items-center justify-between gap-6 mb-1">
+                <h1 className="flex-1 font-serif text-3xl min-w-64">
+                    <input type="text" className="input input-xl w-full font-serif"
+                           value={snippet.draft_title} placeholder={snippet.title}
+                           onChange={(e) => updateTitle(snippet, e.target.value)}
+                    />
+                </h1>
                 <div className="flex gap-3">
                     {!confirmDelete &&
                         <button aria-label="Delete" className="btn btn-square btn-outline border-0 btn-error"

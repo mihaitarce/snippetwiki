@@ -5,8 +5,9 @@ export function SnippetList({
                                 snippets,
                                 editingIDs,
                                 startEditing,
-                                cancelEdit,
-                                saveEdit,
+                                updateTitle,
+                                discardChanges,
+                                saveChanges,
                                 deleteSnippet,
                                 closeSnippet
                             }) {
@@ -17,8 +18,9 @@ export function SnippetList({
                 return (
                     <li id={snippet.title} key={snippet.id} className="card bg-base-100">
                         {editing &&
-                            <SnippetEditor snippet={snippet} deleteSnippet={deleteSnippet} discard={cancelEdit}
-                                           save={saveEdit}/>}
+                            <SnippetEditor snippet={snippet} deleteSnippet={deleteSnippet}
+                                           updateTitle={updateTitle}
+                                           discard={discardChanges} save={saveChanges}/>}
                         {!editing &&
                             <SnippetViewer snippet={snippet} edit={startEditing}
                                            close={closeSnippet}/>}

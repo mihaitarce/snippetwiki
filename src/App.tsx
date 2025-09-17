@@ -107,11 +107,6 @@ function App() {
         openSnippet(newSnippet)
     }
 
-    function deleteSnippet(snippet) {
-        snippetsCollection.delete(snippet.id)
-        closeSnippet(snippet)
-    }
-
     function openSnippet(snippet, editing = false) {
         if (!openNames.includes(snippet.title)) {
             setOpenNames([snippet.title, ...openNames]);
@@ -129,18 +124,25 @@ function App() {
     }
 
     function closeSnippet(snippet) {
+        stopEditing(snippet)
         setOpenNames(openNames.filter((name) => name !== snippet.title));
-        setEditingIDs(editingIDs.filter((id) => id !== snippet.id));
     }
 
     function closeAllSnippets() {
-        setOpenNames([]);
         setEditingIDs([]);
+        setOpenNames([]);
     }
 
     const [editingIDs, setEditingIDs] = useState([]);
 
     function startEditing(snippet) {
+        if (!snippet.draft_created) {
+            snippetsCollection.update(snippet.id, (draft) => {
+                draft.draft_title = snippet.title;
+                draft.draft_created = new Date();
+            })
+        }
+
         if (!editingIDs.includes(snippet.id)) {
             setEditingIDs([...editingIDs, snippet.id]);
         }
@@ -150,16 +152,47 @@ function App() {
         setEditingIDs(editingIDs.filter((id) => id !== snippet.id));
     }
 
-    function cancelEdit(snippet) {
+    function updateTitle(snippet, newTitle) {
+        snippetsCollection.update(snippet.id, (draft) =>{
+            draft.draft_title = newTitle;
+        })
+    }
+
+    function discardChanges(snippet, usersPresent: boolean = false) {
+        if (!usersPresent) {
+            snippetsCollection.update(snippet.id, (draft) => {
+                draft.draft_title = null;
+                draft.draft_created = null;
+            })
+        }
         stopEditing(snippet);
     }
 
-    function saveEdit(snippet) {
+    function saveChanges(snippet, content, usersPresent: boolean = false) {
         snippetsCollection.update(snippet.id, (draft) => {
+            draft.title = snippet.draft_title ? snippet.draft_title : snippet.title;
             draft.modified = new Date().toISOString();
+
+            if (!usersPresent) {
+                draft.draft_title = null;
+                draft.draft_created = null;
+            }
         })
 
+        // TODO should be in the same transaction
+        // _client.insert('revisions', {
+        //     article_id: articleMetadata.id,
+        //     revision: data.result.latest_revision ? (data.result.latest_revision.revision + 1) : 1,
+        //     author: 'mihai',
+        //     content: content,
+        // })
+
         stopEditing(snippet);
+    }
+
+    function deleteSnippet(snippet) {
+        snippetsCollection.delete(snippet.id)
+        closeSnippet(snippet)
     }
 
     const [importFiles, setImportFiles] = useState([]);
@@ -233,8 +266,8 @@ function App() {
 
                     {openSnippets.length > 0 &&
                         <SnippetList snippets={openSnippets} editingIDs={editingIDs}
-                                     closeSnippet={closeSnippet}
-                                     startEditing={startEditing} cancelEdit={cancelEdit} saveEdit={saveEdit}
+                                     closeSnippet={closeSnippet} updateTitle={updateTitle}
+                                     startEditing={startEditing} discardChanges={discardChanges} saveChanges={saveChanges}
                                      deleteSnippet={deleteSnippet}/>}
 
                     {!importFiles.length && !openSnippets.length && <div className="card p-6">

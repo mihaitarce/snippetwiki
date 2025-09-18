@@ -1,34 +1,122 @@
 import {Crepe} from "@milkdown/crepe";
-import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react";
+import {Milkdown, MilkdownProvider, useEditor, useInstance} from "@milkdown/react";
 
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import {collab, collabServiceCtx} from "@milkdown/plugin-collab";
 
-function CrepeEditor({content}) {
-    const {get} = useEditor((root) => {
-        return new Crepe({
+import * as Y from 'yjs';
+import {WebsocketProvider} from "y-websocket";
+import {Doc} from "yjs";
+
+function CrepeEditor({content, doc, wsProvider}) {
+    useEditor((root) => {
+        const crepe = new Crepe({
             root,
-            defaultValue: content
+            featureConfigs: {
+                [Crepe.Feature.BlockEdit]: {
+                    textGroup: {
+                        label: 'Text Blocks',
+                        text: {
+                            label: 'Normal Text',
+                            // icon: customTextIcon,
+                        },
+                        h1: {
+                            label: 'Heading',
+                            // icon: customH1Icon,
+                        },
+                        h2: null,
+                        h3: null,
+                        h4: null,
+                        h5: null,
+                        h6: null,
+                    },
+                }
+            }
         });
+
+        const editor = crepe.editor;
+        editor.use(collab).create().then(() => {
+            let collabService
+
+            editor.action((ctx) => {
+                collabService = ctx.get(collabServiceCtx);
+
+                collabService
+                    // bind doc and awareness
+                    .bindDoc(doc)
+                    .setAwareness(wsProvider.awareness);
+
+                wsProvider.once("synced", async (isSynced: boolean) => {
+                    if (isSynced) {
+                        if (content) {
+                            collabService.applyTemplate(content);
+                        }
+                        collabService.connect();
+                    }
+                });
+            })
+        });
+
+        return crepe;
     });
 
     return <div className="textarea z-1 w-full min-h-96">
         <Milkdown/>
     </div>;
-};
+}
+
 
 export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, save}) {
     const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const [usersPresent, setUsersPresent] = useState([])
+
+    const colors = [ // all -400 values
+        '#fb923c', // 'oklch(75% 0.183 55.934)', // orange
+        '#facc15', // 'oklch(85.2% 0.199 91.936)', // yellow
+        '#a3e635', // 'oklch(84.1% 0.238 128.85)', // lime
+        '#34d399', // 'oklch(76.5% 0.177 163.223)', // emerald
+        '#22d3ee', // 'oklch(78.9% 0.154 211.53)', // cyan
+        '#60a5fa', // 'oklch(70.7% 0.165 254.624)', // blue
+        '#a78bfa', // 'oklch(70.2% 0.183 293.541)', // violet
+        '#e879f9', // 'oklch(74% 0.238 322.16)', // fuchsia
+        '#fb7185', // 'oklch(71.2% 0.194 13.428)' // rose
+    ]
+    const randomColor = () => colors[Math.floor(Math.random() * colors.length)];
+
+    const [doc, setDoc] = useState<Doc>();
+    const [wsProvider, setWsProvider] = useState<WebsocketProvider>();
+
+    useEffect(() => {
+        const roomName = `${snippet.title}/${snippet.draft_created}`;
+
+        const doc = new Y.Doc();
+        const wsProvider = new WebsocketProvider('/api/yjs/', roomName, doc);
+
+        wsProvider.awareness.setLocalStateField('user', {
+            name: 'user',
+            color: randomColor(),
+        });
+
+        wsProvider.awareness.on('change', (e) => {
+            setUsersPresent(Array.from(wsProvider.awareness.getStates().values())
+                .filter(state => state !== wsProvider.awareness.getLocalState())
+                .map(state => state.user))
+        })
+
+        setDoc(doc);
+        setWsProvider(wsProvider);
+    }, [])
 
     function discardChanges() {
         if (confirmDelete) {
             setConfirmDelete(false)
         } else {
-            discard(snippet)
-            // discard(snippet, usersPresent.length > 0)
-            //
-            // wsProvider.disconnect()
+            discard(snippet, usersPresent.length > 0)
+
+            wsProvider.disconnect()
             // collabService.disconnect()
         }
     }
@@ -36,8 +124,8 @@ export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, sav
     function saveChanges() {
         save(snippet, `# Hello\nThe time is ${new Date().toLocaleDateString()}`);
         // save(crepe.getMarkdown(), usersPresent.length > 0)
-        //
-        // wsProvider.disconnect()
+
+        wsProvider.disconnect()
         // collabService.disconnect()
     }
 
@@ -91,8 +179,25 @@ export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, sav
                 </div>
             </div>
 
+            {usersPresent.length > 0 && <div
+                className="absolute top-[-1em] right-[0.5em] z-2 bg-base-100 px-2 flex flex-wrap items-center justify-end gap-1"
+                title={`${usersPresent.length} users editing`}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5"
+                     stroke="currentColor"
+                     className="size-4 text-base-content/50 me-1">
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                          d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/>
+                </svg>
+                {usersPresent.map((user, index) => (
+                    <div key={index} title={user.name}
+                         className="badge" style={{"--badge-color": user.color} as React.CSSProperties}>
+                        {user.name.slice(0, 1).toUpperCase()}
+                    </div>
+                ))}
+            </div>}
+
             <MilkdownProvider>
-                <CrepeEditor content={"# Hello\nHello, world"}/>
+                {doc && wsProvider && <CrepeEditor content={"# Hello\nHello, world"} doc={doc} wsProvider={wsProvider}/>}
             </MilkdownProvider>
         </div>
     );

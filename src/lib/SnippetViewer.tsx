@@ -1,5 +1,6 @@
 import {useLiveQuery} from "@tanstack/react-db";
 import {snippetsCollection} from "./collection.ts";
+import clsx from "clsx";
 
 export function SnippetViewer({snippet, edit, close}) {
     // const {data: snippet} = useLiveQuery((q) =>
@@ -44,7 +45,7 @@ export function SnippetViewer({snippet, edit, close}) {
             <div className="flex gap-3">
                 {snippet.revision__version &&
                     <button className="btn btn-square btn-ghost border-0 text-base-content/50 hover:text-base-content"
-                            onClick={viewRevisions}>
+                            aria-label="History" onClick={viewRevisions}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                              stroke="currentColor" className="size-6">
                             <path strokeLinecap="round" strokeLinejoin="round"
@@ -53,8 +54,12 @@ export function SnippetViewer({snippet, edit, close}) {
                     </button>}
 
                 <button
-                    className="btn btn-square btn-ghost border-0 text-base-content/50 hover:text-base-content"
-                    onClick={() => edit(snippet)}>
+                    className={clsx({
+                        "btn btn-square": true,
+                        "btn-ghost border-0 text-base-content/50 hover:text-base-content": !snippet.draft_created,
+                        "btn-primary": snippet.draft_created
+                    })}
+                    aria-label="Edit" onClick={() => edit(snippet)}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                          strokeWidth={1.5} stroke="currentColor" className="size-6">
                         <path strokeLinecap="round" strokeLinejoin="round"

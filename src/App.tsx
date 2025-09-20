@@ -104,7 +104,7 @@ function App() {
 
         //     const inserted = await z.current.query.article.where('id', newID).one();
         //     console.log(inserted)
-        openSnippet(newSnippet)
+        openSnippet(newSnippet, true)
     }
 
     function openSnippet(snippet, editing = false) {
@@ -160,6 +160,7 @@ function App() {
 
     function discardChanges(snippet, usersPresent: boolean = false) {
         if (!usersPresent) {
+            console.log("No users present");
             snippetsCollection.update(snippet.id, (draft) => {
                 draft.draft_title = null;
                 draft.draft_created = null;
@@ -174,6 +175,7 @@ function App() {
             draft.modified = new Date().toISOString();
 
             if (!usersPresent) {
+                console.log("No users present");
                 draft.draft_title = null;
                 draft.draft_created = null;
             }

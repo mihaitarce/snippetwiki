@@ -1,5 +1,4 @@
-import {SnippetEditor} from "./SnippetEditor.tsx";
-import {SnippetViewer} from "./SnippetViewer.tsx";
+import {SnippetItem} from "./SnippetItem.tsx";
 
 export function SnippetList({
                                 snippets,
@@ -11,19 +10,18 @@ export function SnippetList({
                                 deleteSnippet,
                                 closeSnippet
                             }) {
+
+    // TODO Query snippet content and details
+
     return (
         <>
             {snippets.map((snippet) => {
                 const editing = editingIDs.includes(snippet.id);
                 return (
                     <li id={snippet.title} key={snippet.id} className="card bg-base-100">
-                        {editing &&
-                            <SnippetEditor snippet={snippet} deleteSnippet={deleteSnippet}
-                                           updateTitle={updateTitle}
-                                           discard={discardChanges} save={saveChanges}/>}
-                        {!editing &&
-                            <SnippetViewer snippet={snippet} edit={startEditing}
-                                           close={closeSnippet}/>}
+                        <SnippetItem snippetMetadata={snippet} editing={editing} startEditing={startEditing} updateTitle={updateTitle}
+                        discardChanges={discardChanges} saveChanges={saveChanges} deleteSnippet={deleteSnippet}
+                        closeSnippet={closeSnippet}/>
                     </li>
                 )
             })

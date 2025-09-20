@@ -42,6 +42,19 @@ export const latestRevisionsCollection = createCollection(
             }
         },
         getKey: (item) => item.id,
+    })
+);
+
+export const revisionsCollection = createCollection(
+    electricCollectionOptions({
+        shapeOptions: {
+            url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
+            params: {
+                table: 'revisions',
+                columns: ['id', 'snippet_id', 'author', 'content', 'content_type', 'version', 'file', 'created']
+            }
+        },
+        getKey: (item) => item.id,
 
         onInsert: async ({transaction}) => {
             const newItem = transaction.mutations[0].modified;

@@ -3,12 +3,6 @@ import {snippetsCollection} from "./collection.ts";
 import clsx from "clsx";
 
 export function SnippetViewer({snippet, edit, close}) {
-    // const {data: snippet} = useLiveQuery((q) =>
-    //     q.from({snippetRevision: snippetsCollection})
-    //         .where(({ score }) => eq(todo.completed, false))
-    // .orderBy(({snippet}) => snippet.modified, 'desc')
-    // );
-
     // import {Crepe} from "@milkdown/crepe";
     // import {Editor} from "@milkdown/kit/core";
     // import {replaceAll} from "@milkdown/kit/utils";
@@ -36,7 +30,7 @@ export function SnippetViewer({snippet, edit, close}) {
     // })
 
     function viewRevisions() {
-        // ...
+        // ..
     }
 
     return (<div className="card-body">
@@ -87,16 +81,7 @@ export function SnippetViewer({snippet, edit, close}) {
         {snippet.revision__version &&
             // <div class="w-full viewer" use:milkdown></div>
             <div className="prose prose-headings:font-serif prose-headings:font-normal prose-headings:my-2">
-                <h2>Hello, world!</h2>
-                <p>
-                    Et eligendi aut cupiditate voluptatibus quia sit architecto. Ut suscipit facere rerum ut et
-                    repellat. Distinctio non officiis commodi iste repellendus aut.
-                </p>
-                <p>
-                    In et voluptas non modi. Ut asperiores et voluptatem consectetur. Ducimus asperiores
-                    laudantium
-                    enim. Eius rerum illo ut. Necessitatibus deserunt aspernatur sapiente aliquid harum nihil.
-                </p>
+                {snippet.revision__content}
             </div>}
         {!snippet.revision__version &&
             <div className="p-6 text-base-content/30 text-lg text-center">

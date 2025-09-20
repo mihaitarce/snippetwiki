@@ -45,6 +45,35 @@ export const latestRevisionsCollection = createCollection(
     })
 );
 
+export function revisionCollectionOne(snippet_id) {
+    const params = {
+        table: 'revisions',
+    }
+
+    if (snippet_id) {
+        params.where = 'id = $1';
+        params.params = [ snippet_id ]
+    } else {
+        params.where = 'FALSE'
+    }
+
+    return createCollection(
+        electricCollectionOptions({
+            shapeOptions: {
+                url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
+                params: params
+            },
+            getKey: (item) => item.id,
+
+            onInsert: async ({transaction}) => {
+                const newItem = transaction.mutations[0].modified;
+                const response = await createRevision(newItem.snippet_id, newItem);
+                return {txid: response.txid};
+            },
+        })
+    );
+}
+
 export const revisionsCollection = createCollection(
     electricCollectionOptions({
         shapeOptions: {

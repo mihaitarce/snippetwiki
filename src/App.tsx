@@ -160,7 +160,6 @@ function App() {
 
     function discardChanges(snippet, usersPresent: boolean = false) {
         if (!usersPresent) {
-            console.log("No users present");
             snippetsCollection.update(snippet.id, (draft) => {
                 draft.draft_title = null;
                 draft.draft_created = null;

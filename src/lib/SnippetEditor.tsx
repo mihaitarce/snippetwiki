@@ -9,7 +9,7 @@ import {collab, collabServiceCtx} from "@milkdown/plugin-collab";
 import * as Y from 'yjs';
 import {WebsocketProvider} from "y-websocket";
 
-function CrepeEditor({snippet, content, usersPresent, setUsersPresent}) {
+function CrepeEditor({snippet, usersPresent, setUsersPresent}) {
     useEditor((root) => {
         const crepe = new Crepe({
             root,
@@ -48,7 +48,7 @@ function CrepeEditor({snippet, content, usersPresent, setUsersPresent}) {
         ]
         const randomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
-        const roomName = `${snippet.id}`;
+        const roomName = snippet.id;
 
         const doc = new Y.Doc();
         const wsProvider = new WebsocketProvider('/api/yjs/', roomName, doc);
@@ -75,9 +75,7 @@ function CrepeEditor({snippet, content, usersPresent, setUsersPresent}) {
 
                 wsProvider.once("synced", async (isSynced: boolean) => {
                     if (isSynced) {
-                        if (content) {
-                            collabService.applyTemplate(content);
-                        }
+                        collabService.applyTemplate(snippet.revision__content);
                         collabService.connect();
                     }
                 });
@@ -185,8 +183,7 @@ export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, sav
             </div>
 
             <MilkdownProvider>
-                <CrepeEditor snippet={snippet} content={"# Hello\nHello, world"}
-                             usersPresent={usersPresent} setUsersPresent={setUsersPresent}/>
+                <CrepeEditor snippet={snippet} usersPresent={usersPresent} setUsersPresent={setUsersPresent}/>
             </MilkdownProvider>
         </div>
     );

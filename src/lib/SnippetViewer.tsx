@@ -31,30 +31,8 @@ export function SnippetViewer({snippet, edit, close}) {
         // ..
     }
 
-    (
-        <div className="card-body">
-            <div
-                className="prose prose-headings:font-serif prose-headings:font-normal prose-headings:my-2">
-                <p>
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. At atque
-                    consectetur
-                    dicta, earum inventore, iusto nobis nostrum numquam odit officiis placeat
-                    repudiandae, sit soluta! Alias nihil odit quibusdam quod vero.
-                </p>
-
-                <h2>Testing</h2>
-
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. A animi ducimus
-                    ipsam
-                    non, officiis quia quo recusandae sequi sunt. Cumque iste labore nobis
-                    numquam
-                    perspiciatis reiciendis, vero? Minima quasi, veritatis.</p>
-            </div>
-        </div>
-    )
-
     return (<div className="card-body">
-        <div className="flex items-center justify-between gap-3 mb-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
             <h1 className="text-3xl font-serif">
                 {snippet.title}
             </h1>

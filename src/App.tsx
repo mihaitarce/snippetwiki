@@ -329,7 +329,6 @@ function App() {
                     <input type="radio" name="tabs" className="tab" aria-label="Recent"
                            checked={selectedTab === Tabs.Recent} onChange={() => setSelectedTab(Tabs.Recent)}/>
                     <div className="tab-content p-3">
-                        Recent
                         <RecentSnippets snippets={snippets} openSnippets={openSnippets}
                                         openSnippet={openSnippet} closeSnippet={closeSnippet}/>
                     </div>
@@ -337,7 +336,6 @@ function App() {
                     <input type="radio" name="tabs" className="tab" aria-label="Open"
                            checked={selectedTab === Tabs.Open} onChange={() => setSelectedTab(Tabs.Open)}/>
                     <div className="tab-content p-3">
-                        Open
                         <OpenSnippets snippets={openSnippets}
                                       openSnippet={openSnippet} closeSnippet={closeSnippet}
                                       closeAllSnippets={closeAllSnippets}/>

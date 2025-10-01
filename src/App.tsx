@@ -1,7 +1,6 @@
 import './App.css'
 
-import {useLiveQuery, eq, max, and} from "@tanstack/react-db";
-import {SnippetList} from "./lib/SnippetList.tsx";
+import {useLiveQuery, eq, max} from "@tanstack/react-db";
 import {Search} from "./lib/Search"
 import {ConceptMap} from "./lib/ConceptMap.tsx";
 import {latestRevisionsCollection, snippetsCollection} from "./lib/collection.ts";
@@ -13,6 +12,7 @@ import {Import} from "./lib/Import.tsx";
 import {useAutoAnimate} from "@formkit/auto-animate/react";
 import {DraftList} from "./lib/DraftList.tsx";
 import {Sidebar} from "./lib/Sidebar.tsx";
+import {SnippetItem} from "./lib/SnippetItem.tsx";
 
 enum Tabs {
     Open,
@@ -260,8 +260,8 @@ function App() {
 
     return (<>
         <div role="main" className={clsx({
-            "flex flex-col items-center xl:items-start xl:flex-row h-full": true,
-            "outline-16 outline-success": isDraggingOver,
+            "flex flex-col items-center xl:items-start xl:flex-row h-full transition-colors": true,
+            "bg-info/30": isDraggingOver,
         })}
              onDragEnter={handleDragEnter}
              onDragLeave={handleDragLeave}
@@ -281,15 +281,25 @@ function App() {
                     <Search snippets={snippets} openSnippet={openSnippet}/>
                 </div>
 
-                <div className="flex flex-col gap-4 p-4">
+                <div ref={parent} className="flex flex-col gap-4 p-4">
                     {importFiles.length > 0 &&
                         <Import files={importFiles} snippets={snippets} cancelImport={() => setImportFiles([])}/>}
 
                     {openSnippets.length > 0 &&
-                        <SnippetList snippets={openSnippets} editingIDs={editingIDs}
-                                     closeSnippet={closeSnippet} updateTitle={updateTitle}
-                                     startEditing={startEditing} discardChanges={discardChanges} saveChanges={saveChanges}
-                                     deleteSnippet={deleteSnippet}/>}
+                        openSnippets.map((snippet) => {
+                            const editing = editingIDs.includes(snippet.id);
+                            return (
+                                <div id={snippet.title} key={snippet.id} className={clsx({
+                                    "card bg-base-100": true,
+                                    // "border-t-16 border-warning/30": index === 1,
+                                })}>
+                                    <SnippetItem snippetMetadata={snippet} editing={editing} startEditing={startEditing}
+                                                 updateTitle={updateTitle}
+                                                 discardChanges={discardChanges} saveChanges={saveChanges}
+                                                 deleteSnippet={deleteSnippet}
+                                                 closeSnippet={closeSnippet}/>
+                                </div>)
+                        })}
 
                     {!importFiles.length && !openSnippets.length && <div className="card p-6">
                         <div className="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
@@ -336,8 +346,7 @@ function App() {
                     <input type="radio" name="tabs" className="tab" aria-label="Map"
                            checked={selectedTab === Tabs.Map} onChange={() => setSelectedTab(Tabs.Map)}/>
                     <div className="tab-content pt-3">
-                        {/*{selectedTab === Tabs.Map && <Map/>}*/}
-                        {snippets.length > 1 && <ConceptMap snippets={snippets}/>}
+                        {selectedTab === Tabs.Map && snippets.length > 1 && <ConceptMap snippets={snippets}/>}
                     </div>
                 </div>
             </div>

@@ -32,7 +32,7 @@ export function Search({snippets, openSnippet}) {
         if (selectedResult > results?.length - 1) {
             setSelectedResult(Math.max(0, results?.length - 1))
         }
-    }, [results]);
+    }, [results, selectedResult]);
 
     function snippetSelected(snippet) {
         openSnippet(snippet);

@@ -1,4 +1,5 @@
 import './App.css'
+
 import {useLiveQuery, eq, max, and} from "@tanstack/react-db";
 import {SnippetList} from "./lib/SnippetList.tsx";
 import {Search} from "./lib/Search"
@@ -11,6 +12,14 @@ import clsx from "clsx";
 import {Import} from "./lib/Import.tsx";
 import {useAutoAnimate} from "@formkit/auto-animate/react";
 import {DraftList} from "./lib/DraftList.tsx";
+import {Sidebar} from "./lib/Sidebar.tsx";
+
+enum Tabs {
+    Open,
+    Recent,
+    Sidebar,
+    Map
+}
 
 function App() {
     const {data: snippets} = useLiveQuery((q) => {
@@ -153,7 +162,7 @@ function App() {
     }
 
     function updateTitle(snippet, newTitle) {
-        snippetsCollection.update(snippet.id, (draft) =>{
+        snippetsCollection.update(snippet.id, (draft) => {
             draft.draft_title = newTitle;
         })
     }
@@ -247,21 +256,32 @@ function App() {
 
     const [parent, enableAnimations] = useAutoAnimate()
 
-    return (
-        <>
-            <div className="flex px-4 gap-6 flex-col items-center lg:items-start lg:flex-row" role="main">
-                <div
-                    ref={parent}
-                    className={clsx({
-                        "flex-none order-2 lg:order-1 mx-auto w-full max-w-[calc(65ch+3rem)] lg:w-[calc(65ch+3rem)] my-4": true,
-                        "flex flex-col gap-6": true,
-                        "outline-16 outline-success": isDraggingOver,
-                    })}
-                    onDragEnter={handleDragEnter}
-                    onDragLeave={handleDragLeave}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}>
+    const [selectedTab, setSelectedTab] = useState(Tabs.Recent)
 
+    return (<>
+        <div role="main" className={clsx({
+            "flex flex-col items-center xl:items-start xl:flex-row h-full": true,
+            "outline-16 outline-success": isDraggingOver,
+        })}
+             onDragEnter={handleDragEnter}
+             onDragLeave={handleDragLeave}
+             onDragOver={handleDragOver}
+             onDrop={handleDrop}>
+            <div className="flex flex-col xl:h-svh xl:overflow-y-scroll xl:overscroll-none xl:w-[calc(65ch+5rem)]">
+                <div className="flex justify-between gap-12 px-4 py-2 sticky top-0 z-1 bg-base-300">
+                    <div className="flex items-center gap-3 ps-2">
+                        <img src="/logo.svg" alt="snippetwiki" className="h-8"/>
+                        <AddButton addSnippet={createSnippet} addImportFiles={addImportFiles}/>
+                        {/*<div className="inline-grid *:[grid-area:1/1]">*/}
+                        {/*    <div className="status status-lg status-error animate-ping"></div>*/}
+                        {/*    <div className="status status-lg status-error"></div>*/}
+                        {/*</div>*/}
+                    </div>
+
+                    <Search snippets={snippets} openSnippet={openSnippet}/>
+                </div>
+
+                <div className="flex flex-col gap-4 p-4">
                     {importFiles.length > 0 &&
                         <Import files={importFiles} snippets={snippets} cancelImport={() => setImportFiles([])}/>}
 
@@ -278,62 +298,53 @@ function App() {
                         </div>
                     </div>}
                 </div>
+            </div>
+            <div className="flex-1 h-svh hidden xl:block">
+                {/*<div className="filter justify-end absolute right-4">*/}
+                {/*    <input className="btn btn-sm btn-ghost filter-reset" type="radio" name="bag"*/}
+                {/*           aria-label="All"/>*/}
+                {/*    <input className="btn btn-sm" type="radio" name="bag" aria-label="HKU"/>*/}
+                {/*    <input className="btn btn-sm" type="radio" name="bag" aria-label="Dentistry"/>*/}
+                {/*    <input className="btn btn-sm btn-soft btn-warning" type="radio" name="bag"*/}
+                {/*           aria-label="Journal"/>*/}
+                {/*</div>*/}
 
-                <div className="flex-auto order-1 lg:order-2 w-full lg:sticky lg:top-0 lg:h-svh lg:overflow-y-scroll">
-                    <div className="flex flex-col gap-3 h-full">
-                        <div className="filter justify-end">
-                            <input className="btn btn-sm btn-ghost filter-reset" type="radio" name="bag"
-                                   aria-label="All"/>
-                            <input className="btn btn-sm" type="radio" name="bag" aria-label="HKU"/>
-                            <input className="btn btn-sm" type="radio" name="bag" aria-label="Dentistry"/>
-                            <input className="btn btn-sm btn-soft btn-warning" type="radio" name="bag"
-                                   aria-label="Personal"/>
-                        </div>
+                <div className="tabs tabs-box h-svh rounded-none p-4">
+                    <input type="radio" name="tabs" className="tab" aria-label="Sidebar"
+                           checked={selectedTab === Tabs.Sidebar} onChange={() => setSelectedTab(Tabs.Sidebar)}/>
+                    <div className="tab-content pt-3 overflow-y-scroll overscroll-none">
+                        <Sidebar/>
+                    </div>
 
-                        <div className="flex items-top gap-6">
-                            <img src="/logo.svg" alt="snippetswiki logo" className="h-12"/>
-                            <div>
-                                <h1 className="text-4xl font-serif my-1">Snippet wiki</h1>
-                                <h2 className="text-xl text-base-content/50">Collaborative knowledge building</h2>
-                            </div>
-                        </div>
+                    <input type="radio" name="tabs" className="tab" aria-label="Recent"
+                           checked={selectedTab === Tabs.Recent} onChange={() => setSelectedTab(Tabs.Recent)}/>
+                    <div className="tab-content p-3">
+                        Recent
+                        <RecentSnippets snippets={snippets} openSnippets={openSnippets}
+                                        openSnippet={openSnippet} closeSnippet={closeSnippet}/>
+                    </div>
 
-                        <div className="flex items-center gap-6">
-                            <AddButton addSnippet={createSnippet} addImportFiles={addImportFiles}/>
+                    <input type="radio" name="tabs" className="tab" aria-label="Open"
+                           checked={selectedTab === Tabs.Open} onChange={() => setSelectedTab(Tabs.Open)}/>
+                    <div className="tab-content p-3">
+                        Open
+                        <OpenSnippets snippets={openSnippets}
+                                      openSnippet={openSnippet} closeSnippet={closeSnippet}
+                                      closeAllSnippets={closeAllSnippets}/>
+                    </div>
 
-                            <Search snippets={snippets} openSnippet={openSnippet}/>
-
-                            {/*<div className="inline-grid *:[grid-area:1/1]">*/}
-                            {/*    <div className="status status-lg status-error animate-ping"></div>*/}
-                            {/*    <div className="status status-lg status-error"></div>*/}
-                            {/*</div>*/}
-                        </div>
-
-                        <div className="flex-1 tabs tabs-lift tabs-sm hidden lg:flex">
-                            <input type="radio" name="my_tabs_3" className="tab" aria-label="Open"/>
-                            <div className="tab-content bg-base-100 border-base-300 p-4">
-                                <OpenSnippets snippets={openSnippets}
-                                              openSnippet={openSnippet} closeSnippet={closeSnippet}
-                                              closeAllSnippets={closeAllSnippets}/>
-                            </div>
-
-                            <input type="radio" name="my_tabs_3" className="tab" aria-label="Recent" defaultChecked/>
-                            <div className="tab-content bg-base-100 border-base-300 p-4">
-                                <RecentSnippets snippets={snippets} openSnippets={openSnippets}
-                                                openSnippet={openSnippet} closeSnippet={closeSnippet}/>
-                            </div>
-
-                            <input type="radio" name="my_tabs_3" className="tab hidden xl:flex" aria-label="Map"/>
-                            <div className="tab-content bg-base-100 border-base-300 p-4">
-                                {snippets.length > 1 && <ConceptMap snippets={snippets}/>}
-                            </div>
-                        </div>
+                    <input type="radio" name="tabs" className="tab" aria-label="Map"
+                           checked={selectedTab === Tabs.Map} onChange={() => setSelectedTab(Tabs.Map)}/>
+                    <div className="tab-content pt-3">
+                        {/*{selectedTab === Tabs.Map && <Map/>}*/}
+                        {snippets.length > 1 && <ConceptMap snippets={snippets}/>}
                     </div>
                 </div>
             </div>
-            <DraftList drafts={draftSnippets} openSnippet={openSnippet}/>
-        </>
-    )
+        </div>
+
+        <DraftList drafts={draftSnippets} openSnippet={openSnippet}/>
+    </>)
 }
 
 export default App

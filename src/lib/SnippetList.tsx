@@ -1,4 +1,5 @@
 import {SnippetItem} from "./SnippetItem.tsx";
+import clsx from "clsx";
 
 export function SnippetList({
                                 snippets,
@@ -18,14 +19,17 @@ export function SnippetList({
             {snippets.map((snippet) => {
                 const editing = editingIDs.includes(snippet.id);
                 return (
-                    <li id={snippet.title} key={snippet.id} className="card bg-base-100">
-                        <SnippetItem snippetMetadata={snippet} editing={editing} startEditing={startEditing} updateTitle={updateTitle}
-                        discardChanges={discardChanges} saveChanges={saveChanges} deleteSnippet={deleteSnippet}
-                        closeSnippet={closeSnippet}/>
-                    </li>
-                )
-            })
-            }
+                    <div id={snippet.title} key={snippet.id} className={clsx({
+                        "card bg-base-100": true,
+                        // "border-t-16 border-warning/30": index === 1,
+                    })}>
+                        <SnippetItem snippetMetadata={snippet} editing={editing} startEditing={startEditing}
+                                     updateTitle={updateTitle}
+                                     discardChanges={discardChanges} saveChanges={saveChanges}
+                                     deleteSnippet={deleteSnippet}
+                                     closeSnippet={closeSnippet}/>
+                    </div>)
+            })}
         </>
     )
 }

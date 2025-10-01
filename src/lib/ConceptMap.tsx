@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import {useState, useCallback, useEffect} from 'react';
 import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -26,11 +26,22 @@ export function ConceptMap({snippets}) {
 
     const proOptions = { hideAttribution: true };
 
+    useEffect(() => {
+        console.log("Loading map");
+    }, []);
+
     if (snippets.length === 0) {
         return (<div className="text-base-content/50">
             No snippets found
         </div>)
     }
+
+    (
+        <div className="flex flex-col gap-4 items-center justify-center h-full text-base-content/30 bg-indigo-500/10">
+            <span className="text-xl">Loading</span>
+            <span className="loading loading-bars loading-xl"></span>
+        </div>
+    )
 
     return (
         <div className="w-full h-full bg-base-200">

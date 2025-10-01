@@ -59,8 +59,8 @@ export function Search({snippets, openSnippet}) {
     }
 
     return (
-        <div className="dropdown w-full max-w-128">
-            <label tabIndex={0} role="button"  className="input mx-1">
+        <div className="dropdown dropdown-end w-full">
+            <label tabIndex={0} role="button" className="input w-full">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                      stroke="currentColor"
                      className="h-[1em] opacity-50">
@@ -73,7 +73,7 @@ export function Search({snippets, openSnippet}) {
                        onKeyDown={(e) => handleKey(e)}/>
             </label>
             <ul tabIndex={0} className={clsx({
-                "dropdown-content bg-base-100 rounded-box z-1 w-full p-2 shadow-sm mt-2 text-base-content/70": true,
+                "dropdown-content bg-base-100 rounded-box shadow-sm z-1 p-2 mt-3 w-full text-base-content/70": true,
                 "hidden": !showResults
             })}>
                 {results.map((result, index) =>

@@ -261,7 +261,7 @@ function App() {
     return (<>
         <div role="main" className={clsx({
             "flex flex-col items-center xl:items-start xl:flex-row h-full transition-colors": true,
-            "bg-info/30": isDraggingOver,
+            "bg-success/10": isDraggingOver,
         })}
              onDragEnter={handleDragEnter}
              onDragLeave={handleDragLeave}

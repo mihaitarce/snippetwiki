@@ -3,13 +3,46 @@ import {Milkdown, MilkdownProvider, useEditor, useInstance} from "@milkdown/reac
 
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {collab, collabServiceCtx} from "@milkdown/plugin-collab";
 
 import * as Y from 'yjs';
 import {WebsocketProvider} from "y-websocket";
 
-function CrepeEditor({snippet, usersPresent, setUsersPresent}) {
+function CrepeEditor({snippet, doc, wsProvider, collabService, usersPresent, setUsersPresent}) {
+    useEffect(() => {
+        if (!doc.current && !wsProvider.current) {
+            const colors = [ // all -400 values
+                '#fb923c', // 'oklch(75% 0.183 55.934)', // orange
+                '#facc15', // 'oklch(85.2% 0.199 91.936)', // yellow
+                '#a3e635', // 'oklch(84.1% 0.238 128.85)', // lime
+                '#34d399', // 'oklch(76.5% 0.177 163.223)', // emerald
+                '#22d3ee', // 'oklch(78.9% 0.154 211.53)', // cyan
+                '#60a5fa', // 'oklch(70.7% 0.165 254.624)', // blue
+                '#a78bfa', // 'oklch(70.2% 0.183 293.541)', // violet
+                '#e879f9', // 'oklch(74% 0.238 322.16)', // fuchsia
+                '#fb7185', // 'oklch(71.2% 0.194 13.428)' // rose
+            ]
+            const randomColor = () => colors[Math.floor(Math.random() * colors.length)];
+
+            const roomName = snippet.id;
+
+            doc.current = new Y.Doc();
+            wsProvider.current = new WebsocketProvider('/api/yjs/', roomName, doc.current);
+
+            wsProvider.current.awareness.setLocalStateField('user', {
+                name: 'user',
+                color: randomColor(),
+            });
+
+            wsProvider.current.awareness.on('change', (e) => {
+                setUsersPresent(Array.from(wsProvider.current.awareness.getStates().values())
+                    .filter(state => state !== wsProvider.current.awareness.getLocalState())
+                    .map(state => state.user))
+            })
+        }
+    }, [setUsersPresent, snippet]);
+
     useEditor((root) => {
         const crepe = new Crepe({
             root,
@@ -35,48 +68,19 @@ function CrepeEditor({snippet, usersPresent, setUsersPresent}) {
             }
         });
 
-        const colors = [ // all -400 values
-            '#fb923c', // 'oklch(75% 0.183 55.934)', // orange
-            '#facc15', // 'oklch(85.2% 0.199 91.936)', // yellow
-            '#a3e635', // 'oklch(84.1% 0.238 128.85)', // lime
-            '#34d399', // 'oklch(76.5% 0.177 163.223)', // emerald
-            '#22d3ee', // 'oklch(78.9% 0.154 211.53)', // cyan
-            '#60a5fa', // 'oklch(70.7% 0.165 254.624)', // blue
-            '#a78bfa', // 'oklch(70.2% 0.183 293.541)', // violet
-            '#e879f9', // 'oklch(74% 0.238 322.16)', // fuchsia
-            '#fb7185', // 'oklch(71.2% 0.194 13.428)' // rose
-        ]
-        const randomColor = () => colors[Math.floor(Math.random() * colors.length)];
-
-        const roomName = snippet.id;
-
-        const doc = new Y.Doc();
-        const wsProvider = new WebsocketProvider('/api/yjs/', roomName, doc);
-
-        wsProvider.awareness.setLocalStateField('user', {
-            name: 'user',
-            color: randomColor(),
-        });
-
-        wsProvider.awareness.on('change', (e) => {
-            setUsersPresent(Array.from(wsProvider.awareness.getStates().values())
-                .filter(state => state !== wsProvider.awareness.getLocalState())
-                .map(state => state.user))
-        })
-
         crepe.editor.use(collab).create().then((editor) => {
             editor.action((ctx) => {
-                const collabService = ctx.get(collabServiceCtx);
+                collabService.current = ctx.get(collabServiceCtx);
 
-                collabService
+                collabService.current
                     // bind doc and awareness
-                    .bindDoc(doc)
-                    .setAwareness(wsProvider.awareness);
+                    .bindDoc(doc.current)
+                    .setAwareness(wsProvider.current.awareness);
 
-                wsProvider.once("synced", async (isSynced: boolean) => {
+                wsProvider.current.once("synced", async (isSynced: boolean) => {
                     if (isSynced) {
-                        collabService.applyTemplate(snippet.revision__content);
-                        collabService.connect();
+                        collabService.current.applyTemplate(snippet.revision__content);
+                        collabService.current.connect();
                     }
                 });
             })
@@ -112,6 +116,10 @@ export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, sav
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [usersPresent, setUsersPresent] = useState([])
 
+    const doc = useRef(null);
+    const wsProvider = useRef(null);
+    const collabService = useRef(null);
+
     function discardChanges() {
         if (confirmDelete) {
             setConfirmDelete(false)
@@ -119,8 +127,8 @@ export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, sav
             // discard(snippet)
             discard(snippet, usersPresent.length > 0)
 
-            // wsProvider.disconnect()
-            // collabService.disconnect()
+            wsProvider.current?.disconnect()
+            collabService.current?.disconnect()
         }
     }
 
@@ -128,20 +136,20 @@ export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, sav
         save(snippet, `# Hello\nThe time is ${new Date().toLocaleDateString()}`, usersPresent.length > 0);
         // save(crepe.getMarkdown(), usersPresent.length > 0)
 
-        // wsProvider.disconnect()
-        // collabService.disconnect()
+        wsProvider.current?.disconnect()
+        collabService.current?.disconnect()
     }
 
     return (
         <div className="card-body">
-            <div className="flex flex-wrap items-center justify-between gap-6 mb-3">
-                <h1 className="flex-1 font-serif text-3xl min-w-64">
-                    <input type="text" className="input input-xl w-full font-serif"
+            <div className="flex flex-wrap items-center justify-between gap-8 mb-3">
+                <h1 className="flex-1 font-serif">
+                    <input type="text" className="input input-lg w-full font-serif"
                            value={snippet.draft_title} placeholder={snippet.title}
                            onChange={(e) => updateTitle(snippet, e.target.value)}
                     />
                 </h1>
-                <div className="flex gap-3">
+                <div className="flex gap-1">
                     {!confirmDelete &&
                         <button aria-label="Delete" className="btn btn-square btn-outline border-0 btn-error"
                                 onClick={() => setConfirmDelete(true)}>
@@ -183,7 +191,8 @@ export function SnippetEditor({snippet, deleteSnippet, updateTitle, discard, sav
             </div>
 
             <MilkdownProvider>
-                <CrepeEditor snippet={snippet} usersPresent={usersPresent} setUsersPresent={setUsersPresent}/>
+                <CrepeEditor snippet={snippet} doc={doc} wsProvider={wsProvider} collabService={collabService}
+                             usersPresent={usersPresent} setUsersPresent={setUsersPresent}/>
             </MilkdownProvider>
         </div>
     );

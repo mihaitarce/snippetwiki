@@ -32,7 +32,7 @@ export function SnippetViewer({snippet, edit, close}) {
     }
 
     return (<div className="card-body">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 min-h-12">
             <h1 className="text-3xl font-serif">
                 {snippet.title}
             </h1>
@@ -87,12 +87,7 @@ export function SnippetViewer({snippet, edit, close}) {
 
         <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
             <div className="flex-1 text-base-content/50">
-                {new Date(snippet.modified).toLocaleDateString(undefined, {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                })}
+                {new Date(snippet.modified).toLocaleDateString(undefined, {dateStyle: 'medium'})}
             </div>
 
             <div className="tooltip tooltip-bottom">

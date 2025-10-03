@@ -1,10 +1,13 @@
 import {createCollection} from '@tanstack/react-db'
 import {electricCollectionOptions} from "@tanstack/electric-db-collection";
 
+// const API_URL = "http://localhost:5000";
+const API_URL = window.location.href.split('#')[0];
+
 export const snippetsCollection = createCollection(
     electricCollectionOptions({
         shapeOptions: {
-            url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
+            url: `${API_URL}api/electric/v1/shape`,
             params: {
                 table: 'snippets'
             }
@@ -35,7 +38,7 @@ export const snippetsCollection = createCollection(
 export const latestRevisionsCollection = createCollection(
     electricCollectionOptions({
         shapeOptions: {
-            url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
+            url: `${API_URL}api/electric/v1/shape`,
             params: {
                 table: 'revisions',
                 columns: ['id', 'snippet_id', 'author', 'content_type', 'version', 'file', 'created']
@@ -60,7 +63,7 @@ export function revisionCollectionOne(snippet_id) {
     return createCollection(
         electricCollectionOptions({
             shapeOptions: {
-                url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
+                url: `${API_URL}api/electric/v1/shape`,
                 params: params
             },
             getKey: (item) => item.id,
@@ -77,7 +80,7 @@ export function revisionCollectionOne(snippet_id) {
 export const revisionsCollection = createCollection(
     electricCollectionOptions({
         shapeOptions: {
-            url: `${window.location.href.split('#')[0]}api/electric/v1/shape`,
+            url: `${API_URL}api/electric/v1/shape`,
             params: {
                 table: 'revisions',
                 columns: ['id', 'snippet_id', 'author', 'content', 'content_type', 'version', 'file', 'created']
@@ -94,17 +97,16 @@ export const revisionsCollection = createCollection(
 );
 
 
-const BASE_URL = "http://localhost:5000";
 
 function createSnippet(snippet) {
-    return fetch(`${BASE_URL}/snippets/`, {
+    return fetch(`${API_URL}api/v1/snippets/`, {
         method: "POST",
         body: JSON.stringify(snippet)
     }).then(res => res.json())
 }
 
 function createRevision(snippet_id, revision) {
-    return fetch(`${BASE_URL}/snippets/${snippet_id}/revisions/`, {
+    return fetch(`${API_URL}api/v1/snippets/${snippet_id}/revisions/`, {
         method: "POST",
         body: JSON.stringify(revision)
     }).then(res => res.json())
@@ -112,14 +114,14 @@ function createRevision(snippet_id, revision) {
 
 
 function updateSnippet(snippet) {
-    return fetch(`${BASE_URL}/snippets/${snippet.id}`, {
+    return fetch(`${API_URL}api/v1/snippets/${snippet.id}`, {
         method: "PUT",
         body: JSON.stringify(snippet)
     }).then(res => res.json())
 }
 
 function deleteSnippet(snippet) {
-    return fetch(`${BASE_URL}/snippets/${snippet.id}`, {
+    return fetch(`${API_URL}api/v1/snippets/${snippet.id}`, {
         method: "DELETE"
     }).then(res => res.json())
 }

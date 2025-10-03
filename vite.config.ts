@@ -11,6 +11,11 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api\/electric/, ''),
             },
+            '/api/v1': {
+                target: 'http://localhost:5000',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api\/v1/, ''),
+            },
             '/api/yjs': {
                 target: 'ws://localhost:1234',
                 ws: true,

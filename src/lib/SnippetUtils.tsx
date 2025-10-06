@@ -1,4 +1,4 @@
-import {useMemo} from "react";
+import {useMemo, useRef} from "react";
 
 function SnippetCloseButton({snippet, isOpen, closeSnippet}) {
     if (isOpen) {
@@ -33,13 +33,24 @@ function SnippetEditButton({snippet, editing, openSnippet}) {
 }
 
 function SnippetListItem({snippet, isOpen, openSnippet, closeSnippet}) {
+    const timer = useRef(null)
+
+    const onClickHandler = event => {
+        event.preventDefault();
+        clearTimeout(timer.current);
+
+        if (event.detail === 1) {
+            timer.current = setTimeout(() => openSnippet(snippet), 200)
+        } else if (event.detail === 2) {
+            console.log("double click")
+            openSnippet(snippet)
+        }
+    }
+
     return (<>
         <SnippetCloseButton snippet={snippet} isOpen={isOpen} closeSnippet={closeSnippet}/>
         <a className="text-blue-500" href={`#${snippet.title}`}
-           onClick={(e) => {
-               e.preventDefault();
-               openSnippet(snippet);
-           }}>
+           onClick={onClickHandler}>
             {snippet.title || "<untitled>"}
         </a>
         <SnippetEditButton snippet={snippet} editing={snippet.draft_created} openSnippet={openSnippet} />

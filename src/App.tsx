@@ -13,6 +13,7 @@ import {useAutoAnimate} from "@formkit/auto-animate/react";
 import {DraftList} from "./lib/DraftList.tsx";
 import {Sidebar} from "./lib/Sidebar.tsx";
 import {SnippetItem} from "./lib/SnippetItem.tsx";
+import {createBreakpoint} from "react-use";
 
 enum Tabs {
     Open,
@@ -20,6 +21,8 @@ enum Tabs {
     Sidebar,
     Map
 }
+
+const useBreakpoint = createBreakpoint({ xl: 1280, l: 768 });
 
 function App() {
     const {data: snippets} = useLiveQuery((q) => {
@@ -257,6 +260,9 @@ function App() {
     const [parent, enableAnimations] = useAutoAnimate()
 
     const [selectedTab, setSelectedTab] = useState(Tabs.Recent)
+
+    const breakpoint = useBreakpoint();
+    const twoColumns = (breakpoint === 'xl');
 
     return (<>
         <div role="main" className={clsx({

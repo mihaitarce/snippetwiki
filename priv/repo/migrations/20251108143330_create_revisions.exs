@@ -1,4 +1,4 @@
-defmodule Snwiki.Repo.Migrations.CreateRevisions do
+defmodule Snippetwiki.Repo.Migrations.CreateRevisions do
   use Ecto.Migration
 
   def change do

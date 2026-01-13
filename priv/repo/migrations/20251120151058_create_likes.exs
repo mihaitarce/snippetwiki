@@ -1,4 +1,4 @@
-defmodule Snwiki.Repo.Migrations.CreateLikes do
+defmodule Snippetwiki.Repo.Migrations.CreateLikes do
   use Ecto.Migration
 
   def change do

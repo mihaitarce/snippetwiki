@@ -1,4 +1,4 @@
-defmodule Snwiki.Repo.Migrations.CreateUsers do
+defmodule Snippetwiki.Repo.Migrations.CreateUsers do
   use Ecto.Migration
 
   def change do

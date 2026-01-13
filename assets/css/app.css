@@ -26,7 +26,7 @@
   default: false;
   prefersdark: true;
   color-scheme: "dark";
-  --color-base-100: oklch(30.33% 0.016 252.42);
+  /* --color-base-100: oklch(30.33% 0.016 252.42);
   --color-base-200: oklch(25.26% 0.014 253.1);
   --color-base-300: oklch(20.15% 0.012 254.09);
   --color-base-content: oklch(97.807% 0.029 256.847);
@@ -53,7 +53,7 @@
   --size-field: 0.21875rem;
   --border: 1.5px;
   --depth: 1;
-  --noise: 0;
+  --noise: 0; */
 }
 
 @plugin "../vendor/daisyui-theme" {
@@ -61,7 +61,7 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: oklch(98% 0 0);
+  /* --color-base-100: oklch(98% 0 0);
   --color-base-200: oklch(96% 0.001 286.375);
   --color-base-300: oklch(92% 0.004 286.32);
   --color-base-content: oklch(21% 0.006 285.885);
@@ -88,7 +88,7 @@
   --size-field: 0.21875rem;
   --border: 1.5px;
   --depth: 1;
-  --noise: 0;
+  --noise: 0; */
 }
 
 /* Add variants based on LiveView classes */

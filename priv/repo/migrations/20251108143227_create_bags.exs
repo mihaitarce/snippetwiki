@@ -1,4 +1,4 @@
-defmodule Snwiki.Repo.Migrations.CreateBags do
+defmodule Snippetwiki.Repo.Migrations.CreateBags do
   use Ecto.Migration
 
   def change do

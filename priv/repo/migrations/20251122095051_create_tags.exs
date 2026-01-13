@@ -1,4 +1,4 @@
-defmodule Snwiki.Repo.Migrations.CreateTags do
+defmodule Snippetwiki.Repo.Migrations.CreateTags do
   use Ecto.Migration
 
   def change do

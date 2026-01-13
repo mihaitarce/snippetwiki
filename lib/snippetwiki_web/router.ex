@@ -20,8 +20,6 @@ defmodule SnippetwikiWeb.Router do
     # get "/", PageController, :home
 
     live "/", SnippetLive.Index, :index
-    # live "/snippets/new", SnippetLive.Form, :new
-    # live "/snippets/:id/edit", SnippetLive.Form, :edit
   end
 
   # Other scopes may use custom stacks.

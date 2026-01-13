@@ -6,15 +6,12 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div id={"card" <> Integer.to_string(@snippet.id)} class="card bg-base-100">
+    <div class="card bg-base-100">
       <div class="card-body">
         <%= if @editing do %>
-          <.form for={@form} phx-submit="save_changes" phx-target={@myself}>
+          <.form for={@form} phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
             <div class="flex justify-between items-center mb-2">
-              <%!-- <.svelte name="InputField" props={%{ --%>
-                  <%!-- room: @snippet.id --%>
-                <%!-- }} /> --%>
-              <.input type="text" field={@form[:title]} class="hidden" />
+              <.input type="text" field={@form[:title]} class="input input-lg" />
 
               <div>
                 <.button type="button"
@@ -23,22 +20,23 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
                   data-confirm="Are you sure?">
                   <.icon name="hero-trash" />
                 </.button>
+
                 <.button type="submit">
                   <.icon name="hero-check" />
                 </.button>
+                <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
+
                 <.button type="button" phx-click="discard_changes" phx-target={@myself}>
                   <.icon name="hero-x-mark" />
                 </.button>
+                <%!-- <.button navigate={return_path(@return_to, @snippet)}>Cancel</.button> --%>
               </div>
             </div>
 
-            <%!-- <.svelte name="Editor" props={%{ --%>
-                  <%!-- room: @snippet.id, --%>
-                <%!-- }} /> --%>
-            <.input type="textarea" field={@form[:content]} class="hidden" />
+            <.input type="textarea" field={@form[:content]} class="textarea textarea-lg w-full" rows="10" />
           </.form>
         <% else %>
-          <div class="flex justify-between items-center mb-2">
+          <div class="flex justify-between items-center mb-2 h-16">
             <div class="text-3xl">{@snippet.title}</div>
             <div>
               <.button>
@@ -47,6 +45,9 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
               <.button phx-click="edit_snippet" phx-target={@myself}>
                 <.icon name="hero-pencil" />
               </.button>
+              <div :if={@snippet.has_draft} class="badge badge-warning me-2">
+              <.icon  name="hero-exclamation-triangle" class="size-[1.25em]" />
+              </div>
               <.button phx-click="close_snippet" phx-value-id={@snippet.id}>
                 <.icon name="hero-x-mark" />
               </.button>
@@ -75,50 +76,47 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, :editing, false)}
-  end
-
-  @impl true
-  def update(assigns, socket) do
-    snippet = assigns.snippet
     {:ok,
      socket
-     |> assign(:snippet, snippet)
-     |> assign(:form, to_form(Snippets.change_snippet(snippet)))
-     |> assign(:latest_revision, Snippets.get_latest_revision!(snippet))}
+     |> assign(:editing, false)}
   end
 
   @impl true
   def handle_event("edit_snippet", _, socket) do
-    snippet = socket.assigns.snippet
-    case snippet.has_draft do
-      true ->
-        {:ok, snippet} = Snippets.update_snippet(snippet, %{has_draft: true})
-        {:noreply,
-          socket
-          |> assign(:editing, true)
-          |> assign(:snippet, snippet)}
-      false ->
-        {:noreply,
-          socket
-          |> assign(:editing, true)}
-    end
+    {:ok, snippet} = Snippets.update_snippet(socket.assigns.snippet, %{"has_draft" => true})
+
+    {:noreply,
+      socket
+      |> assign(:editing, true)
+      |> assign(:snippet, snippet)
+      |> assign(:latest_revision, Snippets.get_latest_revision!(snippet))
+      |> assign(:form, to_form(Snippets.change_snippet(snippet)))}
+  end
+
+  @impl true
+  def handle_event("validate", %{"snippet" => snippet_params}, socket) do
+    changeset = Snippets.change_snippet(socket.assigns.snippet, snippet_params)
+    {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   @impl true
   def handle_event("save_changes", %{"snippet" => %{"title" => title, "content" => content}}, socket) do
-    IO.inspect("Saving #{title}: #{content}")
-    snippet = socket.assigns.snippet
-    {:ok, snippet} = Snippets.update_snippet(snippet, %{"title" => title, "has_draft" => false})
-    {:noreply,
-     socket
-     |> assign(:editing, false)
-     |> assign(:snippet, snippet)
-    }
+    case Snippets.update_snippet(socket.assigns.snippet, %{"title" => title, "has_draft" => false}) do
+      {:ok, snippet} ->
+        {:noreply,
+        socket
+        |> assign(:editing, false)
+        |> assign(:snippet, snippet)
+        |> put_flash(:info, "Snippet updated successfully")}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, form: to_form(changeset))}
+    end
   end
 
   @impl true
   def handle_event("discard_changes", _, socket) do
+    {:ok, _} = Snippets.update_snippet(socket.assigns.snippet, %{"has_draft" => false})
     {:noreply, assign(socket, :editing, false)}
   end
 

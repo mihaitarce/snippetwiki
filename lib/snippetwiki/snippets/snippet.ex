@@ -5,7 +5,7 @@ defmodule Snippetwiki.Snippets.Snippet do
   schema "snippets" do
     field :title, :string
     field :has_draft, :boolean
-    field :views, :integer
+    field :views, :integer, default: 0
     belongs_to :bag, Snippetwiki.Snippets.Bag
     has_many :revisions, Snippetwiki.Snippets.Revision
     has_many :likes, Snippetwiki.Snippets.Like

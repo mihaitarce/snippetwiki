@@ -240,7 +240,7 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
   def handle_event("new_snippet", _, socket) do
     title = find_available_title("New snippet", 1, list_snippets())
 
-    {:ok, snippet} = Snippets.create_snippet(%{title: title, views: 0})
+    {:ok, snippet} = Snippets.create_snippet(%{title: title})
 
     {:noreply,
      socket

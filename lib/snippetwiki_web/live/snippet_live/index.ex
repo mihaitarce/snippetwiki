@@ -91,7 +91,7 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
         <div class="flex flex-col gap-8">
           <%= if length(@open) > 0 do %>
             <.live_component
-              :for={snippet <- Enum.filter(@snippets, fn snippet -> Enum.find(@open, fn id -> id === snippet.id end) end)}
+              :for={snippet <- Enum.map(@open, fn snippet_id -> Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) end)}
               module={SnippetwikiWeb.SnippetLive.Show}
               id={snippet.id}
               snippet={snippet}
@@ -138,7 +138,7 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
                         </div>
                       </div>
 
-                      <div>
+                      <div class="mt-4">
                         <.button phx-click="close_snippets">
                           <.icon name="hero-x-mark" /> Close all
                         </.button>

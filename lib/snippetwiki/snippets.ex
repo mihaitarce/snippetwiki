@@ -7,6 +7,7 @@ defmodule Snippetwiki.Snippets do
   alias Snippetwiki.Repo
 
   alias Snippetwiki.Snippets.Snippet
+  alias Snippetwiki.Snippets.Revision
   alias Snippetwiki.Snippets.Like
   alias Snippetwiki.Snippets.User
 
@@ -20,9 +21,13 @@ defmodule Snippetwiki.Snippets do
 
   """
   def list_snippets do
-    Repo.all from s in Snippet,
-              order_by: [desc: :updated_at, desc: :id],
-              preload: [:likes]
+    likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
+
+    query = from s in Snippet, as: :snippet,
+      select_merge: %{like_count: subquery(likes_count)},
+      order_by: [desc: :updated_at, desc: :id]
+
+    Repo.all(query)
   end
 
   @doc """
@@ -126,6 +131,14 @@ defmodule Snippetwiki.Snippets do
     broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
   end
 
+  def create_new_revision(snippet, attrs, content) do
+    # Create new revision
+    {:ok, _} = Repo.insert(%Revision{snippet: snippet, content: content})
+
+    # Update snippet
+    update_snippet(snippet, attrs)
+  end
+
   def increment_views(id) do
       Snippet
       |> where(id: ^id)
@@ -142,14 +155,16 @@ defmodule Snippetwiki.Snippets do
     broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
   end
 
-  def with_latest_revision(snippet) do
-    query = from s in Snippet,
+  def with_content(snippet) do
+    likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
+
+    query = from s in Snippet, as: :snippet,
       where: s.id == ^snippet.id,
       left_join: r in assoc(s, :revisions),
+      select_merge: %{like_count: subquery(likes_count)},
+      select_merge: %{content: r.content},
       order_by: [desc: r.version],
-      limit: 1,
-      select_merge: %{latest_revision: r.content},
-      preload: [:likes]
+      limit: 1
 
     Repo.one(query)
   end

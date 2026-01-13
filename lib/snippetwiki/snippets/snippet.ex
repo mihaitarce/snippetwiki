@@ -10,7 +10,8 @@ defmodule Snippetwiki.Snippets.Snippet do
     has_many :revisions, Snippetwiki.Snippets.Revision
     has_many :likes, Snippetwiki.Snippets.Like
 
-    field :latest_revision, :string, virtual: true
+    field :content, :string, virtual: true
+    field :like_count, :integer, virtual: true
 
     timestamps(type: :utc_datetime)
   end
@@ -18,7 +19,7 @@ defmodule Snippetwiki.Snippets.Snippet do
   @doc false
   def changeset(snippet, attrs) do
     snippet
-    |> cast(attrs, [:title, :has_draft])
+    |> cast(attrs, [:title, :has_draft, :content])
     |> validate_required([:title])
   end
 end

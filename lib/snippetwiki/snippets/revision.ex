@@ -10,7 +10,7 @@ defmodule Snippetwiki.Snippets.Revision do
       join_through: Snippetwiki.Snippets.RevisionTag
     field :version, :integer
     field :content, :string
-    field :content_type, :string
+    field :content_type, :string, default: "application/json"
 
     timestamps(type: :utc_datetime)
   end

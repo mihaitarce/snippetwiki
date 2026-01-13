@@ -33,7 +33,7 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
               </div>
             </div>
 
-            <.input type="textarea" field={@form[:latest_revision]} class="textarea textarea-lg w-full" rows="10" />
+            <.input type="textarea" field={@form[:content]} class="textarea textarea-lg w-full" rows="10" />
           </.form>
         <% else %>
           <div class="flex justify-between items-center mb-2 h-16">
@@ -55,8 +55,8 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
           </div>
 
           <article class="prose">
-            <%= if @snippet.latest_revision do %>
-                {@snippet.latest_revision}
+            <%= if @snippet.content do %>
+                {@snippet.content}
             <% else %>
                 <div class="flex items-center justify-center p-12">
                   <p class="text-center text-base-content/50">Empty snippet</p>
@@ -69,7 +69,7 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
                   {@snippet.views} views
               </div>
               <button class="btn" phx-click="like_snippet" phx-target={@myself}>
-                  {length(@snippet.likes)} likes
+                  {@snippet.like_count} likes
               </button>
           </div>
         <% end %>
@@ -111,12 +111,11 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
 
   @impl true
   def handle_event("save_changes", %{"snippet" => %{"title" => title, "content" => content}}, socket) do
-    case Snippets.update_snippet(socket.assigns.snippet, %{"title" => title, "has_draft" => false}) do
-      {:ok, snippet} ->
+    case Snippets.create_new_revision(socket.assigns.snippet, %{"title" => title, "has_draft" => false}, content) do
+      {:ok, _} ->
         {:noreply,
         socket
         |> assign(:editing, false)
-        |> assign(:snippet, snippet)
         |> put_flash(:info, "Snippet updated successfully")}
 
       {:error, %Ecto.Changeset{} = changeset} ->

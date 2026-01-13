@@ -91,10 +91,10 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
         <div class="flex flex-col gap-8">
           <%= if length(@open) > 0 do %>
             <.live_component
-              :for={snippet <- Enum.map(@open, fn snippet_id -> Snippets.with_latest_revision( Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) ) end)}
+              :for={snippet <- Enum.map(@open, fn snippet_id -> Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) end)}
               module={SnippetwikiWeb.SnippetLive.Show}
               id={snippet.id}
-              snippet={snippet} />
+              snippet={Snippets.with_content(snippet)} />
           <% else %>
                       <div class="card p-6 select-none">
                           <div class="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">

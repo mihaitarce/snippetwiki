@@ -33,9 +33,7 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
               </div>
             </div>
 
-            <.input type="textarea" field={@form[:content]} class="textarea textarea-lg w-full" rows="10" />
-
-            <textarea :if={@latest_revision} class="textarea textarea-lg w-full" rows="10" >{@latest_revision.content}</textarea>
+            <.input type="textarea" field={@form[:latest_revision]} class="textarea textarea-lg w-full" rows="10" />
           </.form>
         <% else %>
           <div class="flex justify-between items-center mb-2 h-16">
@@ -57,8 +55,8 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
           </div>
 
           <article class="prose">
-            <%= if @latest_revision do %>
-                {@latest_revision.content}
+            <%= if @snippet.latest_revision do %>
+                {@snippet.latest_revision}
             <% else %>
                 <div class="flex items-center justify-center p-12">
                   <p class="text-center text-base-content/50">Empty snippet</p>

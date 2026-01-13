@@ -10,6 +10,8 @@ defmodule Snippetwiki.Snippets.Snippet do
     has_many :revisions, Snippetwiki.Snippets.Revision
     has_many :likes, Snippetwiki.Snippets.Like
 
+    field :latest_revision, :string, virtual: true
+
     timestamps(type: :utc_datetime)
   end
 

@@ -142,14 +142,14 @@ defmodule Snippetwiki.Snippets do
     broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
   end
 
-
-  def get_latest_revision!(snippet) do
+  def with_latest_revision(snippet) do
     query = from s in Snippet,
-      left_join: r in assoc(s, :revisions),
       where: s.id == ^snippet.id,
-      select: r,
+      left_join: r in assoc(s, :revisions),
       order_by: [desc: r.version],
-      limit: 1
+      limit: 1,
+      select_merge: %{latest_revision: r.content},
+      preload: [:likes]
 
     Repo.one(query)
   end
@@ -165,5 +165,9 @@ defmodule Snippetwiki.Snippets do
     Phoenix.PubSub.broadcast(Snippetwiki.PubSub, @topic, {__MODULE__, event, result})
 
     {:ok, result}
+  end
+
+  defp broadcast_change({:error, message}, _) do
+    {:error, message}
   end
 end

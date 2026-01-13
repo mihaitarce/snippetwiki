@@ -33,6 +33,7 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
               </div>
             </div>
 
+            <.svelte name="Example" props={%{number: 2}} socket={@socket} />
             <.input type="textarea" field={@form[:content]} class="textarea textarea-lg w-full" rows="10" />
           </.form>
         <% else %>
@@ -56,7 +57,7 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
 
           <article class="prose">
             <%= if @snippet.content do %>
-                {@snippet.content}
+              <pre>{@snippet.content}</pre>
             <% else %>
                 <div class="flex items-center justify-center p-12">
                   <p class="text-center text-base-content/50">Empty snippet</p>

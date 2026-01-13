@@ -89,8 +89,6 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
 
 
         <div class="flex flex-col gap-8">
-          <.svelte name="Example" props={%{number: 2}} socket={@socket} />
-
           <%= if length(@open) > 0 do %>
             <.live_component
               :for={snippet <- Enum.map(@open, fn snippet_id -> Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) end)}

@@ -87,6 +87,8 @@ defmodule SnippetwikiWeb do
       # Core UI components
       import SnippetwikiWeb.CoreComponents
 
+      import LiveSvelte
+
       # Common modules used in templates
       alias Phoenix.LiveView.JS
       alias SnippetwikiWeb.Layouts

@@ -25,7 +25,7 @@ config :snippetwiki, SnippetwikiWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "KolmqkuRjzQ+SZuodJCe32lu45Tbj0ZL5k4LJeqW+RwFrF0yPUY3ksqCMEKA54er",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:snippetwiki, ~w(--sourcemap=inline --watch)]},
+    node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)],
     tailwind: {Tailwind, :install_and_run, [:snippetwiki, ~w(--watch)]}
   ]
 

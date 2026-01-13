@@ -5,6 +5,7 @@
 @source "../css";
 @source "../js";
 @source "../../lib/snippetwiki_web";
+@source "../svelte";
 
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */

@@ -49,7 +49,7 @@ defmodule Snippetwiki.MixProject do
       {:phoenix_live_view, "~> 1.1.0"},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
+      # {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
@@ -65,7 +65,8 @@ defmodule Snippetwiki.MixProject do
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:live_svelte, "~> 0.16.0"}
     ]
   end
 
@@ -81,17 +82,22 @@ defmodule Snippetwiki.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.setup": [
+        "tailwind.install --if-missing",
+        # "esbuild.install --if-missing"
+       ],
       "assets.build": [
-        # "cmd --cd assets npm ci",
+        "cmd --cd assets npm ci",
         "compile",
         "tailwind snippetwiki",
-        "esbuild snippetwiki"
+        # "esbuild snippetwiki"
+        "cmd --cd assets node build.js",
       ],
       "assets.deploy": [
-        # "cmd --cd assets npm ci",
+        "cmd --cd assets npm ci",
         "tailwind snippetwiki --minify",
-        "esbuild snippetwiki --minify",
+        # "esbuild snippetwiki --minify",
+        "cmd --cd assets node build.js --deploy",
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]

@@ -7,6 +7,8 @@ defmodule Snippetwiki.Snippets do
   alias Snippetwiki.Repo
 
   alias Snippetwiki.Snippets.Snippet
+  alias Snippetwiki.Snippets.Like
+  alias Snippetwiki.Snippets.User
 
   @doc """
   Returns the list of snippets.
@@ -108,6 +110,21 @@ defmodule Snippetwiki.Snippets do
     Snippet.changeset(snippet, attrs)
   end
 
+  def create_draft(%Snippet{} = snippet) do
+    Snippet
+    |> where(id: ^snippet.id)
+    |> Repo.update_all(set: [has_draft: true])
+
+    broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
+  end
+
+  def discard_draft(%Snippet{} = snippet) do
+    Snippet
+    |> where(id: ^snippet.id)
+    |> Repo.update_all(set: [has_draft: false])
+
+    broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
+  end
 
   def increment_views(id) do
       Snippet
@@ -116,6 +133,15 @@ defmodule Snippetwiki.Snippets do
 
       broadcast_change({:ok, %{id: id}}, [:snippet, :updated])
   end
+
+
+  def like_snippet(snippet, user) do
+    %Like{ snippet: snippet, user: %User{ username: user } }
+    |> Repo.insert
+
+    broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
+  end
+
 
   def get_latest_revision!(snippet) do
     query = from s in Snippet,

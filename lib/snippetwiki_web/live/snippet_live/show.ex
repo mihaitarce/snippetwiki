@@ -14,14 +14,14 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
               <.input type="text" field={@form[:title]} class="input input-lg" />
 
               <div>
-                <.button type="button"
+                <.button type="button" variant="error"
                   phx-click="delete"
                   phx-target={@myself}
                   data-confirm="Are you sure?">
                   <.icon name="hero-trash" />
                 </.button>
 
-                <.button type="submit">
+                <.button type="submit" variant="success">
                   <.icon name="hero-check" />
                 </.button>
                 <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
@@ -34,6 +34,8 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
             </div>
 
             <.input type="textarea" field={@form[:content]} class="textarea textarea-lg w-full" rows="10" />
+
+            <textarea :if={@latest_revision} class="textarea textarea-lg w-full" rows="10" >{@latest_revision.content}</textarea>
           </.form>
         <% else %>
           <div class="flex justify-between items-center mb-2 h-16">
@@ -64,10 +66,14 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
             <% end %>
           </article>
 
-          <%!-- <.svelte name="SnippetStats" props={%{ --%>
-              <%!-- views: @snippet.views, --%>
-              <%!-- likes: length(@snippet.likes) --%>
-            <%!-- }} /> --%>
+          <div class="flex items-center gap-6">
+              <div>
+                  {@snippet.views} views
+              </div>
+              <button class="btn" phx-click="like_snippet" phx-target={@myself}>
+                  {length(@snippet.likes)} likes
+              </button>
+          </div>
         <% end %>
       </div>
     </div>
@@ -82,14 +88,20 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
   end
 
   @impl true
+  def handle_event("like_snippet", _, socket) do
+    {:ok, _} = Snippets.like_snippet(socket.assigns.snippet, "me")
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("edit_snippet", _, socket) do
-    {:ok, snippet} = Snippets.update_snippet(socket.assigns.snippet, %{"has_draft" => true})
+    snippet = socket.assigns.snippet
+    {:ok, _} = Snippets.create_draft(snippet)
 
     {:noreply,
       socket
       |> assign(:editing, true)
-      |> assign(:snippet, snippet)
-      |> assign(:latest_revision, Snippets.get_latest_revision!(snippet))
       |> assign(:form, to_form(Snippets.change_snippet(snippet)))}
   end
 
@@ -116,7 +128,7 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
 
   @impl true
   def handle_event("discard_changes", _, socket) do
-    {:ok, _} = Snippets.update_snippet(socket.assigns.snippet, %{"has_draft" => false})
+    {:ok, _} = Snippets.discard_draft(socket.assigns.snippet)
     {:noreply, assign(socket, :editing, false)}
   end
 

@@ -1,7 +1,7 @@
 defmodule SnippetwikiWeb.UploadComponent do
   use Phoenix.Component
 
-  alias FileSize
+  import SnippetwikiWeb.CoreComponents
 
   def upload(assigns) do
     ~H"""
@@ -11,6 +11,7 @@ defmodule SnippetwikiWeb.UploadComponent do
                     <h1 class="font-serif text-3xl">Import</h1>
                     <div class="flex gap-3">
                         <button phx="save_upload"
+                            form="upload"
                             class="btn btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                 stroke="currentColor" class="size-6">
@@ -40,8 +41,8 @@ defmodule SnippetwikiWeb.UploadComponent do
 
                 <%!-- render each document entry --%>
                 <article :for={entry <- @uploads.documents.entries} class="flex items-center gap-2 overflow-x-scroll">
-                    <figure>
-                        <.live_img_preview entry={entry} class="max-h-32" />
+                    <figure class="w-48">
+                        <.live_img_preview entry={entry} class="max-h-48 mx-auto" />
 
                         <%!-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={0.75}
                             stroke="currentColor" class="flex-none size-12 text-base-content/30">
@@ -50,11 +51,16 @@ defmodule SnippetwikiWeb.UploadComponent do
                         </svg> --%>
                     </figure>
 
-                    <div>
-                        {entry.client_name}
-                        <label class="input mb-1">
+                    <div class="grow">
+                        <div class="flex justify-between gap-2">
+                            <div class="max-w-64    overflow-x-clip text-ellipsis">{entry.client_name}</div>
+                            <div class="text-base-content/50 text-sm text-nowrap">
+                                {entry.client_size |> FileSize.new |> FileSize.convert(:mb) |> FileSize.format([precision: 2])}
+                            </div>
+                        </div>
+                        <label class="input w-full mb-1">
                             <%!-- "input-warning": fileNameExists(file.name)} --%>
-                            <input type="text" placeholder="Enter file name" />
+                            <input type="text" class="w-full" placeholder="Enter file name" />
                             <%!-- {fileNameExists(file.name) && --%>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     strokeWidth={1.5} stroke="currentColor"
@@ -63,17 +69,17 @@ defmodule SnippetwikiWeb.UploadComponent do
                                             d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
                                 </svg>
                         </label>
-                    </div>
 
-                    <div class="text-base-content/50 text-sm">
-                        {entry.client_size |> FileSize.new |> FileSize.convert(:mb) |> FileSize.format([precision: 2])}
+                        <%!-- entry.progress will update automatically for in-flight entries --%>
+                        <div>
+                            <progress value={entry.progress} max="100"> {entry.progress}% </progress>
+                        </div>
                     </div>
-
-                    <%!-- entry.progress will update automatically for in-flight entries --%>
-                    <progress value={entry.progress} max="100"> {entry.progress}% </progress>
 
                     <%!-- a regular click event whose handler will invoke Phoenix.LiveView.cancel_upload/3 --%>
-                    <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} aria-label="cancel">&times;</button>
+                    <.button phx-click="cancel_upload" phx-value-ref={entry.ref} aria-label="cancel" variant="error">
+                        <.icon name="hero-trash" class="h-[1.5em]" />
+                    </.button>
 
                     <%!-- Phoenix.Component.upload_errors/2 returns a list of error atoms --%>
                     <p :for={err <- upload_errors(@uploads.documents, entry)} class="alert alert-danger">{error_to_string(err)}</p>

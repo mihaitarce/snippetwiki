@@ -40,7 +40,7 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
                                   </a>
                               </li>
                               <li>
-                                <form phx-change="validate_upload" phx-submit="save_upload">
+                                <form id="upload" phx-change="validate_upload" phx-submit="save_upload">
                                   <label class="flex gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                         stroke="currentColor" class="size-5 inline">
@@ -284,12 +284,14 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
   @impl Phoenix.LiveView
   def handle_event("save_upload", _params, socket) do
     uploaded_files =
-      consume_uploaded_entries(socket, :documents, fn %{path: path}, _entry ->
+      consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
         IO.inspect(path)
-        # dest = Path.join(Application.app_dir(:my_app, "priv/static/uploads"), Path.basename(path))
-        # You will need to create `priv/static/uploads` for `File.cp!/2` to work.
-        # File.cp!(path, dest)
-        # {:ok, ~p"/uploads/#{Path.basename(dest)}"}
+        IO.inspect(entry)
+        # Do something with Path.basename(path)...
+        Snippets.create_snippet(%{ title: "File:" <> entry.client_name })
+        # TODO create revision with file content
+
+        {:ok, path}
       end)
 
     {:noreply, update(socket, :uploaded_files, &(&1 ++ uploaded_files))}

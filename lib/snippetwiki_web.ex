@@ -86,6 +86,7 @@ defmodule SnippetwikiWeb do
       import Phoenix.HTML
       # Core UI components
       import SnippetwikiWeb.CoreComponents
+      import SnippetwikiWeb.UploadComponent
 
       import LiveSvelte
 

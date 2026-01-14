@@ -43,12 +43,15 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
               <.button>
                 <.icon name="hero-chat-bubble-left-right" />
               </.button>
-              <.button phx-click="edit_snippet" phx-target={@myself}>
-                <.icon name="hero-pencil" />
-              </.button>
-              <div :if={@snippet.has_draft} class="badge badge-warning me-2">
-              <.icon  name="hero-exclamation-triangle" class="size-[1.25em]" />
-              </div>
+              <%= if @snippet.has_draft do %>
+                <.button phx-click="edit_snippet" phx-target={@myself} variant="warning">
+                  <.icon name="hero-pencil" />
+                </.button>
+              <% else %>
+                <.button phx-click="edit_snippet" phx-target={@myself}>
+                  <.icon name="hero-pencil" />
+                </.button>
+              <% end %>
               <.button phx-click="close_snippet" phx-value-id={@snippet.id}>
                 <.icon name="hero-x-mark" />
               </.button>

@@ -66,7 +66,8 @@ defmodule Snippetwiki.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
-      {:live_svelte, "~> 0.16.0"}
+      {:live_svelte, "~> 0.16.0"},
+      {:file_size, "~> 3.0.1"}
     ]
   end
 

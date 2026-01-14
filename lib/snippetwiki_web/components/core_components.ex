@@ -90,13 +90,14 @@ defmodule SnippetwikiWeb.CoreComponents do
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
   attr :class, :any
-  attr :variant, :string, values: ~w(primary success error)
+  attr :variant, :string, values: ~w(primary success warning error)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
     variants = %{
       "primary" => "btn-primary",
       "success" => "btn-success",
+      "warning" => "btn-warning",
       "error" => "btn-error btn-soft",
       nil => ""
     }

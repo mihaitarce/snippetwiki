@@ -40,15 +40,19 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
                                   </a>
                               </li>
                               <li>
-                                  <label aria-label="Upload file">
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                                          stroke="currentColor" class="size-5">
-                                          <path strokeLinecap="round" strokeLinejoin="round"
-                                                d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/>
-                                      </svg>
-                                      Upload file
-                                      <input class="hidden" type="file" />
+                                <form phx-change="validate_upload" phx-submit="save_upload">
+                                  <label class="flex gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                        stroke="currentColor" class="size-5 inline">
+                                        <path strokeLinecap="round" strokeLinejoin="round"
+                                              d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/>
+                                    </svg>
+                                    <span>Upload file</span>
+                                    <span class="hidden">
+                                      <.live_file_input upload={@uploads.documents} />
+                                    </span>
                                   </label>
+                                </form>
                               </li>
                           </ul>
                       </div>
@@ -77,34 +81,28 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
               </div>
               <div class="flex-1 flex flex-col overflow-y-scroll overscroll-none xl:w-[calc(65ch+5rem)]">
                   <div class="flex flex-col gap-4 p-4">
-                      <%!-- <Import files={importFiles} snippets={snippets} cancelImport={() => setImportFiles([])}/>} --%>
+                    <%= if length(@uploads.documents.entries) > 0 do %>
+                      <section phx-drop-target={@uploads.documents.ref}>
+                        <.upload uploads={@uploads} />
+                      </section>
+                    <% end %>
 
-                      <div id="snippet.title" class="card bg-base-100">
-                          <%!-- <SnippetItem snippetMetadata={snippet} editing={editing} startEditing={startEditing}
-                                        updateTitle={updateTitle}
-                                        discardChanges={discardChanges} saveChanges={saveChanges}
-                                        deleteSnippet={deleteSnippet}
-                                        closeSnippet={closeSnippet}/> --%>
-                      </div>
+                    <%= if length(@open) > 0 do %>
+                      <.live_component
+                        :for={snippet <- Enum.filter(Enum.map(@open, fn snippet_id -> Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) end), fn s -> s != nil end)}
+                        module={SnippetwikiWeb.SnippetLive.Show}
+                        id={snippet.id}
+                        snippet={Snippets.with_content(snippet)} />
+                    <% end %>
 
-
-        <div class="flex flex-col gap-8">
-          <%= if length(@open) > 0 do %>
-            <.live_component
-              :for={snippet <- Enum.map(@open, fn snippet_id -> Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) end)}
-              module={SnippetwikiWeb.SnippetLive.Show}
-              id={snippet.id}
-              snippet={Snippets.with_content(snippet)} />
-          <% else %>
+                    <%= if length(@uploads.documents.entries) == 0 and length(@open) == 0 do %>
                       <div class="card p-6 select-none">
                           <div class="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
                               <img src={~p(/images/logo.svg)} alt="" class="h-[25vh] grayscale opacity-10"/>
                               <div class="text-base-content/30">No open snippets</div>
                           </div>
                       </div>
-          <% end %>
-        </div>
-
+                    <% end %>
                   </div>
               </div>
           </div>
@@ -232,7 +230,9 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
                editing: snippets
                         |> Enum.filter(fn s -> s.has_draft end)
                         |> Enum.map(fn s -> s.id end),
-               open: [])}
+               open: [],
+               uploaded_files: [])
+     |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
   end
 
   @impl true
@@ -275,6 +275,37 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
     |> assign(:open, [])}
   end
 
+
+  @impl Phoenix.LiveView
+  def handle_event("validate_upload", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("save_upload", _params, socket) do
+    uploaded_files =
+      consume_uploaded_entries(socket, :documents, fn %{path: path}, _entry ->
+        IO.inspect(path)
+        # dest = Path.join(Application.app_dir(:my_app, "priv/static/uploads"), Path.basename(path))
+        # You will need to create `priv/static/uploads` for `File.cp!/2` to work.
+        # File.cp!(path, dest)
+        # {:ok, ~p"/uploads/#{Path.basename(dest)}"}
+      end)
+
+    {:noreply, update(socket, :uploaded_files, &(&1 ++ uploaded_files))}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :documents, ref)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_all_uploads", _, socket) do
+    {:noreply,
+      Enum.reduce(socket.assigns.uploads.documents.entries, socket,
+                  fn entry, acc -> cancel_upload(acc, :documents, entry.ref) end)}
+  end
 
   @impl true
   def handle_info({Snippets, [:snippet | _], _}, socket) do

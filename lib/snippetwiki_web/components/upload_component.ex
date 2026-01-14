@@ -51,7 +51,7 @@ defmodule SnippetwikiWeb.UploadComponent do
                         </svg> --%>
                     </figure>
 
-                    <div class="grow">
+                    <div class="grow flex flex-col gap-1">
                         <div class="flex justify-between gap-2">
                             <div class="max-w-64    overflow-x-clip text-ellipsis">{entry.client_name}</div>
                             <div class="text-base-content/50 text-sm text-nowrap">
@@ -72,7 +72,7 @@ defmodule SnippetwikiWeb.UploadComponent do
 
                         <%!-- entry.progress will update automatically for in-flight entries --%>
                         <div>
-                            <progress value={entry.progress} max="100"> {entry.progress}% </progress>
+                            <progress class="w-full" value={entry.progress} max="100"> {entry.progress}% </progress>
                         </div>
                     </div>
 

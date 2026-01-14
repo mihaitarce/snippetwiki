@@ -1,5 +1,6 @@
 defmodule SnippetwikiWeb.SnippetLive.Index do
   use SnippetwikiWeb, :live_view
+  on_mount SnippetwikWeb.UserLiveAuth
 
   alias Snippetwiki.Snippets
 
@@ -177,6 +178,7 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
     </Layouts.app>
     """
   end
+
   # def render(assigns) do
   #   ~H"""
   #   <Layouts.app flash={@flash}>

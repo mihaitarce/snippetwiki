@@ -7,37 +7,51 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
   def render(assigns) do
     ~H"""
     <div class="card bg-base-100">
-      <div class="card-body">
-        <%= if @editing do %>
-          <.form for={@form} phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
-            <div class="flex justify-between items-center mb-2">
+      <%= if @editing do %>
+        <.form for={@form} class="card-body" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
+          <div class="flex justify-between items-center mb-2 h-14">
+            <%= if is_nil(@snippet.content) or @snippet.content_type == "text/html" do %>
               <.input type="text" field={@form[:title]} class="input input-lg" />
+            <% else %>
+              <div class="text-3xl">{@snippet.title}</div>
+            <% end %>
 
-              <div>
-                <.button type="button" variant="error"
-                  phx-click="delete"
-                  phx-target={@myself}
-                  data-confirm="Are you sure?">
-                  <.icon name="hero-trash" />
-                </.button>
+            <div>
+              <.button type="button" variant="error"
+                phx-click="delete"
+                phx-target={@myself}
+                data-confirm="Are you sure?">
+                <.icon name="hero-trash" />
+              </.button>
 
+              <%= if is_nil(@snippet.content) or @snippet.content_type == "text/html" do %>
                 <.button type="submit" variant="success">
                   <.icon name="hero-check" />
                 </.button>
                 <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
+              <% end %>
 
-                <.button type="button" phx-click="discard_changes" phx-target={@myself}>
-                  <.icon name="hero-x-mark" />
-                </.button>
-                <%!-- <.button navigate={return_path(@return_to, @snippet)}>Cancel</.button> --%>
-              </div>
+              <.button type="button" phx-click="discard_changes" phx-target={@myself}>
+                <.icon name="hero-x-mark" />
+              </.button>
+              <%!-- <.button navigate={return_path(@return_to, @snippet)}>Cancel</.button> --%>
             </div>
+          </div>
 
-            <.svelte name="Example" props={%{number: 2}} socket={@socket} />
-            <.input type="textarea" field={@form[:content]} class="textarea textarea-lg w-full" rows="10" />
-          </.form>
-        <% else %>
-          <div class="flex justify-between items-center mb-2 h-16">
+          <%= if is_nil(@snippet.content_type) or @snippet.content_type == "text/html" do %>
+            <.svelte name="Editor" props={%{content: @snippet.content}} socket={@socket} />
+            <div class="hidden">
+              <.input type="textarea" id="textarea" field={@form[:content]} />
+            </div>
+          <% end %>
+
+          <%= if @snippet.content_type == "image/jpeg" do %>
+            <img src={get_file_url(@snippet.title)} alt={@snippet.title}>
+          <% end %>
+        </.form>
+      <% else %>
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-2 h-14">
             <div class="text-3xl">{@snippet.title}</div>
             <div>
               <.button>
@@ -58,26 +72,34 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
             </div>
           </div>
 
-          <article class="prose">
-            <%= if @snippet.content do %>
-              <pre>{@snippet.content}</pre>
-            <% else %>
-                <div class="flex items-center justify-center p-12">
-                  <p class="text-center text-base-content/50">Empty snippet</p>
-                </div>
+          <%= if is_nil(@snippet.content) do %>
+            <div class="flex items-center justify-center p-12">
+                <p class="text-center text-base-content/50">Empty snippet</p>
+              </div>
+          <% else %>
+            <%= if @snippet.content_type == "text/html" do %>
+              <div class="prose">
+                <%= raw @snippet.content %>
+              </div>
             <% end %>
-          </article>
 
-          <div class="flex items-center gap-6">
-              <div>
-                  {@snippet.views} views
+            <%= if @snippet.content_type == "image/jpeg" do %>
+              <img src={get_file_url(@snippet.title)} alt={@snippet.title}>
+            <% end %>
+          <% end %>
+
+          <div class="flex items-center gap-6 mt-2">
+              <div class="flex items-center gap-2">
+                <.icon name="hero-eye" />
+                <.svelte name="Number" props={%{number: @snippet.views, item: "view"}} socket={@socket} />
               </div>
               <button class="btn" phx-click="like_snippet" phx-target={@myself}>
-                  {@snippet.like_count} likes
+                <.icon name="hero-hand-thumb-up" />
+                <.svelte name="Number" props={%{number: @snippet.like_count, item: "like"}} socket={@socket} />
               </button>
           </div>
-        <% end %>
-      </div>
+        </div>
+      <% end %>
     </div>
     """
   end
@@ -138,5 +160,9 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
     {:ok, _} = Snippets.delete_snippet(socket.assigns.snippet)
 
     {:noreply, socket}
+  end
+
+  defp get_file_url(title) do
+    "/files/" <> String.replace_prefix(title, "File:", "")
   end
 end

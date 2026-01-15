@@ -46,6 +46,31 @@ defmodule Snippetwiki.Snippets do
   """
   def get_snippet!(id), do: Repo.get!(Snippet, id)
 
+  def find_snippet!(name) do
+    query = from s in Snippet, as: :snippet,
+      where: s.title == ^name,
+      left_join: r in assoc(s, :revisions),
+      select_merge: %{content: r.content, content_type: r.content_type},
+      order_by: [desc: r.version],
+      limit: 1
+
+    Repo.one!(query)
+  end
+
+  def with_content(snippet) do
+    likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
+
+    query = from s in Snippet, as: :snippet,
+      where: s.id == ^snippet.id,
+      left_join: r in assoc(s, :revisions),
+      select_merge: %{like_count: subquery(likes_count)},
+      select_merge: %{content: r.content, content_type: r.content_type},
+      order_by: [desc: r.version],
+      limit: 1
+
+    Repo.one(query)
+  end
+
   @doc """
   Creates a snippet.
 
@@ -131,9 +156,9 @@ defmodule Snippetwiki.Snippets do
     broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
   end
 
-  def create_new_revision(snippet, attrs, content) do
+  def create_new_revision(snippet, attrs, content, content_type \\ "text/html") do
     # Create new revision
-    {:ok, _} = Repo.insert(%Revision{snippet: snippet, content: content})
+    {:ok, _} = Repo.insert(%Revision{snippet: snippet, content: content, content_type: content_type})
 
     # Update snippet
     update_snippet(snippet, attrs)
@@ -153,20 +178,6 @@ defmodule Snippetwiki.Snippets do
     |> Repo.insert
 
     broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
-  end
-
-  def with_content(snippet) do
-    likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
-
-    query = from s in Snippet, as: :snippet,
-      where: s.id == ^snippet.id,
-      left_join: r in assoc(s, :revisions),
-      select_merge: %{like_count: subquery(likes_count)},
-      select_merge: %{content: r.content},
-      order_by: [desc: r.version],
-      limit: 1
-
-    Repo.one(query)
   end
 
 

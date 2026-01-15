@@ -11,6 +11,7 @@ defmodule Snippetwiki.Snippets.Snippet do
     has_many :likes, Snippetwiki.Snippets.Like
 
     field :content, :string, virtual: true
+    field :content_type, :string, virtual: true
     field :like_count, :integer, virtual: true
 
     timestamps(type: :utc_datetime)

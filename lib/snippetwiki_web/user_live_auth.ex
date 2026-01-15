@@ -8,8 +8,6 @@ defmodule SnippetwikWeb.UserLiveAuth do
     #     Accounts.get_user_by_session_token(user_token)
     #   end)
 
-    IO.inspect(get_connect_info(socket, :x_headers))
-
     socket = assign(socket, :current_user, "anonymous")
 
     if socket.assigns.current_user do

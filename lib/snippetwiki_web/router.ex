@@ -17,9 +17,10 @@ defmodule SnippetwikiWeb.Router do
   scope "/", SnippetwikiWeb do
     pipe_through :browser
 
-    # get "/", PageController, :home
-
     live "/", SnippetLive.Index, :index
+
+    # get "/", PageController, :home
+    get "/files/*name", DownloadController, :download
   end
 
   # Other scopes may use custom stacks.

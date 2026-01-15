@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "esbuild": "^0.27.2",
     "esbuild-plugin-import-glob": "^0.1.1",
     "esbuild-svelte": "^0.9.4",
@@ -7,9 +8,11 @@
     "svelte-preprocess": "^6.0.3"
   },
   "dependencies": {
+    "@number-flow/svelte": "^0.3.9",
     "live_svelte": "file:../deps/live_svelte",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
-    "phoenix_live_view": "file:../deps/phoenix_live_view"
+    "phoenix_live_view": "file:../deps/phoenix_live_view",
+    "quill": "^2.0.3"
   }
 }

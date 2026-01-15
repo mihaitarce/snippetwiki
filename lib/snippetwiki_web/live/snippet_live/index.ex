@@ -287,11 +287,9 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
   def handle_event("save_upload", _params, socket) do
     uploaded_files =
       consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
-        IO.inspect(path)
-        IO.inspect(entry)
-        # Do something with Path.basename(path)...
-        Snippets.create_snippet(%{ title: "File:" <> entry.client_name })
-        # TODO create revision with file content
+        {:ok, snippet} = Snippets.create_snippet(%{ title: "File:" <> entry.client_name })
+        {:ok, content} = File.read(path)
+        Snippets.create_new_revision(snippet, %{}, content, entry.client_type)
 
         {:ok, path}
       end)

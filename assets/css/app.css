@@ -106,6 +106,16 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ql-editor {
+  @apply prose;
+}
+
 .ql-container,
 .ql-editor {
   &,
@@ -127,12 +137,4 @@
   h1 {
     margin-bottom: 32px !important;
   }
-}
-
-.ql-editor {
-  @apply prose !important;
-}
-
-.ql-editor h1 {
-  margin: initial;
 }

@@ -145,14 +145,12 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
 
                   <input type="radio" name="tabs" class="tab" aria-label="Open" />
                   <div class="tab-content p-3">
-                      <%!-- <OpenSnippets snippets={openSnippets}
-                                    openSnippet={openSnippet} closeSnippet={closeSnippet}
-                                    closeAllSnippets={closeAllSnippets}/> --%>
+                    <%!-- open snippets --%>
                   </div>
 
                   <input type="radio" name="tabs" class="tab" aria-label="Map" />
                   <div class="tab-content pt-3">
-                      <%!-- {selectedTab === Tabs.Map && snippets.length > 1 && <ConceptMap snippets={snippets}/>} --%>
+                      <%!-- Concept map --%>
                   </div>
               </div>
           </div>
@@ -161,17 +159,17 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
         <div class="fixed bottom-[-4px] w-full">
             <div class="flex gap-2 px-4 overflow-y-hidden overflow-x-scroll">
                 <%= for e <- @editing -- @open do %>
-                <button class="btn btn-warning btn-sm text-nowrap"
-                        phx-click="open_snippet" phx-value-id={e}>
-                    <svg class="size-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"/>
-                    </svg>
-                    {Enum.find(@snippets, fn s -> s.id == e end).title}
-                </button>
+                  <button class="btn btn-warning btn-sm text-nowrap"
+                          phx-click="open_snippet" phx-value-id={e}>
+                      <svg class="size-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                          <path
+                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"/>
+                      </svg>
+                      {Enum.find(@snippets, fn s -> s.id == e end).title}
+                  </button>
                 <% end %>
             </div>
         </div>

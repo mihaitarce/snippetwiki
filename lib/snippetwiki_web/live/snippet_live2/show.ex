@@ -113,8 +113,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
 
   @impl true
   def handle_event("like_snippet", _, socket) do
-    {:ok, _} = Snippets.like_snippet(socket.assigns.current_scope, socket.assigns.snippet, "me")
-
+    {:ok, _} = Snippets.like_snippet(socket.assigns.current_scope, socket.assigns.snippet)
     {:noreply, socket}
   end
 
@@ -138,10 +137,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
   @impl true
   def handle_event("save_changes", %{"snippet" => %{"title" => title, "content" => content}}, socket) do
     case Snippets.create_new_revision(socket.assigns.current_scope, socket.assigns.snippet, %{"title" => title, "has_draft" => false}, content) do
-      {:ok, _} ->
+      {:ok, snippet} ->
         {:noreply,
         socket
         |> assign(:editing, false)
+        |> assign(:snippet, snippet)
         |> put_flash(:info, "Snippet updated successfully")}
 
       {:error, %Ecto.Changeset{} = changeset} ->

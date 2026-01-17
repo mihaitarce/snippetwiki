@@ -309,17 +309,13 @@ defmodule Snippetwiki.Snippets do
 
   """
   def list_snippets(%Scope{} = scope) do
-    Repo.all_by(Snippet, user_id: scope.user.id)
-  end
-
-  def list_snippets do
     likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
 
     query = from s in Snippet, as: :snippet,
       select_merge: %{like_count: subquery(likes_count)},
       order_by: [desc: :updated_at, desc: :id]
 
-    Repo.all(query)
+    Repo.all_by(query, user_id: scope.user.id)
   end
 
   @doc """
@@ -477,7 +473,8 @@ defmodule Snippetwiki.Snippets do
     {:ok, _} = Repo.insert(%Revision{snippet: snippet, content: content, content_type: content_type})
 
     # Update snippet
-    update_snippet(scope, snippet, attrs)
+    {:ok, snippet} = update_snippet(scope, snippet, attrs)
+    {:ok, with_content(snippet)}
   end
 
   def increment_views(%Scope{} = scope, id) do
@@ -493,10 +490,10 @@ defmodule Snippetwiki.Snippets do
 
 
   def like_snippet(%Scope{} = scope, snippet) do
-    %Like{ snippet: snippet, user: scope.user.id }
-    |> Repo.insert
+    Repo.insert(%Like{ snippet: snippet, user_id: scope.user.id }, on_conflict: :nothing)
 
-    broadcast_change({:ok, %{id: snippet.id}}, [:snippet, :updated])
+    broadcast_snippet(scope, {:updated, snippet})
+    {:ok, snippet}
   end
 
 
@@ -520,23 +517,5 @@ defmodule Snippetwiki.Snippets do
     key = scope.user.id
 
     Phoenix.PubSub.broadcast(Snippetwiki.PubSub, "user:#{key}:snippets", message)
-  end
-
-
-
-  @topic inspect(__MODULE__)
-
-  def subscribe do
-    Phoenix.PubSub.subscribe(Snippetwiki.PubSub, @topic)
-  end
-
-  defp broadcast_change({:ok, result}, event) do
-    Phoenix.PubSub.broadcast(Snippetwiki.PubSub, @topic, {__MODULE__, event, result})
-
-    {:ok, result}
-  end
-
-  defp broadcast_change({:error, message}, _) do
-    {:error, message}
   end
 end

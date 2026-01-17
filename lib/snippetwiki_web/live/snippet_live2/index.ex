@@ -221,7 +221,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
       Snippets.subscribe_snippets(socket.assigns.current_scope)
     end
 
-    snippets = list_snippets()
+    snippets = list_snippets(socket.assigns.current_scope)
     # |> stream(:snippets, list_snippets())}
 
     {:ok,
@@ -238,7 +238,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
   @impl true
   def handle_event("new_snippet", _, socket) do
-    title = find_available_title("New snippet", 1, list_snippets())
+    title = find_available_title("New snippet", 1, list_snippets(socket.assigns.current_scope))
 
     {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{title: title})
 
@@ -313,33 +313,23 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   @impl true
   def handle_info({type, %Snippetwiki.Snippets.Snippet{}}, socket)
       when type in [:created, :updated, :deleted] do
-        IO.inspect("Called")
     # {:noreply, stream(socket, :snippets, list_snippets(socket.assigns.current_scope), reset: true)}
-    {:noreply, assign(socket, :snippets, list_snippets(socket.assigns.current_scope))}
+    snippets = list_snippets(socket.assigns.current_scope)
+    {:noreply,
+     socket
+     |> assign(:snippets, snippets)
+     |> assign(:editing, snippets
+                         |> Enum.filter(fn s -> s.has_draft end)
+                         |> Enum.map(fn s -> s.id end))
+     |> assign(:opem, socket.assigns.open
+                      |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end))
+    }
   end
 
   defp list_snippets(current_scope) do
     Snippets.list_snippets(current_scope)
   end
 
-  # @impl true
-  # def handle_info({Snippets, [:snippet | _], _}, socket) do
-  #   snippets = list_snippets()
-  #   {:noreply,
-  #    socket
-  #    |> assign(snippets: snippets,
-  #              editing: snippets
-  #                       |> Enum.filter(fn s -> s.has_draft end)
-  #                       |> Enum.map(fn s -> s.id end),
-  #              open: socket.assigns.open
-  #                    |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end))
-  #   }
-  # end
-
-
-  defp list_snippets() do
-    Snippets.list_snippets()
-  end
 
   defp find_available_title(base, i, snippets) do
     if Enum.find_value(snippets, fn x -> x.title == base <> " " <> Integer.to_string(i) end) do

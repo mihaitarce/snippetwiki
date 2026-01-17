@@ -11,5 +11,7 @@ defmodule Snippetwiki.Repo.Migrations.CreateLikes do
 
     create index(:likes, [:snippet_id])
     create index(:likes, [:user_id])
+
+    create unique_index(:likes, [:snippet_id, :user_id])
   end
 end

@@ -13,7 +13,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
             <%= if is_nil(@snippet.content) or @snippet.content_type == "text/html" do %>
               <.input type="text" field={@form[:title]} class="input input-lg" />
             <% else %>
-              <div class="text-3xl max-w-[25ch] truncate">{@snippet.title}</div>
+              <div class="text-3xl max-w-[25ch] truncate">
+                {@snippet.namespace}
+                {@snippet.title}
+              </div>
             <% end %>
 
             <div>
@@ -21,16 +24,16 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
                 phx-click="delete"
                 phx-target={@myself}
                 data-confirm="Are you sure?">
-                <.icon name="hero-trash" />
+                <.icon name="hero-trash" class="size-6" />
               </.button>
 
               <.button type="submit" variant="success">
-                <.icon name="hero-check" />
+                <.icon name="hero-check" class="size-6" />
               </.button>
               <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
 
               <.button type="button" phx-click="discard_changes" phx-target={@myself}>
-                <.icon name="hero-x-mark" />
+                <.icon name="hero-x-mark" class="size-6" />
               </.button>
               <%!-- <.button navigate={return_path(@return_to, @snippet)}>Cancel</.button> --%>
             </div>
@@ -48,31 +51,34 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
       <% else %>
         <div class="card-body">
           <div class="flex justify-between items-center mb-2 h-14">
-            <div class="text-3xl max-w-[25ch] truncate">{@snippet.title}</div>
+            <div class="text-3xl max-w-[25ch] truncate">
+              <%= if @snippet.namespace do %>{@snippet.namespace}:<% end %>{@snippet.title}
+            </div>
             <div>
-              <%= unless String.starts_with?(@snippet.title, "Talk:") do %>
+              <%= if is_nil(@snippet.namespace) do %>
                 <.button phx-click="talk_page" phx-value-id={@snippet.id}>
-                  <.icon name="hero-chat-bubble-left-right" />
+                  <.icon name="hero-chat-bubble-left-right" class="size-6" />
                 </.button>
-              <% end %>
-              <%= if @snippet.has_draft do %>
-                <.button phx-click="edit_snippet" phx-target={@myself} variant="warning">
-                  <.icon name="hero-pencil" />
-                </.button>
-              <% else %>
-                <.button phx-click="edit_snippet" phx-target={@myself}>
-                  <.icon name="hero-pencil" />
-                </.button>
+
+                <%= if @snippet.has_draft do %>
+                  <.button phx-click="edit_snippet" phx-target={@myself} variant="warning" title="Someone else is editing this snippet.">
+                    <.icon name="hero-pencil" class="size-6" />
+                  </.button>
+                <% else %>
+                  <.button phx-click="edit_snippet" phx-target={@myself}>
+                    <.icon name="hero-pencil" class="size-6" />
+                  </.button>
+                <% end %>
               <% end %>
               <.button phx-click="close_snippet" phx-value-id={@snippet.id}>
-                <.icon name="hero-x-mark" />
+                <.icon name="hero-x-mark" class="size-6" />
               </.button>
             </div>
           </div>
 
           <%= if is_nil(@snippet.content) do %>
-            <div class="flex items-center justify-center p-12">
-                <p class="text-center text-base-content/50">Empty snippet</p>
+            <div class="flex items-center justify-center p-4">
+                <p class="text-lg text-center text-base-content/30">Empty snippet</p>
               </div>
           <% else %>
             <%= if @snippet.content_type == "text/html" do %>
@@ -85,16 +91,18 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
             <% end %>
           <% end %>
 
-          <div class="flex items-center gap-6 mt-2">
-              <div class="flex items-center gap-2">
-                <.icon name="hero-eye" />
-                <div id={"views-#{@snippet.id}"} phx-hook="Number" data-number={@snippet.views} phx-update="ignore"></div>
-              </div>
-              <button class="btn" phx-click="like_snippet" phx-target={@myself}>
-                <.icon name="hero-hand-thumb-up" />
-                <div id={"likes-#{@snippet.id}"} phx-hook="Number" data-number={@snippet.like_count} phx-update="ignore"></div>
-              </button>
-          </div>
+          <%= if is_nil(@snippet.namespace) do %>
+            <div class="flex items-center gap-6 mt-2">
+                <div class="flex items-center gap-2">
+                  <.icon name="hero-eye" />
+                  <div id={"views-#{@snippet.id}"} phx-hook="Number" data-number={@snippet.views} phx-update="ignore"></div>
+                </div>
+                <button class="btn" phx-click="like_snippet" phx-target={@myself}>
+                  <.icon name="hero-hand-thumb-up" />
+                  <div id={"likes-#{@snippet.id}"} phx-hook="Number" data-number={@snippet.like_count} phx-update="ignore"></div>
+                </button>
+            </div>
+          <% end %>
         </div>
       <% end %>
     </div>

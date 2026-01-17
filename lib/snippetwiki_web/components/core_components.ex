@@ -95,16 +95,16 @@ defmodule SnippetwikiWeb.CoreComponents do
 
   def button(%{rest: rest} = assigns) do
     variants = %{
-      "primary" => "btn-primary",
-      "success" => "btn-success",
-      "warning" => "btn-warning",
-      "error" => "btn-error btn-soft",
-      nil => ""
+      "primary" => "btn-primary btn-soft",
+      "success" => "btn-success btn-soft",
+      "warning" => "btn-warning btn-soft",
+      "error" => "btn-error btn-soft mx-3",
+      nil => "btn-ghost text-base-content/50 hover:text-base-content"
     }
 
     assigns =
       assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
+        ["btn", "btn-square", Map.fetch!(variants, assigns[:variant])]
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do

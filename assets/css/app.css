@@ -109,6 +109,7 @@ a {
   color: var(--color-primary);
   text-decoration: underline;
   font-weight: 450;
+  cursor: pointer;
 }
 
 .bn-editor-readonly .bn-editor {

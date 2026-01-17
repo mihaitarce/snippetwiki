@@ -126,19 +126,24 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
                   <input type="radio" name="tabs" class="tab" aria-label="Recent" checked="checked" />
                   <div class="tab-content p-3">
-                      <%!-- <RecentSnippets snippets={snippets} openSnippets={openSnippets}
-                                      openSnippet={openSnippet} closeSnippet={closeSnippet}/> --%>
-
-                      <div id="snippets">
-                        <div :for={snippet <- @snippets} id={"snippet-link-" <> Integer.to_string(snippet.id)}>
-                          <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
-                        </div>
+                      <div :for={snippet <- Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
+                            id={"snippet-link-" <> Integer.to_string(snippet.id)}>
+                        <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
                       </div>
 
                       <div class="mt-4">
-                        <.button phx-click="close_snippets">
-                          <.icon name="hero-x-mark" /> Close all
-                        </.button>
+                        <button type="button" class="btn" phx-click="close_snippets">
+                          <.icon name="hero-x-mark" />
+                          Close all
+                        </button>
+                      </div>
+                  </div>
+
+                  <input type="radio" name="tabs" class="tab" aria-label="Files" />
+                  <div class="tab-content p-3">
+                      <div :for={snippet <- Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
+                            id={"snippet-link-" <> Integer.to_string(snippet.id)}>
+                        <a phx-click="open_snippet" phx-value-id={snippet.id}>File:{snippet.title}</a>
                       </div>
                   </div>
 
@@ -249,10 +254,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     snippet_id = String.to_integer(id)
     snippet = Snippets.get_snippet!(socket.assigns.current_scope, snippet_id)
 
-    talk_page = Snippets.find_snippet(socket.assigns.current_scope, "Talk:#{snippet.title}")
+    talk_page = Snippets.find_snippet(socket.assigns.current_scope, snippet.title, "Talk")
 
     if is_nil(talk_page) do
-      {:ok, talk_page} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: "Talk:#{snippet.title}" })
+      {:ok, talk_page} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: snippet.title, namespace: "Talk" })
       {:noreply,
        socket
        |> assign(:open, [talk_page.id | socket.assigns.open])}
@@ -306,7 +311,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   def handle_event("save_upload", _params, socket) do
     uploaded_files =
       consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
-        {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: "File:" <> entry.client_name })
+        {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
         {:ok, content} = File.read(path)
         Snippets.create_new_revision(socket.assigns.current_scope, snippet, %{}, content, entry.client_type)
 

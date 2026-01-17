@@ -4,6 +4,7 @@ defmodule Snippetwiki.Snippets.Snippet do
 
   schema "snippets" do
     field :title, :string
+    field :namespace, :string
     field :has_draft, :boolean, default: false
     field :views, :integer, default: 0
     # Delete
@@ -22,7 +23,7 @@ defmodule Snippetwiki.Snippets.Snippet do
   @doc false
   def changeset(snippet, attrs, user_scope) do
     snippet
-    |> cast(attrs, [:title, :content, :has_draft, :views])
+    |> cast(attrs, [:title, :namespace, :has_draft, :views, :content])
     |> validate_required([:title])
     |> unique_constraint([:title, :bag_id])
     |> put_change(:user_id, user_scope.user.id)

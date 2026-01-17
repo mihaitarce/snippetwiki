@@ -260,7 +260,7 @@ defmodule SnippetwikiWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="fieldset hidden">
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <textarea

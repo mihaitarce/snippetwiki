@@ -24,6 +24,7 @@ defmodule Snippetwiki.Snippets.Snippet do
     snippet
     |> cast(attrs, [:title, :content, :has_draft, :views])
     |> validate_required([:title])
+    |> unique_constraint([:title, :bag_id])
     |> put_change(:user_id, user_scope.user.id)
   end
 end

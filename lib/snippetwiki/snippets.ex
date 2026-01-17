@@ -336,9 +336,18 @@ defmodule Snippetwiki.Snippets do
     Repo.get_by!(Snippet, id: id, user_id: scope.user.id)
   end
 
-  def get_snippet!(id), do: Repo.get!(Snippet, id)
+  def find_snippet(scope, name) do
+    query = from s in Snippet, as: :snippet,
+      where: s.title == ^name,
+      left_join: r in assoc(s, :revisions),
+      select_merge: %{content: r.content, content_type: r.content_type},
+      order_by: [desc: r.version],
+      limit: 1
 
-  def find_snippet!(name) do
+    Repo.one(query)
+  end
+
+  def find_snippet!(scope, name) do
     query = from s in Snippet, as: :snippet,
       where: s.title == ^name,
       left_join: r in assoc(s, :revisions),
@@ -478,7 +487,7 @@ defmodule Snippetwiki.Snippets do
   end
 
   def increment_views(%Scope{} = scope, id) do
-      snippet = get_snippet!(id)
+      snippet = get_snippet!(scope, id)
 
       Snippet
       |> where(id: ^id)

@@ -246,14 +246,39 @@ defmodule SnippetwikiWeb.UserAuth do
   end
 
   defp mount_current_scope(socket, session) do
-    Phoenix.Component.assign_new(socket, :current_scope, fn ->
-      {user, _} =
-        if user_token = session["user_token"] do
-          Snippets.get_user_by_session_token(user_token)
-        end || {nil, nil}
+    scope = process_auth_headers(socket)
 
-      Scope.for_user(user)
+    if is_nil(scope) do
+      Phoenix.Component.assign_new(socket, :current_scope, fn ->
+        {user, _} =
+          if user_token = session["user_token"] do
+            Snippets.get_user_by_session_token(user_token)
+          end || {nil, nil}
+
+        Scope.for_user(user)
+      end)
+    else
+      Phoenix.Component.assign(socket, :current_scope, scope)
+    end
+  end
+
+  defp process_auth_headers(socket) do
+    headers = Phoenix.LiveView.get_connect_info(socket, :x_headers)
+
+    result = Enum.reduce(headers, %{}, fn header, acc ->
+      {key, value} = header
+      case key do
+        "x-authenticated-user" -> Map.put(acc, :email, value)
+        "x-authenticated-group" -> Map.put(acc, :group, value)
+        _ -> acc
+      end
     end)
+
+    if Enum.empty?(result) do
+      nil
+    else
+      %Scope{user: Map.put(result, :id, 1)}
+    end
   end
 
   @doc "Returns the path to redirect to after log in."

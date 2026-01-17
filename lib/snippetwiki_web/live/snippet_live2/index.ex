@@ -1,6 +1,5 @@
 defmodule SnippetwikiWeb.SnippetLive2.Index do
   use SnippetwikiWeb, :live_view
-  on_mount SnippetwikWeb.UserLiveAuth
 
   alias Snippetwiki.Snippets
 
@@ -110,13 +109,13 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
           </div>
 
           <div class="flex-1 h-svh hidden xl:block">
-              <%!-- <div class="filter justify-end absolute right-4">
+              <div class="filter justify-end absolute right-4">
                     <input class="btn btn-sm btn-ghost filter-reset" type="radio" name="bag" aria-label="All"/>
                     <input class="btn btn-sm" type="radio" name="bag" aria-label="HKU"/>
                     <input class="btn btn-sm" type="radio" name="bag" aria-label="Dentistry"/>
-                  <input class="btn btn-sm btn-soft btn-warning" type="radio" name="bag"
-                          aria-label={@current_scope.user.email}/>
-              </div> --%>
+                    <input class="btn btn-sm btn-soft btn-warning" type="radio" name="bag"
+                           aria-label={@current_scope.user.email}/>
+              </div>
 
               <div class="tabs tabs-box h-svh rounded-none p-4">
                   <input type="radio" name="tabs" class="tab" aria-label="Sidebar" />
@@ -158,7 +157,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
         <%!-- <DraftList drafts={draftSnippets} openSnippet={openSnippet}/> --%>
         <div class="fixed bottom-[-4px] w-full">
             <div class="flex gap-2 px-4 overflow-y-hidden overflow-x-scroll">
-                <%= for e <- @editing -- @open do %>
+                <%= for e <- @drafts -- @open do %>
                   <button class="btn btn-warning btn-sm text-nowrap"
                           phx-click="open_snippet" phx-value-id={e}>
                       <svg class="size-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"
@@ -227,7 +226,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
      socket
      |> assign(page_title: "Snippet Wiki",
                snippets: snippets,
-               editing: snippets
+               drafts: snippets
                         |> Enum.filter(fn s -> s.has_draft end)
                         |> Enum.map(fn s -> s.id end),
                open: [],
@@ -244,6 +243,28 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     {:noreply,
      socket
      |> assign(:open, [snippet.id | socket.assigns.open])}
+  end
+
+  def handle_event("talk_page", %{ "id" => id }, socket) do
+    snippet_id = String.to_integer(id)
+    snippet = Snippets.get_snippet!(socket.assigns.current_scope, snippet_id)
+
+    talk_page = Snippets.find_snippet(socket.assigns.current_scope, "Talk:#{snippet.title}")
+
+    if is_nil(talk_page) do
+      {:ok, talk_page} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: "Talk:#{snippet.title}" })
+      {:noreply,
+       socket
+       |> assign(:open, [talk_page.id | socket.assigns.open])}
+    else
+      if talk_page.id in socket.assigns.open do
+        {:noreply, socket}
+      else
+        {:noreply,
+         socket
+         |> assign(:open, [talk_page.id | socket.assigns.open])}
+      end
+    end
   end
 
   @impl true
@@ -317,7 +338,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     {:noreply,
      socket
      |> assign(:snippets, snippets)
-     |> assign(:editing, snippets
+     |> assign(:drafts, snippets
                          |> Enum.filter(fn s -> s.has_draft end)
                          |> Enum.map(fn s -> s.id end))
      |> assign(:opem, socket.assigns.open

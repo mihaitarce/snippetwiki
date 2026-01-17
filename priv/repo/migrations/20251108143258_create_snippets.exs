@@ -14,7 +14,7 @@ defmodule Snippetwiki.Repo.Migrations.CreateSnippets do
     end
 
     create index(:snippets, [:bag_id])
-    # remove
-    create index(:snippets, [:user_id])
+
+    create unique_index(:snippets, [:title, :bag_id], nulls_distinct: false)
   end
 end

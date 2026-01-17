@@ -105,13 +105,12 @@
 /* This file is for your main application CSS */
 @plugin "@tailwindcss/typography";
 
-.bn-editor-readonly .bn-editor {
-  padding: 0 !important;
-}
-
-.bn-html a,
-.bn-editor a {
+a {
   color: var(--color-primary);
   text-decoration: underline;
   font-weight: 450;
+}
+
+.bn-editor-readonly .bn-editor {
+  padding: 0 !important;
 }

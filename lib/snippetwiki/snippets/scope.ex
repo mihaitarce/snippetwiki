@@ -29,9 +29,5 @@ defmodule Snippetwiki.Snippets.Scope do
     %__MODULE__{user: user}
   end
 
-  def for_user(nil) do
-    %__MODULE__{
-      user: %{id: 1, email: "anonymous", group: "wikigroup"}
-    }
-  end
+  def for_user(nil), do: nil
 end

@@ -24,16 +24,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
                 <.icon name="hero-trash" />
               </.button>
 
-              <.button type="button">
-                <.icon name="hero-chat-bubble-left-right" />
+              <.button type="submit" variant="success">
+                <.icon name="hero-check" />
               </.button>
-
-              <%= if is_nil(@snippet.content) or @snippet.content_type == "text/html" do %>
-                <.button type="submit" variant="success">
-                  <.icon name="hero-check" />
-                </.button>
-                <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
-              <% end %>
+              <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
 
               <.button type="button" phx-click="discard_changes" phx-target={@myself}>
                 <.icon name="hero-x-mark" />
@@ -43,7 +37,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
           </div>
 
           <%= if is_nil(@snippet.content_type) or @snippet.content_type == "text/html" do %>
-            <.input field={@form[:content]} type="textarea" class="hidden" />
+            <.input field={@form[:content]} type="textarea" />
             <div id={if @snippet.id do "editor-#{@snippet.id}" else "editor-new" end} phx-hook="BlockNote" phx-update="ignore"></div>
           <% end %>
 
@@ -56,9 +50,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
           <div class="flex justify-between items-center mb-2 h-14">
             <div class="text-3xl max-w-[25ch] truncate">{@snippet.title}</div>
             <div>
-              <.button>
-                <.icon name="hero-chat-bubble-left-right" />
-              </.button>
+              <%= unless String.starts_with?(@snippet.title, "Talk:") do %>
+                <.button phx-click="talk_page" phx-value-id={@snippet.id}>
+                  <.icon name="hero-chat-bubble-left-right" />
+                </.button>
+              <% end %>
               <%= if @snippet.has_draft do %>
                 <.button phx-click="edit_snippet" phx-target={@myself} variant="warning">
                   <.icon name="hero-pencil" />
@@ -80,11 +76,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
               </div>
           <% else %>
             <%= if @snippet.content_type == "text/html" do %>
-
-              <div class="prose">
-                <textarea class="hidden">{@snippet.content}</textarea>
-                <div id={"viewer-#{@snippet.id}"} phx-hook="BlockNote" phx-update="ignore"></div>
-              </div>
+              <textarea class="hidden">{@snippet.content}</textarea>
+              <div id={"viewer-#{@snippet.id}"} phx-hook="BlockNote" phx-update="ignore"></div>
             <% end %>
 
             <%= if @snippet.content_type == "image/jpeg" do %>
@@ -148,8 +141,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
         |> assign(:snippet, snippet)
         |> put_flash(:info, "Snippet updated successfully")}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+      # {:error, %Ecto.Changeset{} = changeset} ->
+      #   {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 

@@ -22,8 +22,8 @@ defmodule SnippetwikiWeb.Router do
 
     # get "/", PageController, :home
 
-    live_session :require_authenticated,
-      on_mount: [{SnippetwikiWeb.UserAuth, :require_authenticated}]  do
+    live_session :default,
+      on_mount: [{SnippetwikiWeb.UserAuth, :require_authenticated}] do
       live "/", SnippetLive2.Index, :index
 
       live "/snippets", SnippetLive.Index, :index

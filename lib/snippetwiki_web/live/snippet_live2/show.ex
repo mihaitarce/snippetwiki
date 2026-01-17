@@ -13,7 +13,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
             <%= if is_nil(@snippet.content) or @snippet.content_type == "text/html" do %>
               <.input type="text" field={@form[:title]} class="input input-lg" />
             <% else %>
-              <div class="text-3xl">{@snippet.title}</div>
+              <div class="text-3xl max-w-[25ch] truncate">{@snippet.title}</div>
             <% end %>
 
             <div>
@@ -22,6 +22,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
                 phx-target={@myself}
                 data-confirm="Are you sure?">
                 <.icon name="hero-trash" />
+              </.button>
+
+              <.button type="button">
+                <.icon name="hero-chat-bubble-left-right" />
               </.button>
 
               <%= if is_nil(@snippet.content) or @snippet.content_type == "text/html" do %>
@@ -50,7 +54,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
       <% else %>
         <div class="card-body">
           <div class="flex justify-between items-center mb-2 h-14">
-            <div class="text-3xl">{@snippet.title}</div>
+            <div class="text-3xl max-w-[25ch] truncate">{@snippet.title}</div>
             <div>
               <.button>
                 <.icon name="hero-chat-bubble-left-right" />

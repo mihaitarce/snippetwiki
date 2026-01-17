@@ -111,12 +111,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
           <div class="flex-1 h-svh hidden xl:block">
               <%!-- <div class="filter justify-end absolute right-4">
-                  <input class="btn btn-sm btn-ghost filter-reset" type="radio" name="bag"
-                          aria-label="All"/>
-                  <input class="btn btn-sm" type="radio" name="bag" aria-label="HKU"/>
-                  <input class="btn btn-sm" type="radio" name="bag" aria-label="Dentistry"/>
+                    <input class="btn btn-sm btn-ghost filter-reset" type="radio" name="bag" aria-label="All"/>
+                    <input class="btn btn-sm" type="radio" name="bag" aria-label="HKU"/>
+                    <input class="btn btn-sm" type="radio" name="bag" aria-label="Dentistry"/>
                   <input class="btn btn-sm btn-soft btn-warning" type="radio" name="bag"
-                          aria-label="Journal"/>
+                          aria-label={@current_scope.user.email}/>
               </div> --%>
 
               <div class="tabs tabs-box h-svh rounded-none p-4">

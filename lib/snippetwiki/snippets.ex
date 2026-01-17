@@ -341,10 +341,9 @@ defmodule Snippetwiki.Snippets do
       where: s.title == ^title and s.namespace == ^namespace,
       left_join: r in assoc(s, :revisions),
       select_merge: %{content: r.content, content_type: r.content_type},
-      order_by: [desc: r.version],
-      limit: 1
+      order_by: [desc: r.version]
 
-    Repo.one(query)
+    Repo.get_by(query, user_id: scope.user.id)
   end
 
   def find_snippet!(scope, title, namespace \\ nil) do
@@ -352,10 +351,9 @@ defmodule Snippetwiki.Snippets do
       where: s.title == ^title and s.namespace == ^namespace,
       left_join: r in assoc(s, :revisions),
       select_merge: %{content: r.content, content_type: r.content_type},
-      order_by: [desc: r.version],
-      limit: 1
+      order_by: [desc: r.version]
 
-    Repo.one!(query)
+    Repo.get_by!(query, user_id: scope.user.id)
   end
 
   def with_content(snippet) do

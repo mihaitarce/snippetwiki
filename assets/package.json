@@ -1,18 +1,19 @@
 {
-  "devDependencies": {
-    "@tailwindcss/typography": "^0.5.19",
-    "esbuild": "^0.27.2",
-    "esbuild-plugin-import-glob": "^0.1.1",
-    "esbuild-svelte": "^0.9.4",
-    "svelte": "5.45.10",
-    "svelte-preprocess": "^6.0.3"
-  },
   "dependencies": {
-    "@number-flow/svelte": "^0.3.9",
-    "live_svelte": "file:../deps/live_svelte",
+    "@blocknote/core": "^0.46.1",
+    "@blocknote/mantine": "^0.46.1",
+    "@blocknote/react": "^0.46.1",
+    "@mantine/core": "^8.3.12",
+    "@mantine/hooks": "^8.3.12",
+    "@mantine/utils": "^6.0.22",
+    "@number-flow/react": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.19",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
-    "phoenix_live_view": "file:../deps/phoenix_live_view",
-    "quill": "^2.0.3"
+    "phoenix_live_view": "file:../deps/phoenix_live_view"
   }
 }

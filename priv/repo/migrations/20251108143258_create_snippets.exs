@@ -7,10 +7,14 @@ defmodule Snippetwiki.Repo.Migrations.CreateSnippets do
       add :has_draft, :boolean, default: false, null: false
       add :bag_id, references(:bags, on_delete: :nothing)
       add :views, :integer, default: 0, null: false
+      # remove
+      add :user_id, references(:users, type: :id, on_delete: :delete_all)
 
       timestamps(type: :utc_datetime)
     end
 
     create index(:snippets, [:bag_id])
+    # remove
+    create index(:snippets, [:user_id])
   end
 end

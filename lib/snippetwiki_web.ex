@@ -88,8 +88,6 @@ defmodule SnippetwikiWeb do
       import SnippetwikiWeb.CoreComponents
       import SnippetwikiWeb.UploadComponent
 
-      import LiveSvelte
-
       # Common modules used in templates
       alias Phoenix.LiveView.JS
       alias SnippetwikiWeb.Layouts

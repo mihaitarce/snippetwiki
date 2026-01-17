@@ -22,15 +22,15 @@ import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
+import {hooks as colocatedHooks} from "phoenix-colocated/snippetwiki"
+import {hooks as wikiHooks} from "./wiki"
 import topbar from "../vendor/topbar"
-import {getHooks} from "live_svelte"
-import * as Components from "../svelte/**/*.svelte"
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {
-    longPollFallbackMs: 2500,
-    params: {_csrf_token: csrfToken},
-    hooks: getHooks(Components)
+const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+const liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
+  params: {_csrf_token: csrfToken},
+  hooks: {...colocatedHooks, ...wikiHooks},
 })
 
 // Show progress bar on live navigation and form submits
@@ -81,4 +81,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

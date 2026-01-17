@@ -20,17 +20,13 @@
 //
 // Feel free to adjust this configuration however you need.
 {
-    "compilerOptions": {
-        "verbatimModuleSyntax": true,
-        "types": ["node"],
-        "baseUrl": ".",
-        "paths": {
-            "$lib": ["svelte"],
-            "$lib/*": ["svelte/*"],
-            // "*": ["../deps/*"]
-        }
-        // "allowJs": true,
-        // "noEmit": true
-    }
-    // "include": ["js/**/*"]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": ["../deps/*"]
+    },
+    "allowJs": true,
+    "noEmit": true
+  },
+  "include": ["js/**/*"]
 }

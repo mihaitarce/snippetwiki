@@ -30,8 +30,8 @@ defmodule SnippetwikWeb.UserLiveAuth do
     end
   end
 
-  defp process_header({"x-authenticated-user", username}, socket) do
-    assign(socket, username: username)
+  defp process_header({"x-authenticated-user", email}, socket) do
+    assign(socket, email: email)
   end
 
   defp process_header({"x-authenticated-group", group}, socket) do

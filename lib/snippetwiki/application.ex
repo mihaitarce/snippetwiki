@@ -8,7 +8,6 @@ defmodule Snippetwiki.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},
       SnippetwikiWeb.Telemetry,
       Snippetwiki.Repo,
       {DNSCluster, query: Application.get_env(:snippetwiki, :dns_cluster_query) || :ignore},

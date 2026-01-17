@@ -5,9 +5,6 @@
 @source "../css";
 @source "../js";
 @source "../../lib/snippetwiki_web";
-@source "../svelte";
-
-@plugin "@tailwindcss/typography";
 
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
@@ -106,35 +103,15 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
-a {
+@plugin "@tailwindcss/typography";
+
+.bn-editor-readonly .bn-editor {
+  padding: 0 !important;
+}
+
+.bn-html a,
+.bn-editor a {
   color: var(--color-primary);
   text-decoration: underline;
-  cursor: pointer;
-}
-
-.ql-editor {
-  @apply prose;
-}
-
-.ql-container,
-.ql-editor {
-  &,
-  p {
-    font-size: 16px !important;
-  }
-
-  p {
-    margin: 20px 0 !important;
-  }
-
-  ul, ol {
-    margin: 20px 0 !important;
-    padding-left: 0 !important;
-    /* list-style-position: inside !important; */
-    /* padding-inline-start: 1.625em !important; */
-  }
-
-  h1 {
-    margin-bottom: 32px !important;
-  }
+  font-weight: 450;
 }

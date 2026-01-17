@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :snippetwiki, :scopes,
+  user: [
+    default: true,
+    module: Snippetwiki.Snippets.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Snippetwiki.SnippetsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :snippetwiki,
   ecto_repos: [Snippetwiki.Repo],
   generators: [timestamp_type: :utc_datetime]
@@ -30,6 +43,16 @@ config :snippetwiki, SnippetwikiWeb.Endpoint,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :snippetwiki, Snippetwiki.Mailer, adapter: Swoosh.Adapters.Local
+
+# Configure esbuild (the version is required)
+config :esbuild,
+  version: "0.25.4",
+  snippetwiki: [
+    args:
+      ~w(js/app.js --bundle --target=es2022 --loader:.js=jsx --loader:.woff=file --loader:.woff2=file --conditions=style --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
+  ]
 
 # Configure tailwind (the version is required)
 config :tailwind,

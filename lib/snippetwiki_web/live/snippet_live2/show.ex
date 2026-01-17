@@ -168,6 +168,6 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
   end
 
   defp get_file_url(title) do
-    "/files/" <> String.replace_prefix(title, "File:", "")
+    "/files/" <> title
   end
 end

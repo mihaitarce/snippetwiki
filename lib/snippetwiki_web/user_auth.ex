@@ -65,13 +65,23 @@ defmodule SnippetwikiWeb.UserAuth do
   Will reissue the session token if it is older than the configured age.
   """
   def fetch_current_scope_for_user(conn, _opts) do
-    with {token, conn} <- ensure_user_token(conn),
-         {user, token_inserted_at} <- Snippets.get_user_by_session_token(token) do
-      conn
-      |> assign(:current_scope, Scope.for_user(user))
-      |> maybe_reissue_user_session_token(user, token_inserted_at)
+    headers = ["x-authenticated-user", "x-authenticated-group"]
+      |> Enum.map(fn h -> {h, conn |> get_req_header(h) |> List.first} end)
+      |> Enum.filter(fn {_, v} -> v != nil end)
+
+    scope = process_auth_headers(headers)
+
+    if is_nil(scope) do
+      with {token, conn} <- ensure_user_token(conn),
+          {user, token_inserted_at} <- Snippets.get_user_by_session_token(token) do
+        conn
+        |> assign(:current_scope, Scope.for_user(user))
+        |> maybe_reissue_user_session_token(user, token_inserted_at)
+      else
+        nil -> assign(conn, :current_scope, Scope.for_user(nil))
+      end
     else
-      nil -> assign(conn, :current_scope, Scope.for_user(nil))
+      assign(conn, :current_scope, scope)
     end
   end
 
@@ -246,7 +256,8 @@ defmodule SnippetwikiWeb.UserAuth do
   end
 
   defp mount_current_scope(socket, session) do
-    scope = process_auth_headers(socket)
+    headers = Phoenix.LiveView.get_connect_info(socket, :x_headers)
+    scope = process_auth_headers(headers)
 
     if is_nil(scope) do
       Phoenix.Component.assign_new(socket, :current_scope, fn ->
@@ -262,9 +273,7 @@ defmodule SnippetwikiWeb.UserAuth do
     end
   end
 
-  defp process_auth_headers(socket) do
-    headers = Phoenix.LiveView.get_connect_info(socket, :x_headers)
-
+  defp process_auth_headers(headers) do
     result = Enum.reduce(headers, %{}, fn header, acc ->
       {key, value} = header
       case key do

@@ -31,9 +31,13 @@ export default function BlockNote({ textarea }) {
   const editor = useCreateBlockNote(options);
 
   // Render the editor
-  return <>
-      <div className={textarea.form !== null ? "textarea w-full" : "bn-editor-readonly"}>
-        <BlockNoteView editor={editor} editable={textarea.form !== null} />
-      </div>
-    </>;
+  if (textarea.form) {
+    return (<div className="textarea w-full min-h-42">
+        <BlockNoteView editor={editor} />
+      </div>)
+  } else {
+    return (<div className="bn-editor-readonly">
+        <BlockNoteView editor={editor} editable={false} />
+      </div>)
+  }
 }

@@ -93,7 +93,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                         module={SnippetwikiWeb.SnippetLive2.Show}
                         id={snippet.id}
                         current_scope={@current_scope}
-                        snippet={Snippets.with_content(snippet)} />
+                        snippet={Snippets.with_content(snippet)}
+                        editing={Enum.member?(@editing, snippet.id)} />
                     <% end %>
 
                     <%= if length(@uploads.documents.entries) == 0 and length(@open) == 0 do %>
@@ -159,12 +160,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
               </div>
           </div>
 
-        <%!-- <DraftList drafts={draftSnippets} openSnippet={openSnippet}/> --%>
         <div class="fixed bottom-[-4px] w-full">
             <div class="flex gap-2 px-4 overflow-y-hidden overflow-x-scroll">
-                <%= for e <- @drafts -- @open do %>
+                <%= for draft_id <- @drafts -- @open do %>
                   <button class="btn btn-warning btn-sm text-nowrap"
-                          phx-click="open_snippet" phx-value-id={e}>
+                          phx-click="edit_snippet" phx-value-id={draft_id}>
                       <svg class="size-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
                           <path
@@ -172,7 +172,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                               strokeLinecap="round"
                               strokeLinejoin="round"/>
                       </svg>
-                      {Enum.find(@snippets, fn s -> s.id == e end).title}
+                      {Enum.find(@snippets, fn s -> s.id == draft_id end).title}
                   </button>
                 <% end %>
             </div>
@@ -235,6 +235,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                         |> Enum.filter(fn s -> s.has_draft end)
                         |> Enum.map(fn s -> s.id end),
                open: [],
+               editing: [],
                uploaded_files: [])
      |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
   end
@@ -247,8 +248,53 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
     {:noreply,
      socket
-     |> assign(:open, [snippet.id | socket.assigns.open])}
+     |> assign(:open, [snippet.id | socket.assigns.open])
+     |> assign(:editing, [snippet.id | socket.assigns.editing])}
   end
+
+  @impl true
+  def handle_event("open_snippet", %{"id" => id}, socket) do
+    snippet_id = String.to_integer(id)
+    if snippet_id in socket.assigns.open do
+      {:noreply, socket}
+    else
+      Snippets.increment_views(socket.assigns.current_scope, snippet_id)
+      {:noreply,
+       socket
+       |> assign(open: [ snippet_id | socket.assigns.open ])}
+    end
+  end
+
+  @impl true
+  def handle_event("edit_snippet", %{"id" => id}, socket) do
+    snippet_id = String.to_integer(id)
+
+    socket = assign(socket, :editing, [ snippet_id | socket.assigns.editing ])
+
+    if snippet_id in socket.assigns.open do
+      {:noreply, socket}
+    else
+      {:noreply, assign(socket, :open, [ snippet_id | socket.assigns.open ])}
+    end
+  end
+
+
+  @impl true
+  def handle_event("close_snippet", %{"id" => id}, socket) do
+    snippet_id = String.to_integer(id)
+
+    {:noreply,
+    socket
+    |> assign(:open, Enum.reject(socket.assigns.open, fn id -> id == snippet_id end))}
+  end
+
+  @impl true
+  def handle_event("close_snippets", _, socket) do
+    {:noreply,
+    socket
+    |> assign(:open, [])}
+  end
+
 
   def handle_event("talk_page", %{ "id" => id }, socket) do
     snippet_id = String.to_integer(id)
@@ -270,35 +316,6 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
          |> assign(:open, [talk_page.id | socket.assigns.open])}
       end
     end
-  end
-
-  @impl true
-  def handle_event("open_snippet", %{"id" => id}, socket) do
-    snippet_id = String.to_integer(id)
-    if snippet_id in socket.assigns.open do
-      {:noreply, socket}
-    else
-      Snippets.increment_views(socket.assigns.current_scope, snippet_id)
-      {:noreply,
-       socket
-       |> assign(open: [ snippet_id | socket.assigns.open ])}
-    end
-  end
-
-  @impl true
-  def handle_event("close_snippet", %{"id" => id}, socket) do
-    snippet_id = String.to_integer(id)
-
-    {:noreply,
-    socket
-    |> assign(:open, Enum.reject(socket.assigns.open, fn id -> id == snippet_id end))}
-  end
-
-  @impl true
-  def handle_event("close_snippets", _, socket) do
-    {:noreply,
-    socket
-    |> assign(:open, [])}
   end
 
 
@@ -334,6 +351,20 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   end
 
 
+  @impl true
+  def handle_info({:start_editing, snippet}, socket) do
+    {:noreply,
+     socket
+     |> assign(:editing, [ snippet.id | socket.assigns.editing ])}
+  end
+
+  @impl true
+  def handle_info({:stop_editing, snippet}, socket) do
+    {:noreply,
+     socket
+     |> assign(:editing, Enum.reject(socket.assigns.editing, fn id -> id == snippet.id end))
+    }
+  end
 
   @impl true
   def handle_info({type, %Snippetwiki.Snippets.Snippet{}}, socket)

@@ -77,7 +77,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
           </div>
 
           <%= if is_nil(@snippet.content) do %>
-            <div class="flex items-center justify-center p-4">
+            <div class="flex items-center justify-center p-10.5">
                 <p class="text-lg text-center text-base-content/30">Empty snippet</p>
               </div>
           <% else %>
@@ -110,10 +110,19 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
   end
 
   @impl true
-  def mount(socket) do
-    {:ok,
-     socket
-     |> assign(:editing, false)}
+  def update(assigns, socket) do
+    socket = socket
+      |> assign(:snippet, assigns.snippet)
+      |> assign(:current_scope, assigns.current_scope)
+      |> assign(:editing, assigns.editing)
+
+    if (assigns.editing) do
+      {:ok,
+       socket
+       |> assign(:form, to_form(Snippets.change_snippet(assigns.current_scope, assigns.snippet)))}
+    else
+      {:ok, socket}
+    end
   end
 
   @impl true
@@ -127,10 +136,9 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
     snippet = socket.assigns.snippet
     {:ok, _} = Snippets.create_draft(socket.assigns.current_scope, snippet)
 
-    {:noreply,
-      socket
-      |> assign(:editing, true)
-      |> assign(:form, to_form(Snippets.change_snippet(socket.assigns.current_scope, snippet)))}
+    send(self(), {:start_editing, snippet})
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -141,23 +149,27 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
 
   @impl true
   def handle_event("save_changes", %{"snippet" => %{"title" => title, "content" => content}}, socket) do
-    case Snippets.create_new_revision(socket.assigns.current_scope, socket.assigns.snippet, %{"title" => title, "has_draft" => false}, content) do
-      {:ok, snippet} ->
-        {:noreply,
-        socket
-        |> assign(:editing, false)
-        |> assign(:snippet, snippet)
-        |> put_flash(:info, "Snippet updated successfully")}
-
+    {:ok, snippet} = Snippets.create_new_revision(socket.assigns.current_scope, socket.assigns.snippet, %{"title" => title, "has_draft" => false}, content)
       # {:error, %Ecto.Changeset{} = changeset} ->
       #   {:noreply, assign(socket, form: to_form(changeset))}
-    end
+
+    send(self(), {:stop_editing, snippet})
+
+    {:noreply,
+      socket
+      |> assign(:snippet, snippet)
+      |> put_flash(:info, "Snippet updated successfully")}
   end
 
   @impl true
   def handle_event("discard_changes", _, socket) do
-    {:ok, _} = Snippets.discard_draft(socket.assigns.current_scope, socket.assigns.snippet)
-    {:noreply, assign(socket, :editing, false)}
+    {:ok, snippet} = Snippets.discard_draft(socket.assigns.current_scope, socket.assigns.snippet)
+
+    send(self(), {:stop_editing, snippet})
+
+    {:noreply,
+     socket
+     |> assign(:snippet, snippet)}
   end
 
   @impl true

@@ -28,12 +28,12 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
               </.button>
 
               <.button type="submit" variant="success">
-                <.icon name="hero-check" class="size-6" />
+                <.icon name="hero-check" class="size-7" />
               </.button>
               <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
 
               <.button type="button" phx-click="discard_changes" phx-target={@myself}>
-                <.icon name="hero-x-mark" class="size-6" />
+                <.icon name="hero-x-mark" class="size-7" />
               </.button>
               <%!-- <.button navigate={return_path(@return_to, @snippet)}>Cancel</.button> --%>
             </div>
@@ -71,7 +71,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
                 <% end %>
               <% end %>
               <.button phx-click="close_snippet" phx-value-id={@snippet.id}>
-                <.icon name="hero-x-mark" class="size-6" />
+                <.icon name="hero-x-mark" class="size-7" />
               </.button>
             </div>
           </div>

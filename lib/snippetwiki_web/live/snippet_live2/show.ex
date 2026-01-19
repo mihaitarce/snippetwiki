@@ -38,7 +38,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
 
           <%= if is_nil(@snippet.content_type) or @snippet.content_type == "text/html" do %>
             <.input field={@form[:content]} type="textarea" />
-            <div id={"editor-#{@snippet.id}"} phx-hook="BlockNote" phx-update="ignore"
+            <div id={"editor-#{@snippet.id}"} phx-hook="Editor" phx-update="ignore"
                  data-id={@snippet.id}></div>
           <% end %>
 
@@ -54,7 +54,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
             </h1>
             <div class="flex py-1">
               <%= if is_nil(@snippet.namespace) do %>
-                <.button phx-click="talk_page" phx-value-title={@snippet.title}>
+                <.button phx-click="talk_page" phx-value-id={@snippet.title}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />
                 </.button>
 
@@ -81,7 +81,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
           <% else %>
             <%= if @snippet.content_type == "text/html" do %>
               <textarea class="hidden">{@snippet.content}</textarea>
-              <div id={"viewer-#{@snippet.id}"} phx-hook="BlockNote" phx-update="ignore"></div>
+              <div id={"viewer-#{@snippet.id}"} phx-hook="Viewer" phx-update="ignore"></div>
             <% end %>
 
             <%= if @snippet.content_type == "image/jpeg" do %>

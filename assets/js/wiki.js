@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import BlockNote from "../components/BlockNote";
+import Editor from "../components/Editor";
+import Viewer from "../components/Viewer";
 
 import NumberFlow from '@number-flow/react';
 
@@ -8,12 +9,21 @@ import '@fontsource-variable/noto-sans';
 import '@fontsource-variable/noto-serif';
 
 export const hooks = {
-    BlockNote: {
+    Editor: {
         mounted() {
             const id = this.el.dataset.id
             const textareaElement = this.el.parentNode.querySelector('textarea')
             const root = ReactDOM.createRoot(this.el);
-            root.render(<BlockNote id={id} textarea={textareaElement} />);
+            root.render(<Editor id={id} textarea={textareaElement} />);
+        }
+    },
+
+    Viewer: {
+        mounted() {
+            const id = this.el.dataset.id
+            const textareaElement = this.el.parentNode.querySelector('textarea')
+            const root = ReactDOM.createRoot(this.el);
+            root.render(<Viewer id={id} textarea={textareaElement} />);
         }
     },
 

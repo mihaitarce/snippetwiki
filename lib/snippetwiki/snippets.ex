@@ -336,7 +336,7 @@ defmodule Snippetwiki.Snippets do
     Repo.get_by!(Snippet, id: id, user_id: scope.user.id)
   end
 
-  def find_snippet(scope, title, namespace \\ nil) do
+  def find_snippet(%Scope{} = scope, title, namespace \\ nil) do
     query = from s in Snippet, as: :snippet,
       where: s.title == ^title and s.namespace == ^namespace,
       left_join: r in assoc(s, :revisions),
@@ -346,7 +346,7 @@ defmodule Snippetwiki.Snippets do
     Repo.get_by(query, user_id: scope.user.id)
   end
 
-  def find_snippet!(scope, title, namespace \\ nil) do
+  def find_snippet!(%Scope{} = scope, title, namespace \\ nil) do
     query = from s in Snippet, as: :snippet,
       where: s.title == ^title and s.namespace == ^namespace,
       left_join: r in assoc(s, :revisions),

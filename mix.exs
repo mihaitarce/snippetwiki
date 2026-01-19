@@ -67,7 +67,8 @@ defmodule Snippetwiki.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
-      {:file_size, "~> 3.0.1"}
+      {:file_size, "~> 3.0.1"},
+      {:y_ex, "~> 0.10.0"}
     ]
   end
 

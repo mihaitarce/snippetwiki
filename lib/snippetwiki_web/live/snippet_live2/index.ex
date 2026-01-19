@@ -296,14 +296,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   end
 
 
-  def handle_event("talk_page", %{ "id" => id }, socket) do
-    snippet_id = String.to_integer(id)
-    snippet = Snippets.get_snippet!(socket.assigns.current_scope, snippet_id)
-
-    talk_page = Snippets.find_snippet(socket.assigns.current_scope, snippet.title, "Talk")
+  def handle_event("talk_page", %{ "title" => title }, socket) do
+    talk_page = Snippets.find_snippet(socket.assigns.current_scope, title, "Talk")
 
     if is_nil(talk_page) do
-      {:ok, talk_page} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: snippet.title, namespace: "Talk" })
+      {:ok, talk_page} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: title, namespace: "Talk" })
       {:noreply,
        socket
        |> assign(:open, [talk_page.id | socket.assigns.open])}

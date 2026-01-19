@@ -32,7 +32,7 @@ defmodule SnippetwikiWeb.Router do
       live "/snippets/:id/edit", SnippetLive.Form, :edit
     end
 
-    get "/files/*name", DownloadController, :download
+    get "/files/*title", DownloadController, :download
   end
 
   # Other scopes may use custom stacks.

@@ -10,9 +10,10 @@ import '@fontsource-variable/noto-serif';
 export const hooks = {
     BlockNote: {
         mounted() {
+            const id = this.el.dataset.id
             const textareaElement = this.el.parentNode.querySelector('textarea')
             const root = ReactDOM.createRoot(this.el);
-            root.render(<BlockNote textarea={textareaElement} />);
+            root.render(<BlockNote id={id} textarea={textareaElement} />);
         }
     },
 
@@ -21,10 +22,6 @@ export const hooks = {
 
         number() {
             return this.el.dataset.number
-        },
-
-        item() {
-            return this.el.dataset.item
         },
 
         updateComponent() {

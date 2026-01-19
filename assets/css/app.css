@@ -106,11 +106,28 @@
 /* This file is for your main application CSS */
 @plugin "@tailwindcss/typography";
 
+html, .bn-container * {
+  font-family: 'Noto Sans Variable', system-ui, sans-serif;
+}
+
 a {
   color: var(--color-primary);
   text-decoration: underline;
-  font-weight: 450;
+  font-weight: 500;
   cursor: pointer;
+}
+
+h1,
+.bn-editor h1,
+.bn-editor h2,
+.title {
+  font-family: 'Noto Serif Variable', serif;
+  font-weight: 400;
+}
+
+.bn-editor h1,
+.bn-editor h2 {
+  font-size: 24px !important;
 }
 
 .bn-editor-readonly .bn-editor {

@@ -4,6 +4,9 @@ import BlockNote from "../components/BlockNote";
 
 import NumberFlow from '@number-flow/react';
 
+import '@fontsource-variable/noto-sans';
+import '@fontsource-variable/noto-serif';
+
 export const hooks = {
     BlockNote: {
         mounted() {

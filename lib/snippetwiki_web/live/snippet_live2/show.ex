@@ -9,17 +9,14 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
     <div class="card bg-base-100">
       <%= if @editing do %>
         <.form for={@form} class="card-body" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
-          <div class="flex justify-between items-center mb-2 h-14">
-            <%= if is_nil(@snippet.content) or @snippet.content_type == "text/html" do %>
-              <.input type="text" field={@form[:title]} class="input input-lg" />
+          <div class="flex justify-between min-h-12">
+            <%= if is_nil(@snippet.namespace) do %>
+              <.input type="text" field={@form[:title]} class="title input input-lg text-2xl" />
             <% else %>
-              <div class="text-3xl max-w-[25ch] truncate">
-                {@snippet.namespace}
-                {@snippet.title}
-              </div>
+              <h1 class="title text-3xl">{@snippet.namespace}:{@snippet.title}</h1>
             <% end %>
 
-            <div>
+            <div class="flex py-1">
               <.button type="button" variant="error"
                 phx-click="delete"
                 phx-target={@myself}
@@ -50,11 +47,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
         </.form>
       <% else %>
         <div class="card-body">
-          <div class="flex justify-between items-center mb-2 h-14">
-            <div class="text-3xl max-w-[25ch] truncate">
+          <div class="flex justify-between min-h-12">
+            <h1 class="title text-3xl py-1.5">
               <%= if @snippet.namespace do %>{@snippet.namespace}:<% end %>{@snippet.title}
-            </div>
-            <div>
+            </h1>
+            <div class="flex py-1">
               <%= if is_nil(@snippet.namespace) do %>
                 <.button phx-click="talk_page" phx-value-id={@snippet.id}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />

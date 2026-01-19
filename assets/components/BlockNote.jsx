@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { BlockNoteSchema, createHeadingBlockSpec } from "@blocknote/core";
+import { BlockNoteSchema, createHeadingBlockSpec, BlockNoteEditor } from "@blocknote/core";
+import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import { useCreateBlockNote } from "@blocknote/react";
 // Or, you can use ariakit, shadcn, etc.
 import { BlockNoteView } from "@blocknote/mantine";
@@ -26,11 +27,6 @@ export default function BlockNote({ id, textarea }) {
   }
 
   if (textarea) {
-    if (textarea.value.length > 0) {
-      // Load content from textarea
-      options.initialContent = JSON.parse(textarea.value)
-    }
-
     // Update textarea content on form submission
     useEffect(() => {
       textarea.form?.addEventListener('submit', (e) => {
@@ -107,7 +103,21 @@ export default function BlockNote({ id, textarea }) {
         showCursorLabels: "activity",
       }
 
-      // provider.awareness.setLocalStateField('user', localUser)
+      provider.once('synced', (isSynced) => {
+        if (isSynced) {
+          const fragment = yDoc.getXmlFragment("document-store")
+
+          if (textarea.value.length > 0 && fragment._length === 0) {
+            // Load content from textarea
+            const temporaryEditor = BlockNoteEditor.create();
+            blocksToYXmlFragment(
+              temporaryEditor, 
+              JSON.parse(textarea.value),
+              fragment
+            );
+          }
+        }
+      })
 
       // // You can observe when a user updates their awareness information
       // awareness.on('change', changes => {
@@ -115,6 +125,11 @@ export default function BlockNote({ id, textarea }) {
       //         .filter(state => state.user !== localUser)
       //         .map(state => state.user))
       // })
+    } else {
+      if (textarea.value.length > 0) {
+        // Load content from textarea
+        options.initialContent = JSON.parse(textarea.value)
+      }
     }
 
   }

@@ -16,8 +16,8 @@ defmodule SnippetwikiWeb.Endpoint do
     longpoll: [connect_info: [:x_headers, session: @session_options]]
 
   socket "/socket", YPhoenixWeb.UserSocket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    websocket: [connect_info: [:x_headers, session: @session_options]],
+    longpoll: [connect_info: [:x_headers, session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #

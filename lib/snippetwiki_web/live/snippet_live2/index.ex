@@ -58,26 +58,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                       </div>
                   </div>
 
-                  <!-- Search button -->
-                  <div class="dropdown dropdown-end w-full">
-                    <label tabIndex={0} role="button" class="input w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                              stroke="currentColor"
-                              class="h-[1em] opacity-50">
-                            <path strokeLinecap="round" strokeLinejoin="round"
-                                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                        </svg>
-                        <input type="search" class="grow" placeholder="Search" />
-                    </label>
-                    <ul tabIndex="0" class="dropdown-content bg-base-100 rounded-box shadow-sm z-1 p-2 mt-3 w-full text-base-content/70">
-                      <li class="px-3 py-2 truncate">
-                          <%!-- "hover:bg-primary-content/70 hover:text-primary/70" --%>
-                          <%!-- "bg-primary-content text-primary" --%>
-                          <a>result.title</a>
-                      </li>
-                      <div class="text-base-content/50 italic px-2">No matches found</div>
-                    </ul>
-                </div>
+                  <.live_component
+                   module={SnippetwikiWeb.SnippetLive2.Search}
+                   id="search"
+                   current_scope={@current_scope}/>
               </div>
               <div class="flex-1 flex flex-col overflow-y-scroll overscroll-none max-w-screen xl:w-[calc(65ch+5rem)]">
                   <div class="flex flex-col gap-4 p-4">
@@ -129,7 +113,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                   <div class="tab-content p-3">
                       <ul>
                         <li :for={snippet <- Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
-                              id={"recent-link-#{Integer.to_string(snippet.id)}"} class="py-1">
+                              id={"recent-link-#{Integer.to_string(snippet.id)}"} class="pb-1">
                             <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
                             <%= if snippet.has_draft do %>
                               <.icon name="hero-pencil" class="ms-2 size-4" />
@@ -152,11 +136,6 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                            id={"file-link-#{Integer.to_string(snippet.id)}"}
                            phx-click="open_snippet" phx-value-id={snippet.id}>File:{snippet.title}</a>
                       </div>
-                  </div>
-
-                  <input type="radio" name="tabs" class="tab" aria-label="Open" />
-                  <div class="tab-content p-3">
-                    <%!-- open snippets --%>
                   </div>
 
                   <input type="radio" name="tabs" class="tab" aria-label="Map" />

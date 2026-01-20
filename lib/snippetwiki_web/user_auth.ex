@@ -5,6 +5,7 @@ defmodule SnippetwikiWeb.UserAuth do
   import Phoenix.Controller
 
   alias Snippetwiki.Snippets
+  alias Snippetwiki.UserAuth
   alias Snippetwiki.Snippets.Scope
 
   # Make the remember me cookie valid for 14 days. This should match
@@ -69,7 +70,7 @@ defmodule SnippetwikiWeb.UserAuth do
       |> Enum.map(fn h -> {h, conn |> get_req_header(h) |> List.first} end)
       |> Enum.filter(fn {_, v} -> v != nil end)
 
-    scope = process_auth_headers(headers)
+    scope = UserAuth.process_auth_headers(headers)
 
     if is_nil(scope) do
       with {token, conn} <- ensure_user_token(conn),
@@ -257,7 +258,7 @@ defmodule SnippetwikiWeb.UserAuth do
 
   defp mount_current_scope(socket, session) do
     headers = Phoenix.LiveView.get_connect_info(socket, :x_headers)
-    scope = process_auth_headers(headers)
+    scope = UserAuth.process_auth_headers(headers)
 
     if is_nil(scope) do
       Phoenix.Component.assign_new(socket, :current_scope, fn ->
@@ -270,23 +271,6 @@ defmodule SnippetwikiWeb.UserAuth do
       end)
     else
       Phoenix.Component.assign(socket, :current_scope, scope)
-    end
-  end
-
-  defp process_auth_headers(headers) do
-    result = Enum.reduce(headers, %{}, fn header, acc ->
-      {key, value} = header
-      case key do
-        "x-authenticated-user" -> Map.put(acc, :email, value)
-        "x-authenticated-group" -> Map.put(acc, :group, value)
-        _ -> acc
-      end
-    end)
-
-    if Enum.empty?(result) do
-      nil
-    else
-      %Scope{user: Map.put(result, :id, 1)}
     end
   end
 

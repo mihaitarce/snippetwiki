@@ -9,7 +9,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
     <div class="card bg-base-100">
       <%= if @editing do %>
         <.form for={@form} class="card-body" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
-          <div class="flex justify-between min-h-12">
+          <div class="flex justify-between gap-2 min-h-12">
             <%= if is_nil(@snippet.namespace) do %>
               <.input type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
             <% else %>
@@ -48,7 +48,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
         </.form>
       <% else %>
         <div class="card-body">
-          <div class="flex justify-between min-h-16">
+          <div class="flex justify-between gap-2 min-h-16">
             <h1 class="text-3xl py-1.5">
               <%= if @snippet.namespace do %>{@snippet.namespace}:<% end %>{@snippet.title}
             </h1>

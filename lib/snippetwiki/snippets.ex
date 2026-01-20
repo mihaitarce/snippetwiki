@@ -318,6 +318,14 @@ defmodule Snippetwiki.Snippets do
     Repo.all_by(query, user_id: scope.user.id)
   end
 
+  def search_snippets(%Scope{} = scope, query_string) do
+    query = from s in Snippet, as: :snippet,
+      where: ilike(s.title, ^("%#{query_string}%")) and is_nil(s.namespace),
+      order_by: [desc: :updated_at, desc: :id]
+
+    Repo.all_by(query, user_id: scope.user.id)
+  end
+
   @doc """
   Gets a single snippet.
 

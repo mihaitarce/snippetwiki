@@ -1,6 +1,8 @@
 defmodule YPhoenixWeb.UserSocket do
   use Phoenix.Socket
 
+  alias Snippetwiki.UserAuth
+
   # A Socket handler
   #
   # It's possible to control the websocket connection and
@@ -26,8 +28,11 @@ defmodule YPhoenixWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   @impl true
-  def connect(_params, socket, _connect_info) do
-    {:ok, socket}
+  def connect(_params, socket, connect_info) do
+    scope = UserAuth.process_auth_headers(connect_info.x_headers)
+
+    {:ok,
+     socket |> assign(:current_scope, scope)}
   end
 
   # Socket IDs are topics that allow you to identify all sockets for a given user:

@@ -1,134 +1,54 @@
 import React, { useEffect, useState } from "react";
-import { BlockNoteSchema, createHeadingBlockSpec, BlockNoteEditor } from "@blocknote/core";
-import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 
-import * as Y from 'yjs';
-import { Socket } from "phoenix";
-import { PhoenixChannelProvider } from "./y-phoenix-channel";
-
-import EditorComponent from "./EditorComponent";
+import { useCreateBlockNote } from "@blocknote/react";
+// Or, you can use ariakit, shadcn, etc.
+import { BlockNoteView } from "@blocknote/mantine";
+// Default styles for the mantine editor
+import "@blocknote/mantine/style.css";
 
 
-const nameList = [
-    'Time','Past','Future','Dev',
-    'Fly','Flying','Soar','Soaring','Power','Falling',
-    'Fall','Jump','Cliff','Mountain','Rend','Red','Blue',
-    'Green','Yellow','Gold','Demon','Demonic','Panda','Cat',
-    'Kitty','Kitten','Zero','Memory','Trooper','XX','Bandit',
-    'Fear','Light','Glow','Tread','Deep','Deeper','Deepest',
-    'Mine','Your','Worst','Enemy','Hostile','Force','Video',
-    'Game','Donkey','Mule','Colt','Cult','Cultist','Magnum',
-    'Gun','Assault','Recon','Trap','Trapper','Redeem','Code',
-    'Script','Writer','Near','Close','Open','Cube','Circle',
-    'Geo','Genome','Germ','Spaz','Shot','Echo','Beta','Alpha',
-    'Gamma','Omega','Seal','Squid','Money','Cash','Lord','King',
-    'Duke','Rest','Fire','Flame','Morrow','Break','Breaker','Numb',
-    'Ice','Cold','Rotten','Sick','Sickly','Janitor','Camel','Rooster',
-    'Sand','Desert','Dessert','Hurdle','Racer','Eraser','Erase','Big',
-    'Small','Short','Tall','Sith','Bounty','Hunter','Cracked','Broken',
-    'Sad','Happy','Joy','Joyful','Crimson','Destiny','Deceit','Lies',
-    'Lie','Honest','Destined','Bloxxer','Hawk','Eagle','Hawker','Walker',
-    'Zombie','Sarge','Capt','Captain','Punch','One','Two','Uno','Slice',
-    'Slash','Melt','Melted','Melting','Fell','Wolf','Hound',
-    'Legacy','Sharp','Dead','Mew','Chuckle','Bubba','Bubble',
-    'Sandwich','Smasher','Extreme','Multi','Universe','Ultimate',
-    'Death','Ready','Monkey','Elevator','Wrench','Grease','Head',
-    'Theme','Grand','Cool','Kid','Boy','Girl','Vortex','Paradox'
-];
-const randomName = () => `${nameList[Math.floor( Math.random() * nameList.length )]} ${nameList[Math.floor( Math.random() * nameList.length )]}`;
+function initials(name) {
+    const rgx = new RegExp(/(\p{L}{1})\p{L}+/, 'gu');
 
-const colorList = [ // all -400 values
-    '#fb923c', // 'oklch(75% 0.183 55.934)', // orange
-    '#facc15', // 'oklch(85.2% 0.199 91.936)', // yellow
-    '#a3e635', // 'oklch(84.1% 0.238 128.85)', // lime
-    '#34d399', // 'oklch(76.5% 0.177 163.223)', // emerald
-    '#22d3ee', // 'oklch(78.9% 0.154 211.53)', // cyan
-    '#60a5fa', // 'oklch(70.7% 0.165 254.624)', // blue
-    '#a78bfa', // 'oklch(70.2% 0.183 293.541)', // violet
-    '#e879f9', // 'oklch(74% 0.238 322.16)', // fuchsia
-    '#fb7185', // 'oklch(71.2% 0.194 13.428)' // rose
-];
-const randomColor = () => colorList[Math.floor(Math.random() * colorList.length)];
+    const initials = [...name.matchAll(rgx)] || [];
 
-export default function Editor({ id, textarea }) {
-  const [localUser, setLocalUser] = useState()
-  const [options, setOptions] = useState({
-    trailingBlock: false,
-    schema: BlockNoteSchema.create().extend({
-      blockSpecs: {
-        heading: createHeadingBlockSpec({
-          // Disables toggleable headings.
-          allowToggleHeadings: false,
-          // Sets the allowed heading levels.
-          levels: [1],
-        }),
-      },
-    })
-  })
-  const [provider, setProvider] = useState()
+    return (
+    (initials.shift()?.[1] || '') + (initials.pop()?.[1] || '')
+    ).toUpperCase();
+}
+
+
+export default function Editor({ textarea, options }) {
+  const [usersPresent, setUsersPresent] = useState([])
 
   useEffect(() => {
-    // In a form, connect to collaboration provider and load initial content
-    const socket = new Socket("/socket");
-    socket.connect();
+      // You can observe when a user updates their awareness information
+      const awareness = options.collaboration.provider.awareness
 
-    const yDoc = new Y.Doc()
-    const provider = new PhoenixChannelProvider(
-        socket,
-        `y_doc_room:${id}`,
-        yDoc,
-    )
+      awareness.on('change', changes => {
+          setUsersPresent(Array
+              .from(awareness.getStates().values())
+              .filter(state => state.user !== options.collaboration.user)
+              .map(state => state.user));
+      })
 
-    // const persistence = new IndexeddbPersistence(docname, ydoc);
-
-    // Load content if there is no content in the collaborative document yet
-    provider.once('synced', (isSynced) => {
-      if (isSynced) {
-        const fragment = yDoc.getXmlFragment("document-store")
-
-        if (textarea.value.length > 0 && fragment._length === 0) {
-          blocksToYXmlFragment(
-            BlockNoteEditor.create(),
-            JSON.parse(textarea.value),
-            fragment
-          );
-        }
-      }
-    })
-
-    const localUser = {
-      name: randomName(),
-      color: randomColor()
-    }
-
-    options.collaboration = {
-      // The Yjs Provider responsible for transporting updates:
-      provider,
-      // Where to store BlockNote data in the Y.Doc:
-      fragment: yDoc.getXmlFragment("document-store"),
-      // Information (name and color) for this user:
-      user: localUser,
-      // When to show user labels on the collaboration cursor. Set by default to
-      // "activity" (show when the cursor moves), but can also be set to "always".
-      showCursorLabels: "activity",
-    }
-
-    setProvider(provider);
-    setLocalUser(localUser);
-    
-    return () => {
-      console.log("Cleaning up");
-      
-      provider.disconnect();
-      socket.disconnect();
-    }
+      // Update textarea content on form submission
+      textarea.form.addEventListener('submit', (e) => {
+        textarea.value = JSON.stringify(editor.document)
+      })
   }, [])
 
+  const editor = useCreateBlockNote(options);
 
   // Render the editor
-  if (provider) {
-    return <EditorComponent options={options} provider={provider} localUser={localUser} textarea={textarea} />
-  } else {
-    return <div>Connecting...</div>
-  }
+  return (<div className="textarea w-full min-h-42 relative mt-4">
+      {usersPresent.length > 0 && <div className="flex items-center gap-1 bg-base-100 rounded h-6 px-1 absolute top-[-13px] right-2" style={{zIndex: 2}}>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-[1.2em]">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+          </svg>
+          {usersPresent.map((u) => <div key={u.name} className="badge" style={{backgroundColor: u.color}}>{initials(u.name)}</div>)}
+      </div>}
+
+      <BlockNoteView editor={editor} />
+  </div>)
 }

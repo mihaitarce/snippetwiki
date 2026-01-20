@@ -48,7 +48,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
         </.form>
       <% else %>
         <div class="card-body">
-          <div class="flex justify-between min-h-12">
+          <div class="flex justify-between min-h-16">
             <h1 class="title text-3xl py-1.5">
               <%= if @snippet.namespace do %>{@snippet.namespace}:<% end %>{@snippet.title}
             </h1>

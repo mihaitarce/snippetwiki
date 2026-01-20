@@ -110,6 +110,11 @@ html, .bn-container * {
   font-family: 'Noto Sans Variable', system-ui, sans-serif;
 }
 
+pre,
+.bn-container code {
+  font-family: 'Noto Sans Mono Variable', monospace;
+}
+
 a {
   color: var(--color-primary);
   text-decoration: underline;
@@ -132,4 +137,8 @@ h1,
 
 .bn-editor-readonly .bn-editor {
   padding: 0 !important;
+}
+
+.bn-editor-readonly .bn-editor > .bn-block-group > .bn-block-outer:last-child {
+  display: none;
 }

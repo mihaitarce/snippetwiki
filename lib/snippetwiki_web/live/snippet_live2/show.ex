@@ -13,7 +13,14 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
             <%= if is_nil(@snippet.namespace) do %>
               <.input type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
             <% else %>
-              <h1 class="text-3xl">{@snippet.namespace}:{@snippet.title}</h1>
+              <%= if @snippet.namespace == "File" do %>
+                <div class="title text-3xl flex gap-1 items-center">
+                  <span class="title text-3xl pb-2">{@snippet.namespace}:</span>
+                  <.input type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
+                </div>
+              <% else %>
+                <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
+              <% end %>
             <% end %>
 
             <div class="flex flex-col sm:flex-row gap-1 py-1">
@@ -45,19 +52,27 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
           <%= if @snippet.content_type == "image/jpeg" do %>
             <img src={get_file_url(@snippet.title)} alt={@snippet.title}>
           <% end %>
+
+          <%= if @snippet.content_type == "application/pdf" do %>
+            <iframe src={get_file_url(@snippet.title)} title={@snippet.title} class="w-full aspect-square"></iframe>
+          <% end %>
         </.form>
       <% else %>
         <div class="card-body">
           <div class="flex justify-between gap-2 min-h-16">
-            <h1 class="text-3xl py-1.5">
-              <%= if @snippet.namespace do %>{@snippet.namespace}:<% end %>{@snippet.title}
-            </h1>
+            <%= if @snippet.namespace do %>
+              <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
+            <% else %>
+              <h1 class="text-3xl py-1.5">{@snippet.title}</h1>
+            <% end %>
             <div class="flex flex-col sm:flex-row gap-1 py-1">
               <%= if is_nil(@snippet.namespace) do %>
                 <%!-- <.button phx-click="talk_page" phx-value-title={@snippet.title}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />
                 </.button> --%>
+              <% end %>
 
+              <%= if is_nil(@snippet.namespace) or @snippet.namespace == "File" do %>
                 <%= if @snippet.has_draft do %>
                   <.button phx-click="edit_snippet" phx-target={@myself} variant="warning" title="Someone else is editing this snippet.">
                     <.icon name="hero-pencil" class="size-6" />
@@ -68,6 +83,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
                   </.button>
                 <% end %>
               <% end %>
+
               <.button phx-click="close_snippet" phx-value-id={@snippet.id}>
                 <.icon name="hero-x-mark" class="size-7" />
               </.button>
@@ -86,6 +102,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
 
             <%= if @snippet.content_type == "image/jpeg" do %>
               <img src={get_file_url(@snippet.title)} alt={@snippet.title}>
+            <% end %>
+
+            <%= if @snippet.content_type == "application/pdf" do %>
+              <iframe src={get_file_url(@snippet.title)} title={@snippet.title} class="w-full aspect-square"></iframe>
             <% end %>
           <% end %>
 

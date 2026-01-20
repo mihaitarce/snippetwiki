@@ -318,12 +318,18 @@ defmodule Snippetwiki.Snippets do
     Repo.all_by(query, user_id: scope.user.id)
   end
 
-  def search_snippets(%Scope{} = scope, query_string) do
+  def search_snippets(%Scope{} = scope, query_string \\ nil) do
     query = from s in Snippet, as: :snippet,
-      where: ilike(s.title, ^("%#{query_string}%")) and is_nil(s.namespace),
+      where: is_nil(s.namespace),
       order_by: [desc: :updated_at, desc: :id]
 
-    Repo.all_by(query, user_id: scope.user.id)
+    if is_nil(query_string) do
+      query
+    else
+      query
+      |> where([s], ilike(s.title, ^("%#{query_string}%")))
+    end
+    |> Repo.all_by(user_id: scope.user.id)
   end
 
   @doc """

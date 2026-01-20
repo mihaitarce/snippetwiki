@@ -22,10 +22,9 @@ defmodule SnippetwikiWeb.SnippetLive2.Search do
             <div class="text-base-content/50 italic px-2">No matches found</div>
           <% else %>
             <li :for={result <- @results} id={"search-result-#{result.id}"}
-              class="px-2 py-1 truncate">
-              <%!-- "hover:bg-primary-content/70 hover:text-primary/70" --%>
-              <%!-- "bg-primary-content text-primary" --%>
-              <a phx-click="open_snippet" phx-value-id={result.id}>{result.title}</a>
+              class="px-2 py-1 truncate hover:bg-primary-content/70 hover:text-primary/70"
+              phx-click="open_snippet" phx-value-id={result.id}>
+              <a>{result.title}</a>
             </li>
           <% end %>
         </ul>
@@ -38,7 +37,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Search do
     {:ok,
      socket
      |> assign(:current_scope, assigns.current_scope)
-     |> assign(:results, Snippets.list_snippets(assigns.current_scope))}
+     |> assign(:results, Snippets.search_snippets(assigns.current_scope))}
   end
 
   @impl true

@@ -8,7 +8,7 @@ import "@blocknote/mantine/style.css";
 
 export default function Viewer({ id, textarea }) {
     const options = {
-        trailingBlock: false,
+        // trailingBlock: false,
         schema: BlockNoteSchema.create().extend({
             blockSpecs: {
             heading: createHeadingBlockSpec({
@@ -19,6 +19,15 @@ export default function Viewer({ id, textarea }) {
             }),
             },
         }),
+        resolveFileUrl: (url) => {
+            return new Promise((resolve) => {
+                if (url.startsWith("https://")) {
+                    resolve(url)
+                } else {
+                    resolve(`/files/${url}`)
+                }
+            }) 
+        }
     }
 
     if (textarea?.value.length > 0) {

@@ -7,6 +7,7 @@ import NumberFlow from '@number-flow/react';
 
 import '@fontsource-variable/noto-sans';
 import '@fontsource-variable/noto-serif';
+import '@fontsource-variable/noto-sans-mono';
 
 import * as Y from 'yjs';
 import { Socket } from "phoenix";
@@ -96,8 +97,37 @@ export const hooks = {
                 color: this.randomColor()
             }
 
+
+            // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
+            async function uploadFile(file) {
+                const body = new FormData();
+                body.append("file", file);
+
+                const csrfToken = document
+                    .querySelector('meta[name="csrf-token"]')
+                    .getAttribute('content')
+
+                body.append('_csrf_token', csrfToken)
+
+                const ret = await fetch("/files/upload", {
+                    method: "POST",
+                    body: body,
+                });
+                return (await ret.json()).data.url
+            }
+
+            function resolveFileUrl(url) {
+                return new Promise((resolve) => {
+                    if (url.startsWith("https://")) {
+                        resolve(url)
+                    } else {
+                        resolve(`/files/${url}`)
+                    }
+                }) 
+            }
+
             const options = {
-                trailingBlock: false,
+                // trailingBlock: false,
                 schema: BlockNoteSchema.create().extend({
                 blockSpecs: {
                     heading: createHeadingBlockSpec({
@@ -118,7 +148,9 @@ export const hooks = {
                     // When to show user labels on the collaboration cursor. Set by default to
                     // "activity" (show when the cursor moves), but can also be set to "always".
                     showCursorLabels: "activity",
-                }
+                },
+                uploadFile,
+                resolveFileUrl
             }
 
             const root = ReactDOM.createRoot(this.el);

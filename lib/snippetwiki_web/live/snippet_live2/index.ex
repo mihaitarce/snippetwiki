@@ -31,13 +31,13 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                           </div>
                           <ul tabIndex={0} class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm mt-2">
                               <li>
-                                  <a phx-click="new_snippet">
+                                  <button type="button" phx-click="new_snippet">
                                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                           stroke="currentColor" class="size-5">
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                                       </svg>
                                       New snippet
-                                  </a>
+                                  </button>
                               </li>
                               <li>
                                 <form id="upload" phx-change="validate_upload" phx-submit="save_upload">
@@ -79,7 +79,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                     </ul>
                 </div>
               </div>
-              <div class="flex-1 flex flex-col overflow-y-scroll overscroll-none xl:w-[calc(65ch+5rem)]">
+              <div class="flex-1 flex flex-col overflow-y-scroll overscroll-none max-w-screen xl:w-[calc(65ch+5rem)]">
                   <div class="flex flex-col gap-4 p-4">
                     <%= if length(@uploads.documents.entries) > 0 do %>
                       <section phx-drop-target={@uploads.documents.ref}>
@@ -174,7 +174,9 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                               strokeLinecap="round"
                               strokeLinejoin="round"/>
                       </svg>
-                      {Enum.find(@snippets, fn s -> s.id == draft_id end).title}
+                      <span class="max-w-24 md:max-w-48 truncate">
+                        {Enum.find(@snippets, fn s -> s.id == draft_id end).title}
+                      </span>
                   </button>
                 <% end %>
             </div>

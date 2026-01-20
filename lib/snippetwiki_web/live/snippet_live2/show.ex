@@ -11,12 +11,12 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
         <.form for={@form} class="card-body" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
           <div class="flex justify-between min-h-12">
             <%= if is_nil(@snippet.namespace) do %>
-              <.input type="text" field={@form[:title]} class="title input input-lg text-2xl" />
+              <.input type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
             <% else %>
-              <h1 class="title text-3xl">{@snippet.namespace}:{@snippet.title}</h1>
+              <h1 class="text-3xl">{@snippet.namespace}:{@snippet.title}</h1>
             <% end %>
 
-            <div class="flex py-1">
+            <div class="flex flex-col sm:flex-row gap-1 py-1">
               <.button type="button" variant="error"
                 phx-click="delete"
                 phx-target={@myself}
@@ -49,14 +49,14 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
       <% else %>
         <div class="card-body">
           <div class="flex justify-between min-h-16">
-            <h1 class="title text-3xl py-1.5">
+            <h1 class="text-3xl py-1.5">
               <%= if @snippet.namespace do %>{@snippet.namespace}:<% end %>{@snippet.title}
             </h1>
-            <div class="flex py-1">
+            <div class="flex flex-col sm:flex-row gap-1 py-1">
               <%= if is_nil(@snippet.namespace) do %>
-                <.button phx-click="talk_page" phx-value-id={@snippet.title}>
+                <%!-- <.button phx-click="talk_page" phx-value-title={@snippet.title}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />
-                </.button>
+                </.button> --%>
 
                 <%= if @snippet.has_draft do %>
                   <.button phx-click="edit_snippet" phx-target={@myself} variant="warning" title="Someone else is editing this snippet.">

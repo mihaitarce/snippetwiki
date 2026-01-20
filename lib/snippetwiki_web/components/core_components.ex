@@ -98,7 +98,7 @@ defmodule SnippetwikiWeb.CoreComponents do
       "primary" => "btn-primary btn-soft",
       "success" => "btn-success btn-soft",
       "warning" => "btn-warning btn-soft",
-      "error" => "btn-error btn-soft mx-3",
+      "error" => "btn-error btn-soft",
       nil => "btn-ghost text-base-content/50 hover:text-base-content"
     }
 
@@ -281,8 +281,8 @@ defmodule SnippetwikiWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div class="fieldset py-0">
-      <label>
+    <div class="fieldset mb-2">
+      <label class="w-full")>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input
           type={@type}

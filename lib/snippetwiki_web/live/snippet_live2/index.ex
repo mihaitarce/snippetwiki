@@ -374,7 +374,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
      |> assign(:drafts, snippets
                          |> Enum.filter(fn s -> s.has_draft end)
                          |> Enum.map(fn s -> s.id end))
-     |> assign(:opem, socket.assigns.open
+     |> assign(:open, socket.assigns.open
                       |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end))
     }
   end

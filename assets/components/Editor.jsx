@@ -127,9 +127,7 @@ export default function Editor({ id, textarea }) {
 
   // Render the editor
   if (provider) {
-    return (<div className="textarea w-full min-h-42">
-        <EditorComponent options={options} provider={provider} localUser={localUser} textarea={textarea} />
-      </div>)
+    return <EditorComponent options={options} provider={provider} localUser={localUser} textarea={textarea} />
   } else {
     return <div>Connecting...</div>
   }

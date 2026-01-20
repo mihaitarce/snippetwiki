@@ -127,9 +127,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
                   <input type="radio" name="tabs" class="tab" aria-label="Recent" checked="checked" />
                   <div class="tab-content p-3">
-                      <div :for={snippet <- Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
-                            id={"snippet-link-" <> Integer.to_string(snippet.id)}>
-                        <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
+                      <div class="flex flex-col gap-1">
+                        <a :for={snippet <- Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
+                            id={"recent-link-#{Integer.to_string(snippet.id)}"}
+                            phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
                       </div>
 
                       <div class="mt-4">
@@ -142,9 +143,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
                   <input type="radio" name="tabs" class="tab" aria-label="Files" />
                   <div class="tab-content p-3">
-                      <div :for={snippet <- Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
-                            id={"snippet-link-" <> Integer.to_string(snippet.id)}>
-                        <a phx-click="open_snippet" phx-value-id={snippet.id}>File:{snippet.title}</a>
+                      <div class="flex flex-col gap-1">
+                        <a :for={snippet <- Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
+                           id={"file-link-#{Integer.to_string(snippet.id)}"}
+                           phx-click="open_snippet" phx-value-id={snippet.id}>File:{snippet.title}</a>
                       </div>
                   </div>
 

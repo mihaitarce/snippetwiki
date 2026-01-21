@@ -108,11 +108,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
               </div> --%>
 
               <div class="tabs tabs-box h-svh rounded-none p-4">
-                  <input type="radio" name="tabs" class="tab" aria-label="Sidebar" />
+                  <%!-- <input type="radio" name="tabs" class="tab" aria-label="Sidebar" /> --%>
                   <%!-- <div class="tab-content pt-3 overflow-y-scroll overscroll-none"> --%>
-                  <div class="tab-content p-3">
-                      <%!-- <Sidebar/> --%>
-                  </div>
+                  <%!-- <div class="tab-content p-3"> --%>
+                  <%!--   <Sidebar/> --%>
+                  <%!-- </div> --%>
 
                   <input type="radio" name="tabs" class="tab" aria-label="Recent" checked="checked" />
                   <div class="tab-content p-3">
@@ -143,10 +143,10 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                       </div>
                   </div>
 
-                  <input type="radio" name="tabs" class="tab" aria-label="Map" />
-                  <div class="tab-content pt-3">
-                      <%!-- Concept map --%>
-                  </div>
+                  <%!-- <input type="radio" name="tabs" class="tab" aria-label="Map" /> --%>
+                  <%!-- <div class="tab-content pt-3"> --%>
+                  <%!--   Concept map --%>
+                  <%!-- </div> --%>
               </div>
           </div>
 

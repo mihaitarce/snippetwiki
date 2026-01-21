@@ -18,7 +18,6 @@ defmodule Snippetwiki.Repo.Migrations.CreateSnippets do
     create index(:snippets, [:namespace])
     create index(:snippets, [:bag_id])
 
-    create unique_index(:snippets, [:title, :bag_id], where: "namespace IS NULL", name: "snippets_snippet_title_bag_id_index")
-    create unique_index(:snippets, [:title, :bag_id], where: "namespace LIKE 'File'", name: "snippets_file_title_bag_id_index")
+    create unique_index(:snippets, [:title, :bag_id, :namespace], nulls_distinct: false)
   end
 end

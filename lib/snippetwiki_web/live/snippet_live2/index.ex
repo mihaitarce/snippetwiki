@@ -341,7 +341,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
       fn uploads ->
         Map.update!(uploads, :documents,
           fn documents ->
-            refs = Enum.map(errors, fn {ref, msg} -> ref end)
+            refs = Enum.map(errors, fn {ref, _} -> ref end)
 
             documents
             |> Map.update!(:errors, fn e -> e ++ errors end)
@@ -363,15 +363,17 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
   @impl Phoenix.LiveView
   def handle_event("save_upload", _params, socket) do
-    consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
+    created_snippets = consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
       {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
       {:ok, content} = File.read(path)
       Snippets.create_new_revision(socket.assigns.current_scope, snippet, %{}, content, entry.client_type)
 
-      {:ok, path}
+      {:ok, snippet}
     end)
 
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> put_flash(:info, "#{length(created_snippets)} file(s) uploaded successfully")}
   end
 
   @impl Phoenix.LiveView

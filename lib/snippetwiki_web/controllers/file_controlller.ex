@@ -9,22 +9,26 @@ defmodule SnippetwikiWeb.FileController do
   end
 
   def upload(conn, %{"file" => upload}) do
-    snippet = Snippets.find_snippet(conn.assigns.current_scope, upload.filename, "File")
-
-    if is_nil(snippet) do
+    snippet = if is_nil(Snippets.find_snippet(conn.assigns.current_scope, upload.filename, "File")) do
       {:ok, snippet} = Snippets.create_snippet(conn.assigns.current_scope, %{ title: upload.filename, namespace: "File" })
-      {:ok, content} = File.read(upload.path)
-      Snippets.create_new_revision(conn.assigns.current_scope, snippet, %{}, content, upload.content_type)
-
-      IO.inspect upload.filename
-
-      json(conn, %{data: %{url: upload.filename}})
+      snippet
     else
-      # Already exists, generate unique name
-      conn
-      |> put_status(403)
-      |> put_view(html: SnippetwikiWeb.ErrorHTML, json: SnippetwikiWeb.ErrorJSON)
-      |> render(:"403")
+      filename = create_unique_filename(upload.filename)
+
+      {:ok, snippet} = Snippets.create_snippet(conn.assigns.current_scope, %{ title: filename, namespace: "File" })
+      snippet
     end
+
+    {:ok, content} = File.read(upload.path)
+    Snippets.create_new_revision(conn.assigns.current_scope, snippet, %{}, content, upload.content_type)
+
+    json(conn, %{data: %{url: upload.filename}})
+  end
+
+  defp create_unique_filename(filename) do
+    extension = Path.extname(filename)
+    basename = Path.basename(filename, extension)
+
+    "#{basename}_#{IO.inspect Enum.to_list(?a..?f) ++ Enum.to_list(?0..?9) |> Enum.take_random(6)}#{extension}"
   end
 end

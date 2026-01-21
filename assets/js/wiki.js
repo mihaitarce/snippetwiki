@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import Editor from "../components/Editor";
 import Viewer from "../components/Viewer";
+import { InternalLink } from "../components/InternalLink";
 
 import NumberFlow from '@number-flow/react';
 
@@ -13,7 +14,7 @@ import * as Y from 'yjs';
 import { Socket } from "phoenix";
 import { PhoenixChannelProvider } from "./y-phoenix-channel";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
-import { BlockNoteSchema, createHeadingBlockSpec, BlockNoteEditor } from "@blocknote/core";
+import { BlockNoteSchema, createHeadingBlockSpec, defaultInlineContentSpecs, BlockNoteEditor } from "@blocknote/core";
 
 
 export const hooks = {
@@ -129,14 +130,20 @@ export const hooks = {
             const options = {
                 // trailingBlock: false,
                 schema: BlockNoteSchema.create().extend({
-                blockSpecs: {
-                    heading: createHeadingBlockSpec({
-                    // Disables toggleable headings.
-                    allowToggleHeadings: false,
-                    // Sets the allowed heading levels.
-                    levels: [1],
-                    }),
-                },
+                    blockSpecs: {
+                        heading: createHeadingBlockSpec({
+                        // Disables toggleable headings.
+                        allowToggleHeadings: false,
+                        // Sets the allowed heading levels.
+                        levels: [1],
+                        }),
+                    },
+                    inlineContentSpecs: {
+                        // Adds all default inline content.
+                        ...defaultInlineContentSpecs,
+                        // Adds the internal tag.
+                        InternalLink: InternalLink,
+                    },
                 }),
                 collaboration: {
                     // The Yjs Provider responsible for transporting updates:

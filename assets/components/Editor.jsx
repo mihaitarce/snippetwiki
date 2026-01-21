@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 
-import { useCreateBlockNote } from "@blocknote/react";
+import { SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 // Or, you can use ariakit, shadcn, etc.
 import { BlockNoteView } from "@blocknote/mantine";
 // Default styles for the mantine editor
 import "@blocknote/mantine/style.css";
+
+import { filterSuggestionItems } from "@blocknote/core/extensions";
 
 
 function initials(name) {
@@ -17,6 +19,27 @@ function initials(name) {
     ).toUpperCase();
 }
 
+
+function getInternalLinkMenuItems(editor) {
+  const links = [
+    {id: 36, title: "Vincent Van Gogh"},
+    {id: 3, title: "Fiji"},
+    {id: 15, title: "Palawan"}
+  ]
+
+  return links.map((snippet) => ({
+    title: snippet.title,
+    onItemClick: () => {
+      editor.insertInlineContent([
+        {
+          type: "InternalLink",
+          props: snippet,
+        },
+        " ", // add a space after the link
+      ]);
+    },
+  }));
+}
 
 export default function Editor({ textarea, options }) {
   const [usersPresent, setUsersPresent] = useState([])
@@ -49,6 +72,15 @@ export default function Editor({ textarea, options }) {
           {usersPresent.map((u) => <div key={u.name} className="badge" style={{backgroundColor: u.color}}>{initials(u.name)}</div>)}
       </div>}
 
-      <BlockNoteView editor={editor} />
+      <BlockNoteView editor={editor}>
+        {/* Adds an internal link menu which opens with the "[" key */}
+        <SuggestionMenuController
+          triggerCharacter={"["}
+          getItems={async (query) =>
+            // Gets the internal link menu items
+            filterSuggestionItems(getInternalLinkMenuItems(editor), query)
+          }
+        />
+      </BlockNoteView>
   </div>)
 }

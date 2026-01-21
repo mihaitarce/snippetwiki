@@ -122,6 +122,18 @@ a {
   cursor: pointer;
 }
 
+a:hover {
+  background-color: var(--color-primary-content);
+}
+
+.bn-editor a {
+  text-decoration-style: wavy;
+}
+
+.bn-editor a.internal-link {
+  text-decoration-style: unset;
+}
+
 h1,
 .bn-editor h1,
 .bn-editor h2,

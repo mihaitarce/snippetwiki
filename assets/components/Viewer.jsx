@@ -1,6 +1,7 @@
 import React from "react"
+import { InternalLink } from "./InternalLink";
 import { useCreateBlockNote } from "@blocknote/react";
-import { BlockNoteSchema, createHeadingBlockSpec } from "@blocknote/core";
+import { BlockNoteSchema, createHeadingBlockSpec, defaultInlineContentSpecs } from "@blocknote/core";
 // Or, you can use ariakit, shadcn, etc.
 import { BlockNoteView } from "@blocknote/mantine";
 // Default styles for the mantine editor
@@ -11,12 +12,18 @@ export default function Viewer({ id, textarea }) {
         // trailingBlock: false,
         schema: BlockNoteSchema.create().extend({
             blockSpecs: {
-            heading: createHeadingBlockSpec({
-                // Disables toggleable headings.
-                allowToggleHeadings: false,
-                // Sets the allowed heading levels.
-                levels: [1],
-            }),
+                heading: createHeadingBlockSpec({
+                    // Disables toggleable headings.
+                    allowToggleHeadings: false,
+                    // Sets the allowed heading levels.
+                    levels: [1],
+                }),
+            },
+            inlineContentSpecs: {
+                // Adds all default inline content.
+                ...defaultInlineContentSpecs,
+                // Adds the internal link tag.
+                InternalLink: InternalLink,
             },
         }),
         resolveFileUrl: (url) => {

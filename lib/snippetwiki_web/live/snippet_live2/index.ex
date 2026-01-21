@@ -166,43 +166,6 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     """
   end
 
-  # def render(assigns) do
-  #   ~H"""
-  #   <Layouts.app flash={@flash}>
-  #     <.header>
-  #       Listing Snippets
-  #       <:actions>
-  #         <.button variant="primary" navigate={~p"/snippets/new"}>
-  #           <.icon name="hero-plus" /> New Snippet
-  #         </.button>
-  #       </:actions>
-  #     </.header>
-
-  #     <.table
-  #       id="snippets"
-  #       rows={@streams.snippets}
-  #       row_click={fn {_id, snippet} -> JS.navigate(~p"/snippets/#{snippet}") end}
-  #     >
-  #       <:col :let={{_id, snippet}} label="Title">{snippet.title}</:col>
-  #       <:action :let={{_id, snippet}}>
-  #         <div class="sr-only">
-  #           <.link navigate={~p"/snippets/#{snippet}"}>Show</.link>
-  #         </div>
-  #         <.link navigate={~p"/snippets/#{snippet}/edit"}>Edit</.link>
-  #       </:action>
-  #       <:action :let={{id, snippet}}>
-  #         <.link
-  #           phx-click={JS.push("delete", value: %{id: snippet.id}) |> hide("##{id}")}
-  #           data-confirm="Are you sure?"
-  #         >
-  #           Delete
-  #         </.link>
-  #       </:action>
-  #     </.table>
-  #   </Layouts.app>
-  #   """
-  # end
-
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
@@ -212,16 +175,21 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     snippets = list_snippets(socket.assigns.current_scope)
     # |> stream(:snippets, list_snippets())}
 
-    {:ok,
-     socket
-     |> assign(page_title: "Snippet Wiki",
-               snippets: snippets,
-               drafts: snippets
-                        |> Enum.filter(fn s -> s.has_draft end)
-                        |> Enum.map(fn s -> s.id end),
-               open: [],
-               editing: [])
-     |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
+    initial_snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
+
+    socket = socket |> assign(page_title: "Snippet Wiki",
+                              snippets: snippets,
+                              drafts: snippets
+                                      |> Enum.filter(fn s -> s.has_draft end)
+                                      |> Enum.map(fn s -> s.id end),
+                              editing: [])
+                    |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)
+
+     if is_nil(initial_snippet) do
+        {:ok, assign(socket, :open, [])}
+     else
+        {:ok, assign(socket, :open, [initial_snippet.id])}
+     end
   end
 
   @impl true

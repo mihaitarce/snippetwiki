@@ -1,8 +1,6 @@
 defmodule SnippetwikiWeb.RecentComponent do
   use SnippetwikiWeb, :live_component
 
-  alias Snippetwiki.Snippets
-
   @impl true
   def render(assigns) do
     ~H"""

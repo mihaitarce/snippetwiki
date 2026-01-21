@@ -350,17 +350,21 @@ defmodule Snippetwiki.Snippets do
     Repo.get_by!(Snippet, id: id, user_id: scope.user.id)
   end
 
-  def find_snippet(%Scope{} = scope, title, namespace \\ nil) do
+  def find_snippet(%Scope{} = scope, title) do
     query = from s in Snippet, as: :snippet,
-      where: s.title == ^title and s.namespace == ^namespace,
-      left_join: r in assoc(s, :revisions),
-      select_merge: %{content: r.content, content_type: r.content_type},
-      order_by: [desc: r.version]
+      where: s.title == ^title and is_nil(s.namespace)
 
     Repo.get_by(query, user_id: scope.user.id)
   end
 
-  def find_snippet!(%Scope{} = scope, title, namespace \\ nil) do
+  def find_snippet(%Scope{} = scope, title, namespace) do
+    query = from s in Snippet, as: :snippet,
+      where: s.title == ^title and s.namespace == ^namespace
+
+    Repo.get_by(query, user_id: scope.user.id)
+  end
+
+  def load_snippet!(%Scope{} = scope, title, namespace) do
     query = from s in Snippet, as: :snippet,
       where: s.title == ^title and s.namespace == ^namespace,
       left_join: r in assoc(s, :revisions),

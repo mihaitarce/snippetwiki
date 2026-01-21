@@ -7,6 +7,9 @@ import { BlockNoteView } from "@blocknote/mantine";
 // Default styles for the mantine editor
 import "@blocknote/mantine/style.css";
 
+const {pathPrefix} = window.__APP__
+
+
 export default function Viewer({ id, textarea }) {
     const options = {
         // trailingBlock: false,
@@ -28,10 +31,10 @@ export default function Viewer({ id, textarea }) {
         }),
         resolveFileUrl: (url) => {
             return new Promise((resolve) => {
-                if (url.startsWith("https://")) {
+                if (url.startsWith("https://") || url.startsWith("http://")) {
                     resolve(url)
                 } else {
-                    resolve(`/files/${url}`)
+                    resolve(`${pathPrefix}/files/${url}`)
                 }
             }) 
         }

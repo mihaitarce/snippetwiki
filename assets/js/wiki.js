@@ -16,6 +16,7 @@ import { PhoenixChannelProvider } from "./y-phoenix-channel";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import { BlockNoteSchema, createHeadingBlockSpec, defaultInlineContentSpecs, BlockNoteEditor } from "@blocknote/core";
 
+const {pathPrefix} = window.__APP__
 
 export const hooks = {
     Editor: {
@@ -70,7 +71,7 @@ export const hooks = {
             const id = this.el.dataset.id
             const textareaElement = this.el.parentNode.querySelector('textarea')
 
-            const socket = new Socket("/socket");
+            const socket = new Socket(pathPrefix + "/socket");
             socket.connect();
 
             const yDoc = new Y.Doc()
@@ -110,7 +111,7 @@ export const hooks = {
 
                 body.append('_csrf_token', csrfToken)
 
-                const ret = await fetch("/files/upload", {
+                const ret = await fetch(`${pathPrefix}/files/upload`, {
                     method: "POST",
                     body: body,
                 });
@@ -119,10 +120,10 @@ export const hooks = {
 
             function resolveFileUrl(url) {
                 return new Promise((resolve) => {
-                    if (url.startsWith("https://")) {
+                    if (url.startsWith("https://") || url.startsWith("http://")) {
                         resolve(url)
                     } else {
-                        resolve(`/files/${url}`)
+                        resolve(`${pathPrefix}/files/${url}`)
                     }
                 }) 
             }

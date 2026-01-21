@@ -28,6 +28,9 @@
         window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
         
         window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
+
+        window.__APP__  = window.__APP__ || {}
+        window.__APP__.pathPrefix = "<%= Application.get_env(:snippetwiki, SnippetwikiWeb.Endpoint)[:url][:path] %>"
       })();
     </script>
   </head>

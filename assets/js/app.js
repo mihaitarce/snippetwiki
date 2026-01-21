@@ -26,8 +26,10 @@ import {hooks as colocatedHooks} from "phoenix-colocated/snippetwiki"
 import {hooks as wikiHooks} from "./wiki"
 import topbar from "../vendor/topbar"
 
+const {pathPrefix} = window.__APP__
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-const liveSocket = new LiveSocket("/live", Socket, {
+const liveSocket = new LiveSocket(pathPrefix + "/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {...colocatedHooks, ...wikiHooks},

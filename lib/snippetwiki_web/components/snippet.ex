@@ -189,6 +189,8 @@ defmodule SnippetwikiWeb.SnippetComponent do
   end
 
   defp get_file_url(title) do
-    "/files/" <> title
+    prefix_path = Application.get_env(:snippetwiki, SnippetwikiWeb.Endpoint)[:url][:path]
+
+    "#{prefix_path}/files/#{title}"
   end
 end

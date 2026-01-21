@@ -1,10 +1,10 @@
 http://localhost:2080 {
-	# handle_path /demo/* {
-	# 	reverse_proxy localhost:4000 {
-	# 		header_up X-Authenticated-User "caddy-user"
-	# 		header_up X-Authenticated-Group "caddy-group"
-	# 	}
-	# }
+	handle_path /wiki* {
+		reverse_proxy localhost:4000 {
+			header_up X-Authenticated-User "caddy-wikiuser"
+			header_up X-Authenticated-Group "caddy-wikigroup"
+		}
+	}
 
 	handle_path /* {
 		reverse_proxy localhost:4000 {

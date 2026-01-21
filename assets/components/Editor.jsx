@@ -8,6 +8,8 @@ import "@blocknote/mantine/style.css";
 
 import { filterSuggestionItems } from "@blocknote/core/extensions";
 
+const {pathPrefix} = window.__APP__
+
 
 function initials(name) {
     const rgx = new RegExp(/(\p{L}{1})\p{L}+/, 'gu');
@@ -19,9 +21,8 @@ function initials(name) {
     ).toUpperCase();
 }
 
-
 async function getInternalLinkMenuItems(editor) {
-  results = await fetch('/api/snippets')
+  results = await fetch(pathPrefix + "/api/snippets")
   json = await results.json()
 
   return json.data.snippets.map((snippet) => ({

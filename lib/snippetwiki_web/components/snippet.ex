@@ -1,4 +1,4 @@
-defmodule SnippetwikiWeb.SnippetLive2.Show do
+defmodule SnippetwikiWeb.SnippetComponent do
   use SnippetwikiWeb, :live_component
 
   alias Snippetwiki.Snippets

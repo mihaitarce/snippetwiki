@@ -18,7 +18,7 @@ defmodule SnippetwikiWeb.Router do
   end
 
   scope "/", SnippetwikiWeb do
-    pipe_through :browser
+    pipe_through [:browser, :require_authenticated_user]
 
     # get "/", PageController, :home
 
@@ -31,6 +31,8 @@ defmodule SnippetwikiWeb.Router do
       live "/snippets/:id", SnippetLive.Show, :show
       live "/snippets/:id/edit", SnippetLive.Form, :edit
     end
+
+    get "/api/snippets", SnippetController, :index
 
     post "/files/upload", FileController, :upload
     get "/files/*title", FileController, :download

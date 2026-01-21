@@ -1,4 +1,4 @@
-defmodule SnippetwikiWeb.SnippetLive2.Search do
+defmodule SnippetwikiWeb.SearchComponent do
   use SnippetwikiWeb, :live_component
 
   alias Snippetwiki.Snippets

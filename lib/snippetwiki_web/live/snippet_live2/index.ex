@@ -59,7 +59,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                   </div>
 
                   <.live_component
-                   module={SnippetwikiWeb.SnippetLive2.Search}
+                   module={SnippetwikiWeb.SearchComponent}
                    id="search"
                    current_scope={@current_scope}/>
               </div>
@@ -74,7 +74,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                     <%= if length(@open) > 0 do %>
                       <.live_component
                         :for={snippet <- Enum.filter(Enum.map(@open, fn snippet_id -> Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) end), fn s -> s != nil end)}
-                        module={SnippetwikiWeb.SnippetLive2.Show}
+                        module={SnippetwikiWeb.SnippetComponent}
                         id={snippet.id}
                         current_scope={@current_scope}
                         snippet={Snippets.with_content(snippet)}

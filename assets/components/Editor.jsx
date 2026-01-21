@@ -20,14 +20,11 @@ function initials(name) {
 }
 
 
-function getInternalLinkMenuItems(editor) {
-  const links = [
-    {id: 36, title: "Vincent Van Gogh"},
-    {id: 3, title: "Fiji"},
-    {id: 15, title: "Palawan"}
-  ]
+async function getInternalLinkMenuItems(editor) {
+  results = await fetch('/api/snippets')
+  json = await results.json()
 
-  return links.map((snippet) => ({
+  return json.data.snippets.map((snippet) => ({
     title: snippet.title,
     onItemClick: () => {
       editor.insertInlineContent([
@@ -35,7 +32,7 @@ function getInternalLinkMenuItems(editor) {
           type: "InternalLink",
           props: snippet,
         },
-        " ", // add a space after the link
+        "", // add a space after the link?
       ]);
     },
   }));
@@ -78,7 +75,7 @@ export default function Editor({ textarea, options }) {
           triggerCharacter={"["}
           getItems={async (query) =>
             // Gets the internal link menu items
-            filterSuggestionItems(getInternalLinkMenuItems(editor), query)
+            filterSuggestionItems(await getInternalLinkMenuItems(editor), query)
           }
         />
       </BlockNoteView>

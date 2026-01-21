@@ -81,3 +81,7 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
+
+window.addEventListener("phx:scroll", (e) => {
+  document.getElementById(e.detail.id).scrollIntoView({ behavior: 'smooth' })
+})

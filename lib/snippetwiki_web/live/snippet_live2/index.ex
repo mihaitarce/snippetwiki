@@ -247,14 +247,15 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   @impl true
   def handle_event("open_snippet", %{"id" => id}, socket) do
     snippet_id = String.to_integer(id)
-    if snippet_id in socket.assigns.open do
-      {:noreply, socket}
-    else
-      Snippets.increment_views(socket.assigns.current_scope, snippet_id)
-      {:noreply,
+
+    {:noreply,
+     if snippet_id in socket.assigns.open do
        socket
-       |> assign(open: [ snippet_id | socket.assigns.open ])}
-    end
+     else
+       Snippets.increment_views(socket.assigns.current_scope, snippet_id)
+       assign(socket, open: [ snippet_id | socket.assigns.open ])
+     end
+     |> push_event("scroll", %{id: "snippet-#{snippet_id}"})}
   end
 
   @impl true

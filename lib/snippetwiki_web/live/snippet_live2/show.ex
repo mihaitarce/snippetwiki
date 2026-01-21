@@ -74,11 +74,12 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
 
               <%= if is_nil(@snippet.namespace) or @snippet.namespace == "File" do %>
                 <%= if @snippet.has_draft do %>
-                  <.button phx-click="edit_snippet" phx-target={@myself} variant="warning" title="Someone else is editing this snippet.">
+                  <.button phx-click="edit_snippet" phx-value-id={@snippet.id} variant="warning"
+                           title="Someone else is editing this snippet.">
                     <.icon name="hero-pencil" class="size-6" />
                   </.button>
                 <% else %>
-                  <.button phx-click="edit_snippet" phx-target={@myself}>
+                  <.button phx-click="edit_snippet" phx-value-id={@snippet.id}>
                     <.icon name="hero-pencil" class="size-6" />
                   </.button>
                 <% end %>
@@ -146,16 +147,6 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
   @impl true
   def handle_event("like_snippet", _, socket) do
     {:ok, _} = Snippets.like_snippet(socket.assigns.current_scope, socket.assigns.snippet)
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("edit_snippet", _, socket) do
-    snippet = socket.assigns.snippet
-    {:ok, _} = Snippets.create_draft(socket.assigns.current_scope, snippet)
-
-    send(self(), {:start_editing, snippet})
-
     {:noreply, socket}
   end
 

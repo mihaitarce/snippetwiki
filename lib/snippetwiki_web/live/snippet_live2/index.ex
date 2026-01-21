@@ -261,14 +261,21 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   @impl true
   def handle_event("edit_snippet", %{"id" => id}, socket) do
     snippet_id = String.to_integer(id)
+    snippet = Snippets.get_snippet!(socket.assigns.current_scope, snippet_id)
 
-    socket = assign(socket, :editing, [ snippet_id | socket.assigns.editing ])
-
-    if snippet_id in socket.assigns.open do
-      {:noreply, socket}
-    else
-      {:noreply, assign(socket, :open, [ snippet_id | socket.assigns.open ])}
+    unless snippet.has_draft do
+      {:ok, _} = Snippets.create_draft(socket.assigns.current_scope, snippet)
     end
+
+    socket = assign(socket, :editing, [ snippet.id | socket.assigns.editing ])
+
+    {:noreply,
+     if snippet_id in socket.assigns.open do
+       socket
+     else
+       assign(socket, :open, [ snippet.id | socket.assigns.open ])
+     end
+     |> push_event("scroll", %{id: "snippet-#{snippet_id}"})}
   end
 
 
@@ -338,14 +345,6 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     {:noreply,
       Enum.reduce(socket.assigns.uploads.documents.entries, socket,
                   fn entry, acc -> cancel_upload(acc, :documents, entry.ref) end)}
-  end
-
-
-  @impl true
-  def handle_info({:start_editing, snippet}, socket) do
-    {:noreply,
-     socket
-     |> assign(:editing, [ snippet.id | socket.assigns.editing ])}
   end
 
   @impl true

@@ -75,7 +75,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Show do
               <%= if is_nil(@snippet.namespace) or @snippet.namespace == "File" do %>
                 <%= if @snippet.has_draft do %>
                   <.button phx-click="edit_snippet" phx-value-id={@snippet.id} variant="warning"
-                           title="Someone else is editing this snippet.">
+                           title="Someone has started editing this snippet.">
                     <.icon name="hero-pencil" class="size-6" />
                   </.button>
                 <% else %>

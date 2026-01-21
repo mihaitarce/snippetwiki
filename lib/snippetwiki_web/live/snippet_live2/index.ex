@@ -123,6 +123,9 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                             <%= if snippet.has_draft do %>
                               <.icon name="hero-pencil" class="ms-2 size-4" />
                             <% end %>
+                            <%= if snippet.id in @open do %>
+                              <.icon name="hero-eye" class="ms-2 size-4" />
+                            <% end %>
                           </li>
                       </ul>
 
@@ -136,11 +139,18 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
                   <input type="radio" name="tabs" class="tab" aria-label="Files" />
                   <div class="tab-content p-3">
-                      <div class="flex flex-col gap-1">
-                        <a :for={snippet <- Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
-                           id={"file-link-#{Integer.to_string(snippet.id)}"}
-                           phx-click="open_snippet" phx-value-id={snippet.id}>File:{snippet.title}</a>
-                      </div>
+                      <ul>
+                        <li :for={snippet <- Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
+                            id={"file-link-#{Integer.to_string(snippet.id)}"} class="pb-1">
+                          <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
+                          <%= if snippet.has_draft do %>
+                            <.icon name="hero-pencil" class="ms-2 size-4" />
+                          <% end %>
+                          <%= if snippet.id in @open do %>
+                            <.icon name="hero-eye" class="ms-2 size-4" />
+                          <% end %>
+                        </li>
+                      </ul>
                   </div>
 
                   <%!-- <input type="radio" name="tabs" class="tab" aria-label="Map" /> --%>

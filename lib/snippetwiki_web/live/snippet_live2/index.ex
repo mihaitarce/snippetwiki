@@ -121,10 +121,12 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                               id={"recent-link-#{Integer.to_string(snippet.id)}"} class="pb-1">
                             <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
                             <%= if snippet.has_draft do %>
-                              <.icon name="hero-pencil" class="ms-2 size-4" />
+                              <.icon name="hero-pencil" class="size-4 ms-2" />
                             <% end %>
                             <%= if snippet.id in @open do %>
-                              <.icon name="hero-eye" class="ms-2 size-4" />
+                              <span phx-click="close_snippet" phx-value-id={snippet.id}>
+                                <.icon name="hero-x-mark" class="size-4 ms-2" />
+                              </span>
                             <% end %>
                           </li>
                       </ul>

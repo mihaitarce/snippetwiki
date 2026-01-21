@@ -237,8 +237,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                         |> Enum.filter(fn s -> s.has_draft end)
                         |> Enum.map(fn s -> s.id end),
                open: [],
-               editing: [],
-               uploaded_files: [])
+               editing: [])
      |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
   end
 
@@ -328,21 +327,51 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
   @impl Phoenix.LiveView
   def handle_event("validate_upload", _params, socket) do
-    {:noreply, socket}
+    errors = socket.assigns.uploads.documents.entries
+      |> Enum.map(fn entry ->
+        if not is_nil(Snippets.find_snippet(socket.assigns.current_scope, entry.client_name, "File")) do
+          {entry.ref, :already_exists}
+        else
+          nil
+        end
+      end)
+      |> Enum.filter(fn entry -> not is_nil(entry) and entry not in socket.assigns.uploads.documents.errors end)
+
+    assigns = Map.update!(socket.assigns, :uploads,
+      fn uploads ->
+        Map.update!(uploads, :documents,
+          fn documents ->
+            refs = Enum.map(errors, fn {ref, msg} -> ref end)
+
+            documents
+            |> Map.update!(:errors, fn e -> e ++ errors end)
+            |> Map.update!(:entries,
+                fn entries ->
+                  Enum.map(entries, fn entry ->
+                    if entry.ref in refs do
+                      Map.put(entry, :valid?, false)
+                    else
+                      entry
+                    end
+                  end)
+                end)
+          end)
+      end)
+
+    {:noreply, Map.put(socket, :assigns, assigns)}
   end
 
   @impl Phoenix.LiveView
   def handle_event("save_upload", _params, socket) do
-    uploaded_files =
-      consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
-        {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
-        {:ok, content} = File.read(path)
-        Snippets.create_new_revision(socket.assigns.current_scope, snippet, %{}, content, entry.client_type)
+    consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
+      {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
+      {:ok, content} = File.read(path)
+      Snippets.create_new_revision(socket.assigns.current_scope, snippet, %{}, content, entry.client_type)
 
-        {:ok, path}
-      end)
+      {:ok, path}
+    end)
 
-    {:noreply, update(socket, :uploaded_files, &(&1 ++ uploaded_files))}
+    {:noreply, socket}
   end
 
   @impl Phoenix.LiveView

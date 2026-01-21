@@ -5,7 +5,7 @@ defmodule SnippetwikiWeb.UploadComponent do
 
   def upload(assigns) do
     ~H"""
-      <div class="card bg-base-100">
+      <div class="card bg-base-100" phx-drop-target={@uploads.documents.ref}>
             <div class="card-body">
                 <div class="flex items-center justify-between mb-3">
                     <h1 class="font-serif text-3xl">Import</h1>
@@ -13,7 +13,7 @@ defmodule SnippetwikiWeb.UploadComponent do
                         <button phx="save_upload"
                             form="upload"
                             class="btn btn-primary"
-                            disabled={Enum.any?(upload_errors(@uploads.documents))}>
+                            disabled={not Enum.empty?(@uploads.documents.errors)}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                 stroke="currentColor" class="size-6">
                                 <path strokeLinecap="round" strokeLinejoin="round"
@@ -29,15 +29,6 @@ defmodule SnippetwikiWeb.UploadComponent do
                             </svg>
                         </button>
                     </div>
-                </div>
-
-                <div role="alert" class="alert alert-soft alert-warning mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    <span>Some file names already exist. Please rename them.</span>
                 </div>
 
                 <%!-- Phoenix.Component.upload_errors/1 returns a list of error atoms --%>
@@ -71,31 +62,20 @@ defmodule SnippetwikiWeb.UploadComponent do
                                     {entry.client_size |> FileSize.new |> FileSize.convert(:mb) |> FileSize.format([precision: 2])}
                                 </div>
                             </div>
-                            <label class="input w-full mb-1">
-                                <%!-- "input-warning": fileNameExists(file.name)} --%>
-                                <input type="text" class="w-full" placeholder="Enter file name" />
-                                <%!-- {fileNameExists(file.name) && --%>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                        strokeWidth={1.5} stroke="currentColor"
-                                        class="h-[1.5em] opacity-50 text-warning">
-                                        <path strokeLinecap="round" strokeLinejoin="round"
-                                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-                                    </svg>
-                            </label>
 
                             <%!-- entry.progress will update automatically for in-flight entries --%>
                             <div>
                                 <progress class="w-full" value={entry.progress} max="100"> {entry.progress}% </progress>
                             </div>
+
+                            <%!-- Phoenix.Component.upload_errors/2 returns a list of error atoms --%>
+                            <p :for={err <- upload_errors(@uploads.documents, entry)} class="alert alert-soft alert-error">{error_to_string(err)}</p>
                         </div>
 
                         <%!-- a regular click event whose handler will invoke Phoenix.LiveView.cancel_upload/3 --%>
                         <.button phx-click="cancel_upload" phx-value-ref={entry.ref} aria-label="cancel" variant="error">
                             <.icon name="hero-trash" class="h-[1.5em]" />
                         </.button>
-
-                        <%!-- Phoenix.Component.upload_errors/2 returns a list of error atoms --%>
-                        <p :for={err <- upload_errors(@uploads.documents, entry)} class="alert alert-danger">{error_to_string(err)}</p>
                     </article>
                 </div>
             </div>
@@ -103,8 +83,9 @@ defmodule SnippetwikiWeb.UploadComponent do
       """
   end
 
-  defp error_to_string(:too_large), do: "Too large"
-  defp error_to_string(:too_many_files), do: "You have selected too many files"
-  defp error_to_string(:not_accepted), do: "You have selected an unacceptable file type"
+  defp error_to_string(:too_large), do: "File is too large"
+  defp error_to_string(:too_many_files), do: "Too many files selected"
+  defp error_to_string(:not_accepted), do: "File type not supported"
+  defp error_to_string(:already_exists), do: "File name already exists"
 
 end

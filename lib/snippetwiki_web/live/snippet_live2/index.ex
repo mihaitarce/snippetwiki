@@ -116,27 +116,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
                   <input type="radio" name="tabs" class="tab" aria-label="Recent" checked="checked" />
                   <div class="tab-content p-3">
-                      <ul>
-                        <li :for={snippet <- Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
-                              id={"recent-link-#{Integer.to_string(snippet.id)}"} class="pb-1">
-                            <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
-                            <%= if snippet.has_draft do %>
-                              <.icon name="hero-pencil" class="size-4 ms-2" />
-                            <% end %>
-                            <%= if snippet.id in @open do %>
-                              <span phx-click="close_snippet" phx-value-id={snippet.id}>
-                                <.icon name="hero-x-mark" class="size-4 ms-2" />
-                              </span>
-                            <% end %>
-                          </li>
-                      </ul>
-
-                      <div class="mt-4">
-                        <button type="button" class="btn" phx-click="close_snippets">
-                          <.icon name="hero-x-mark" />
-                          Close all
-                        </button>
-                      </div>
+                      <.live_component module={SnippetwikiWeb.RecentComponent} id="recent-snippets"
+                                       snippets={@snippets} open={@open} current_scope={@current_scope} />
                   </div>
 
                   <input type="radio" name="tabs" class="tab" aria-label="Files" />

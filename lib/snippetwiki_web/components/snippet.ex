@@ -9,18 +9,11 @@ defmodule SnippetwikiWeb.SnippetComponent do
     <div class="card bg-base-100" id={"snippet-#{@snippet.id}"}>
       <%= if @editing do %>
         <.form for={@form} class="card-body" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
-          <div class="flex justify-between gap-2 min-h-12">
+          <div class="flex justify-between gap-2 min-h-16">
             <%= if is_nil(@snippet.namespace) do %>
               <.input type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
             <% else %>
-              <%= if @snippet.namespace == "File" do %>
-                <div class="title text-3xl flex gap-1 items-center">
-                  <span class="title text-3xl pb-2">{@snippet.namespace}:</span>
-                  <.input type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
-                </div>
-              <% else %>
-                <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
-              <% end %>
+              <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
             <% end %>
 
             <div class="flex flex-col sm:flex-row gap-1 py-1">
@@ -31,10 +24,12 @@ defmodule SnippetwikiWeb.SnippetComponent do
                 <.icon name="hero-trash" class="size-6" />
               </.button>
 
-              <.button type="submit" variant="success">
-                <.icon name="hero-check" class="size-7" />
-              </.button>
-              <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
+              <%= if is_nil(@snippet.namespace) do %>
+                <.button type="submit" variant="success">
+                  <.icon name="hero-check" class="size-7" />
+                </.button>
+                <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
+              <% end %>
 
               <.button type="button" phx-click="discard_changes" phx-target={@myself}>
                 <.icon name="hero-x-mark" class="size-7" />

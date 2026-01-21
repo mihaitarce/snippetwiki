@@ -6,7 +6,7 @@ defmodule SnippetwikiWeb.SearchComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <form class="dropdown dropdown-end w-full">
+    <form class="dropdown dropdown-end w-full" onsubmit="event.preventDefault()">
         <label tabIndex={0} role="button" class="input w-full">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                   stroke="currentColor"
@@ -14,7 +14,7 @@ defmodule SnippetwikiWeb.SearchComponent do
                 <path strokeLinecap="round" strokeLinejoin="round"
                       d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
             </svg>
-            <input name="query" type="search" class="grow" placeholder="Search"
+            <input name="query" type="search" class="grow" placeholder="Search" autocomplete="off"
                    phx-change="search" phx-target={@myself} phx-debounce="200" />
         </label>
         <ul tabIndex={-1} class="dropdown-content bg-base-100 rounded-box shadow-sm z-1 p-2 mt-3 w-full text-base-content/70">

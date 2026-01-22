@@ -38,7 +38,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
             </div>
           </div>
 
-          <%= if is_nil(@snippet.content_type) or @snippet.content_type == "text/html" do %>
+          <%= if is_nil(@snippet.content_type) or @snippet.content_type == "application/vnd.blocknote+json" do %>
             <.input field={@form[:content]} type="textarea" />
             <div id={"editor-#{@snippet.id}"} phx-hook="Editor" phx-update="ignore"
                  data-id={@snippet.id}></div>
@@ -91,7 +91,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
                 <p class="text-lg text-center text-base-content/30">Empty snippet</p>
               </div>
           <% else %>
-            <%= if @snippet.content_type == "text/html" do %>
+            <%= if @snippet.content_type == "application/vnd.blocknote+json" do %>
               <textarea class="hidden">{@snippet.content}</textarea>
               <div id={"viewer-#{@snippet.id}"} phx-hook="Viewer" phx-update="ignore"></div>
             <% end %>

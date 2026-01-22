@@ -5,11 +5,9 @@ defmodule Snippetwiki.Snippets.Snippet do
   schema "snippets" do
     field :title, :string
     field :namespace, :string
+    field :bag, :string, default: "main"
     field :has_draft, :boolean, default: false
     field :views, :integer, default: 0
-    # Delete
-    field :user_id, :id
-    belongs_to :bag, Snippetwiki.Snippets.Bag
     has_many :revisions, Snippetwiki.Snippets.Revision
     has_many :likes, Snippetwiki.Snippets.Like
 
@@ -25,7 +23,7 @@ defmodule Snippetwiki.Snippets.Snippet do
     snippet
     |> cast(attrs, [:title, :namespace, :has_draft, :views, :content])
     |> validate_required([:title])
-    |> unique_constraint([:title, :bag_id])
-    |> put_change(:user_id, user_scope.user.id)
+    |> put_change(:bag, user_scope.user.bag)
+    |> unique_constraint([:title, :bag, :namespace])
   end
 end

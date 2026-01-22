@@ -73,6 +73,7 @@ defmodule SnippetwikiWeb.UserAuth do
     scope = UserAuth.process_auth_headers(headers)
 
     if is_nil(scope) do
+      # Website-based login flow
       with {token, conn} <- ensure_user_token(conn),
           {user, token_inserted_at} <- Snippets.get_user_by_session_token(token) do
         conn
@@ -82,7 +83,16 @@ defmodule SnippetwikiWeb.UserAuth do
         nil -> assign(conn, :current_scope, Scope.for_user(nil))
       end
     else
-      assign(conn, :current_scope, scope)
+      # Header-based login flow
+      user = Snippets.get_user_by_email(scope.user.email)
+      if is_nil(user) do
+        user = Snippets.create_user!(scope.user.email)
+        updated_scope = Map.update!(scope, :user, fn u -> Map.put(u, :id, user.id) end)
+        assign(conn, :current_scope, updated_scope)
+      else
+        updated_scope = Map.update!(scope, :user, fn u -> Map.put(u, :id, user.id) end)
+        assign(conn, :current_scope, updated_scope)
+      end
     end
   end
 
@@ -270,7 +280,15 @@ defmodule SnippetwikiWeb.UserAuth do
         Scope.for_user(user)
       end)
     else
-      Phoenix.Component.assign(socket, :current_scope, scope)
+      user = Snippets.get_user_by_email(scope.user.email)
+      if is_nil(user) do
+        user = Snippets.create_user!(scope.user.email)
+        updated_scope = Map.update!(scope, :user, fn u -> Map.put(u, :id, user.id) end)
+        Phoenix.Component.assign(socket, :current_scope, updated_scope)
+      else
+        updated_scope = Map.update!(scope, :user, fn u -> Map.put(u, :id, user.id) end)
+        Phoenix.Component.assign(socket, :current_scope, updated_scope)
+      end
     end
   end
 

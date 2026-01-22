@@ -80,6 +80,11 @@ defmodule Snippetwiki.Snippets do
     |> Repo.insert()
   end
 
+  def create_user!(email) do
+    %User{email: email}
+    |> Repo.insert!()
+  end
+
   ## Settings
 
   @doc """
@@ -315,7 +320,7 @@ defmodule Snippetwiki.Snippets do
       select_merge: %{like_count: subquery(likes_count)},
       order_by: [desc: :updated_at, desc: :id]
 
-    Repo.all_by(query, user_id: scope.user.id)
+    Repo.all_by(query, bag: scope.user.bag)
   end
 
   def search_snippets(%Scope{} = scope, query_string \\ nil) do
@@ -329,7 +334,7 @@ defmodule Snippetwiki.Snippets do
       query
       |> where([s], ilike(s.title, ^("%#{query_string}%")))
     end
-    |> Repo.all_by(user_id: scope.user.id)
+    |> Repo.all_by(bag: scope.user.bag)
   end
 
   @doc """
@@ -347,21 +352,21 @@ defmodule Snippetwiki.Snippets do
 
   """
   def get_snippet!(%Scope{} = scope, id) do
-    Repo.get_by!(Snippet, id: id, user_id: scope.user.id)
+    Repo.get_by!(Snippet, id: id, bag: scope.user.bag)
   end
 
   def find_snippet(%Scope{} = scope, title) do
     query = from s in Snippet, as: :snippet,
       where: s.title == ^title and is_nil(s.namespace)
 
-    Repo.get_by(query, user_id: scope.user.id)
+    Repo.get_by(query, bag: scope.user.bag)
   end
 
   def find_snippet(%Scope{} = scope, title, namespace) do
     query = from s in Snippet, as: :snippet,
       where: s.title == ^title and s.namespace == ^namespace
 
-    Repo.get_by(query, user_id: scope.user.id)
+    Repo.get_by(query, bag: scope.user.bag)
   end
 
   def load_snippet!(%Scope{} = scope, title, namespace) do
@@ -371,7 +376,7 @@ defmodule Snippetwiki.Snippets do
       select_merge: %{content: r.content, content_type: r.content_type},
       order_by: [desc: r.version]
 
-    Repo.get_by!(query, user_id: scope.user.id)
+    Repo.get_by!(query, bag: scope.user.bag)
   end
 
   def with_content(snippet) do
@@ -423,7 +428,7 @@ defmodule Snippetwiki.Snippets do
 
   """
   def update_snippet(%Scope{} = scope, %Snippet{} = snippet, attrs) do
-    true = snippet.user_id == scope.user.id
+    true = snippet.bag == scope.user.bag
 
     with {:ok, snippet = %Snippet{}} <-
            snippet
@@ -447,7 +452,7 @@ defmodule Snippetwiki.Snippets do
 
   """
   def delete_snippet(%Scope{} = scope, %Snippet{} = snippet) do
-    true = snippet.user_id == scope.user.id
+    true = snippet.bag == scope.user.bag
 
     with {:ok, snippet = %Snippet{}} <-
            Repo.delete(snippet) do
@@ -466,7 +471,7 @@ defmodule Snippetwiki.Snippets do
 
   """
   def change_snippet(%Scope{} = scope, %Snippet{} = snippet, attrs \\ %{}) do
-    true = snippet.user_id == scope.user.id
+    true = snippet.bag == scope.user.bag
 
     Snippet.changeset(snippet, attrs, scope)
   end
@@ -491,7 +496,7 @@ defmodule Snippetwiki.Snippets do
     {:ok, snippet}
   end
 
-  def create_new_revision(%Scope{} = scope, snippet, attrs, content, content_type \\ "text/html") do
+  def create_new_revision(%Scope{} = scope, snippet, attrs, content, content_type \\ "application/vnd.blocknote+json") do
     # TODO Use transaction
 
     # Create new revision
@@ -533,14 +538,14 @@ defmodule Snippetwiki.Snippets do
 
   """
   def subscribe_snippets(%Scope{} = scope) do
-    key = scope.user.id
+    key = scope.user.bag
 
-    Phoenix.PubSub.subscribe(Snippetwiki.PubSub, "user:#{key}:snippets")
+    Phoenix.PubSub.subscribe(Snippetwiki.PubSub, "bag:#{key}:snippets")
   end
 
   defp broadcast_snippet(%Scope{} = scope, message) do
-    key = scope.user.id
+    key = scope.user.bag
 
-    Phoenix.PubSub.broadcast(Snippetwiki.PubSub, "user:#{key}:snippets", message)
+    Phoenix.PubSub.broadcast(Snippetwiki.PubSub, "bag:#{key}:snippets", message)
   end
 end

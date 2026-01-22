@@ -51,7 +51,7 @@ defmodule SnippetwikiWeb.SnippetLive.Form do
   end
 
   defp apply_action(socket, :new, _params) do
-    snippet = %Snippet{user_id: socket.assigns.current_scope.user.id}
+    snippet = %Snippet{bag: socket.assigns.current_scope.user.bag}
 
     socket
     |> assign(:page_title, "New Snippet")

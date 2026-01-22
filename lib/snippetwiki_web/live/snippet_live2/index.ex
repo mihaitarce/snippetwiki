@@ -96,7 +96,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
           <div class="flex-1 h-svh hidden xl:block">
               <div class="flex items-baseline gap-2 absolute right-4 text-xs p-2 opacity-30 hover:opacity-100 transition-opacity">
                 Logged in as
-                <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email}</span>
+                <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email} ({@current_scope.user.bag})</span>
               </div>
 
               <%!-- <div class="filter justify-end absolute right-4">

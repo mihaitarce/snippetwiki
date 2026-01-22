@@ -13,7 +13,7 @@ defmodule SnippetwikiWeb.FileController do
       {:ok, snippet} = Snippets.create_snippet(conn.assigns.current_scope, %{ title: upload.filename, namespace: "File" })
       snippet
     else
-      filename = create_unique_filename(upload.filename)
+      filename = Snippets.Snippet.create_unique_filename(upload.filename)
 
       {:ok, snippet} = Snippets.create_snippet(conn.assigns.current_scope, %{ title: filename, namespace: "File" })
       snippet
@@ -23,12 +23,5 @@ defmodule SnippetwikiWeb.FileController do
     Snippets.create_new_revision(conn.assigns.current_scope, snippet, %{}, content, upload.content_type)
 
     json(conn, %{data: %{url: upload.filename}})
-  end
-
-  defp create_unique_filename(filename) do
-    extension = Path.extname(filename)
-    basename = Path.basename(filename, extension)
-
-    "#{basename}_#{IO.inspect Enum.to_list(?a..?f) ++ Enum.to_list(?0..?9) |> Enum.take_random(6)}#{extension}"
   end
 end

@@ -315,7 +315,16 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   @impl Phoenix.LiveView
   def handle_event("save_upload", _params, socket) do
     created_snippets = consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
-      {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
+      snippet = if is_nil(Snippets.find_snippet(socket.assigns.current_scope, entry.client_name, "File")) do
+        {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
+        snippet
+      else
+        filename = Snippets.Snippet.create_unique_filename(entry.client_name)
+
+        {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: filename, namespace: "File" })
+        snippet
+      end
+
       {:ok, content} = File.read(path)
       Snippets.create_new_revision(socket.assigns.current_scope, snippet, %{}, content, entry.client_type)
 

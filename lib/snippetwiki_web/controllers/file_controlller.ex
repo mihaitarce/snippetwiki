@@ -22,6 +22,6 @@ defmodule SnippetwikiWeb.FileController do
     {:ok, content} = File.read(upload.path)
     Snippets.create_new_revision(conn.assigns.current_scope, snippet, %{}, content, upload.content_type)
 
-    json(conn, %{data: %{url: upload.filename}})
+    json(conn, %{data: %{url: snippet.title}})
   end
 end

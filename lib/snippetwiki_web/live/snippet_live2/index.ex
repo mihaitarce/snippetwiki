@@ -114,7 +114,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                   <%!--   <Sidebar/> --%>
                   <%!-- </div> --%>
 
-                  <input type="radio" name="tabs" class="tab" aria-label="Recent" checked="checked" />
+                  <input type="radio" name="tabs" class="tab" aria-label="Recent" checked={@active_tab == "Recent"}
+                         phx-click="change_active_tab" phx-value-tab="Recent" />
                   <div class="tab-content p-3">
                       <.live_component module={SnippetwikiWeb.ListComponent} id="recent-snippets"
                                        snippets={Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
@@ -129,7 +130,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                       <% end %>
                   </div>
 
-                  <input type="radio" name="tabs" class="tab" aria-label="Files" />
+                  <input type="radio" name="tabs" class="tab" aria-label="Files" checked={@active_tab == "Files"}
+                         phx-click="change_active_tab" phx-value-tab="Files" />
                   <div class="tab-content p-3">
                       <.live_component module={SnippetwikiWeb.ListComponent} id="file-snippets"
                                        snippets={Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
@@ -178,6 +180,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     initial_snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
 
     socket = socket |> assign(page_title: "Snippet Wiki",
+                              active_tab: "Recent",
                               snippets: snippets,
                               drafts: snippets
                                       |> Enum.filter(fn s -> s.has_draft end)
@@ -277,7 +280,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   end
 
 
-  @impl Phoenix.LiveView
+  @impl true
   def handle_event("validate_upload", _params, socket) do
     errors = socket.assigns.uploads.documents.entries
       |> Enum.map(fn entry ->
@@ -313,7 +316,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     {:noreply, Map.put(socket, :assigns, assigns)}
   end
 
-  @impl Phoenix.LiveView
+  @impl true
   def handle_event("save_upload", _params, socket) do
     created_snippets = consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
       snippet = if is_nil(Snippets.find_snippet(socket.assigns.current_scope, entry.client_name, "File")) do
@@ -337,17 +340,23 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
      |> put_flash(:info, "#{length(created_snippets)} file(s) uploaded successfully")}
   end
 
-  @impl Phoenix.LiveView
+  @impl true
   def handle_event("cancel_upload", %{"ref" => ref}, socket) do
     {:noreply, cancel_upload(socket, :documents, ref)}
   end
 
-  @impl Phoenix.LiveView
+  @impl true
   def handle_event("cancel_all_uploads", _, socket) do
     {:noreply,
       Enum.reduce(socket.assigns.uploads.documents.entries, socket,
                   fn entry, acc -> cancel_upload(acc, :documents, entry.ref) end)}
   end
+
+  @impl true
+  def handle_event("change_active_tab", %{"tab" => tab}, socket) do
+    {:noreply, assign(socket, :active_tab, tab)}
+  end
+
 
   @impl true
   def handle_info({:stop_editing, snippet}, socket) do

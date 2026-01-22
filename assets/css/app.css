@@ -134,17 +134,19 @@ a:not(.btn):hover {
   text-decoration-style: unset;
 }
 
-h1,
-.bn-editor h1,
-.bn-editor h2,
+h1, h1 *,
+.bn-editor h1, .bn-editor h1 *,
 .title {
   font-family: 'Noto Serif Variable', serif;
   font-weight: 400;
 }
 
-.bn-editor h1,
-.bn-editor h2 {
+.bn-editor h1 {
   font-size: 24px !important;
+}
+
+.bn-container .bn-side-menu[data-block-type="heading"][data-level="1"] {
+  height: 42px;
 }
 
 .bn-editor-readonly .bn-editor {

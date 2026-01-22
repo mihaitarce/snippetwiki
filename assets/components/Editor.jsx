@@ -71,6 +71,10 @@ export default function Editor({ textarea, options }) {
       </div>}
 
       <BlockNoteView editor={editor}>
+        {/* TODO Upload image or select from existing images */}
+        
+        {/* TODO Upload file or select from existing files (PDF) */}
+
         {/* Adds an internal link menu which opens with the "[" key */}
         <SuggestionMenuController
           triggerCharacter={"["}

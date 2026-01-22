@@ -14,14 +14,6 @@ export default function Viewer({ id, textarea }) {
     const options = {
         // trailingBlock: false,
         schema: BlockNoteSchema.create().extend({
-            blockSpecs: {
-                heading: createHeadingBlockSpec({
-                    // Disables toggleable headings.
-                    allowToggleHeadings: false,
-                    // Sets the allowed heading levels.
-                    levels: [1],
-                }),
-            },
             inlineContentSpecs: {
                 // Adds all default inline content.
                 ...defaultInlineContentSpecs,

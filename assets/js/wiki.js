@@ -14,7 +14,7 @@ import * as Y from 'yjs';
 import { Socket } from "phoenix";
 import { PhoenixChannelProvider } from "./y-phoenix-channel";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
-import { BlockNoteSchema, createHeadingBlockSpec, defaultInlineContentSpecs, BlockNoteEditor } from "@blocknote/core";
+import { BlockNoteSchema, createHeadingBlockSpec, defaultInlineContentSpecs, defaultBlockSpecs, BlockNoteEditor } from "@blocknote/core";
 
 const {pathPrefix} = window.__APP__
 
@@ -95,21 +95,36 @@ export const hooks = {
 
             const options = {
                 // trailingBlock: false,
-                schema: BlockNoteSchema.create().extend({
+                schema: BlockNoteSchema.create({
                     blockSpecs: {
                         heading: createHeadingBlockSpec({
-                        // Disables toggleable headings.
-                        allowToggleHeadings: false,
-                        // Sets the allowed heading levels.
-                        levels: [1],
+                            // Disables toggleable headings.
+                            allowToggleHeadings: false,
+                            // Sets the allowed heading levels.
+                            levels: [1],
                         }),
+                        paragraph: defaultBlockSpecs.paragraph,
+                        quote: defaultBlockSpecs.quote,
+                        numberedListItem: defaultBlockSpecs.numberedListItem,
+                        bulletListItem: defaultBlockSpecs.bulletListItem,
+                        codeBlock: defaultBlockSpecs.codeBlock,
+                        table: defaultBlockSpecs.table,
+                        image: defaultBlockSpecs.image,
+                        file: defaultBlockSpecs.file,
+                        // audio
+                        // video
+
                     },
                     inlineContentSpecs: {
                         // Adds all default inline content.
                         ...defaultInlineContentSpecs,
+                        // text: defaultInlineContentSpecs.text,
+
                         // Adds the internal tag.
                         InternalLink: InternalLink,
-                    },
+                    }
+                    // styleSpecs: { ...
+                    //     bold: defaultStyleSpecs.bold,
                 }),
                 collaboration: {
                     // The Yjs Provider responsible for transporting updates:

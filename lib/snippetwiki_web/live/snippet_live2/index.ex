@@ -116,24 +116,24 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
                   <input type="radio" name="tabs" class="tab" aria-label="Recent" checked="checked" />
                   <div class="tab-content p-3">
-                      <.live_component module={SnippetwikiWeb.RecentComponent} id="recent-snippets"
-                                       snippets={@snippets} open={@open} current_scope={@current_scope} />
+                      <.live_component module={SnippetwikiWeb.ListComponent} id="recent-snippets"
+                                       snippets={Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
+                                       open={@open} />
+                      <%= unless Enum.empty?(@open) do %>
+                        <div class="mt-4">
+                          <button type="button" class="btn" phx-click="close_snippets">
+                            <.icon name="hero-x-mark" />
+                            Close all
+                          </button>
+                        </div>
+                      <% end %>
                   </div>
 
                   <input type="radio" name="tabs" class="tab" aria-label="Files" />
                   <div class="tab-content p-3">
-                      <ul>
-                        <li :for={snippet <- Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
-                            id={"file-link-#{Integer.to_string(snippet.id)}"} class="pb-1">
-                          <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
-                          <%= if snippet.has_draft do %>
-                            <.icon name="hero-pencil" class="ms-2 size-4" />
-                          <% end %>
-                          <%= if snippet.id in @open do %>
-                            <.icon name="hero-eye" class="ms-2 size-4" />
-                          <% end %>
-                        </li>
-                      </ul>
+                      <.live_component module={SnippetwikiWeb.ListComponent} id="file-snippets"
+                                       snippets={Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
+                                       open={@open} />
                   </div>
 
                   <%!-- <input type="radio" name="tabs" class="tab" aria-label="Map" /> --%>
@@ -245,7 +245,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
     {:noreply,
     socket
-    |> assign(:open, Enum.reject(socket.assigns.open, fn id -> id == snippet_id end))}
+    |> assign(:open, Enum.reject(socket.assigns.open, fn id -> id == snippet_id end))
+    |> assign(:editing, Enum.reject(socket.assigns.editing, fn id -> id == snippet_id end))}
   end
 
   @impl true

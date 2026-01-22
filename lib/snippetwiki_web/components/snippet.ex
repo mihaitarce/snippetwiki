@@ -41,7 +41,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
           <%= if is_nil(@snippet.content_type) or @snippet.content_type == "application/vnd.blocknote+json" do %>
             <.input field={@form[:content]} type="textarea" />
             <div id={"editor-#{@snippet.id}"} phx-hook="Editor" phx-update="ignore"
-                 data-id={@snippet.id}></div>
+                 data-id={@snippet.id} data-username={@current_scope.user.email}></div>
           <% end %>
 
           <%= if @snippet.content_type == "image/jpeg" do %>
@@ -65,6 +65,13 @@ defmodule SnippetwikiWeb.SnippetComponent do
                 <%!-- <.button phx-click="talk_page" phx-value-title={@snippet.title}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />
                 </.button> --%>
+              <% end %>
+
+              <%= if @snippet.namespace == "File" do %>
+                <a href={~p"/files/#{@snippet.title}"} target="_blank"
+                   class="btn btn-ghost btn-square btn-soft btn-primary">
+                  <.icon name="hero-arrow-down-tray" class="size-6" />
+                </a>
               <% end %>
 
               <%= if is_nil(@snippet.namespace) or @snippet.namespace == "File" do %>

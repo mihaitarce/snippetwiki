@@ -115,14 +115,14 @@ pre,
   font-family: 'Noto Sans Mono Variable', monospace;
 }
 
-a {
+a:not(.btn) {
   color: var(--color-primary);
   text-decoration: underline;
   font-weight: 500;
   cursor: pointer;
 }
 
-a:hover {
+a:not(.btn):hover {
   background-color: var(--color-primary-content);
 }
 

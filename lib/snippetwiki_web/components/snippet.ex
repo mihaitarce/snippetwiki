@@ -42,6 +42,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
             <.input field={@form[:content]} type="textarea" />
             <div id={"editor-#{@snippet.id}"} phx-hook="Editor" phx-update="ignore"
                  data-id={@snippet.id} data-username={@current_scope.user.email}></div>
+            <div class="text-lg text-base-content/30">Type '/' for commands, '[' for linking to other articles.</div>
           <% end %>
 
           <%= if @snippet.content_type == "image/jpeg" do %>
@@ -51,8 +52,6 @@ defmodule SnippetwikiWeb.SnippetComponent do
           <%= if @snippet.content_type == "application/pdf" do %>
             <iframe src={get_file_url(@snippet.title)} title={@snippet.title} class="w-full aspect-square"></iframe>
           <% end %>
-
-          <div class="text-lg text-base-content/30">Type '/' for commands, '[' for linking to other articles.</div>
         </.form>
       <% else %>
         <div class="card-body">

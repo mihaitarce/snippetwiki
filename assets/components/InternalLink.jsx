@@ -7,7 +7,7 @@ export const InternalLink = createReactInlineContentSpec(
     type: "InternalLink",
     propSchema: {
       id: {},
-      title: { default: "Unknown" },
+      title: {},
     },
     content: "none",
   },

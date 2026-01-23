@@ -8,17 +8,8 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     ~H"""
     <Layouts.app flash={@flash}>
           <div class="flex flex-col h-svh">
-              <div class="flex justify-between gap-12 px-4 py-2 bg-base-300">
-                  <%!-- <.header>
-                    <h1 class="text-3xl p-3">Welcome to snippetwiki</h1>
-                    <:actions>
-                      <.button variant="primary" phx-click="new_snippet">
-                        <.icon name="hero-plus" /> New Snippet
-                      </.button>
-                    </:actions>
-                  </.header> --%>
-
-                  <div class="flex items-center gap-3 ps-2">
+              <div class="flex justify-between gap-8 px-5 py-2">
+                  <div class="flex items-center gap-3">
                       <img src={~p"/images/logo.svg"} alt="snippetwiki" class="h-8 hover:scale-110 transition-transform"/>
 
                       <%!-- Add button --%>
@@ -47,7 +38,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                                         <path strokeLinecap="round" strokeLinejoin="round"
                                               d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/>
                                     </svg>
-                                    <span>Upload file</span>
+                                    <span>Import files</span>
                                     <span class="hidden">
                                       <.live_file_input upload={@uploads.documents} />
                                     </span>
@@ -63,7 +54,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                    id="search"
                    current_scope={@current_scope}/>
               </div>
-              <div class="flex-1 flex flex-col overflow-y-scroll overscroll-none max-w-screen xl:w-[calc(65ch+5rem)]">
+              <div class="flex-1 overflow-y-scroll overscroll-none max-w-screen xl:w-[calc(65ch+5rem)]">
                   <div class="flex flex-col gap-4 p-4">
                     <%= if length(@uploads.documents.entries) > 0 do %>
                       <section phx-drop-target={@uploads.documents.ref}>

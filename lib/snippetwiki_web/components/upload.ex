@@ -8,7 +8,7 @@ defmodule SnippetwikiWeb.UploadComponent do
       <div class="card bg-base-100" phx-drop-target={@uploads.documents.ref}>
             <div class="card-body">
                 <div class="flex items-center justify-between mb-3">
-                    <h1 class="font-serif text-3xl">Import</h1>
+                    <h1 class="font-serif text-3xl">Import files</h1>
                     <div class="flex gap-3">
                         <button phx="save_upload"
                             form="upload"
@@ -42,10 +42,12 @@ defmodule SnippetwikiWeb.UploadComponent do
                         <figure class="w-36">
                             <%= if String.starts_with?(entry.client_type, "image/") do %>
                                 <.live_img_preview entry={entry} class="max-h-48 mx-auto" />
-                            <% end %>
-
-                            <%= if entry.client_type == "application/pdf" do %>
-                                <.icon name="hero-document" class="size-24 text-base-content/16" />
+                            <% else %>
+                                <%= if entry.client_type == "application/pdf" do %>
+                                    <.icon name="hero-document" class="size-24 text-base-content/16" />
+                                <% else %>
+                                    <.icon name="hero-exclamation-triangle" class="size-24 text-base-content/16" />
+                                <% end %>
                             <% end %>
 
                             <%!-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={0.75}

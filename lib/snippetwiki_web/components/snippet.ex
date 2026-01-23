@@ -51,6 +51,8 @@ defmodule SnippetwikiWeb.SnippetComponent do
           <%= if @snippet.content_type == "application/pdf" do %>
             <iframe src={get_file_url(@snippet.title)} title={@snippet.title} class="w-full aspect-square"></iframe>
           <% end %>
+
+          <div class="text-lg text-base-content/30">Type '/' for commands, '[' for linking to other articles.</div>
         </.form>
       <% else %>
         <div class="card-body">

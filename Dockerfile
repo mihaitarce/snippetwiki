@@ -1,5 +1,4 @@
 FROM elixir:1.19
-# RUN apk add --no-cache build-base npm git postgresql-client
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -V -y --no-install-recommends \
@@ -13,4 +12,4 @@ RUN npm install --prefix assets
 RUN MIX_ENV=prod mix phx.digest
 RUN MIX_ENV=prod mix release
 
-CMD ["_build/prod/rel/snippetwiki/bin/snippetwiki", "start"]
+CMD ["_build/prod/rel/snippetwiki/bin/server"]

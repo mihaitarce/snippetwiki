@@ -30,7 +30,9 @@
         window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
 
         window.__APP__  = window.__APP__ || {}
-        window.__APP__.pathPrefix = "<%= Application.get_env(:snippetwiki, SnippetwikiWeb.Endpoint)[:url][:path] %>"
+        
+        const pathPrefix = "<%= Application.get_env(:snippetwiki, SnippetwikiWeb.Endpoint)[:url][:path] %>"
+        window.__APP__.pathPrefix = (pathPrefix === "/") ? "" : pathPrefix
       })();
     </script>
   </head>

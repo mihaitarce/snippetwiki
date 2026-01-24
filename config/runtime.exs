@@ -24,7 +24,7 @@ config :snippetwiki, SnippetwikiWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 config :snippetwiki, SnippetwikiWeb.Endpoint,
-  url: [path: System.get_env("PHX_PATH") || "/"]
+  url: [path: System.get_env("PHX_PATH", "/")]
 
 if config_env() == :prod do
   database_url =

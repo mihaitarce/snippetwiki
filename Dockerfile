@@ -12,4 +12,4 @@ RUN npm install --prefix assets
 RUN MIX_ENV=prod mix phx.digest
 RUN MIX_ENV=prod mix release
 
-CMD ["_build/prod/rel/snippetwiki/bin/server"]
+CMD ["_build/prod/rel/snippetwiki/bin/snippetwiki", "start"]

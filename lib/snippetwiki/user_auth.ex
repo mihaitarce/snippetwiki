@@ -1,4 +1,6 @@
 defmodule Snippetwiki.UserAuth do
+  alias Snippetwiki.Snippets.Scope
+
   def process_auth_headers(headers) do
     result = Enum.reduce(headers, %{}, fn header, acc ->
       {key, value} = header
@@ -12,7 +14,7 @@ defmodule Snippetwiki.UserAuth do
     if Enum.empty?(result) do
       nil
     else
-      result
+      %Scope{user: result}
     end
   end
 end

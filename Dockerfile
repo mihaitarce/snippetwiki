@@ -9,6 +9,7 @@ COPY . .
 RUN mix deps.get --only prod
 RUN MIX_ENV=prod mix compile
 RUN npm install --prefix assets
+RUN MIX_ENV=prod mix assets.deploy
 RUN MIX_ENV=prod mix phx.digest
 RUN MIX_ENV=prod mix release
 

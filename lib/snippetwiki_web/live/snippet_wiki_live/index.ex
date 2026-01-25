@@ -1,4 +1,4 @@
-defmodule SnippetwikiWeb.SnippetLive2.Index do
+defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   use SnippetwikiWeb, :live_view
 
   alias Snippetwiki.Snippets
@@ -168,8 +168,6 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     snippets = list_snippets(socket.assigns.current_scope)
     # |> stream(:snippets, list_snippets())}
 
-    initial_snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
-
     socket = socket |> assign(page_title: "Snippet Wiki",
                               active_tab: "Recent",
                               snippets: snippets,
@@ -179,9 +177,11 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                               editing: [])
                     |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)
 
+     initial_snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
      if is_nil(initial_snippet) do
         {:ok, assign(socket, :open, [])}
      else
+        send(self(), {:increment_view_count, initial_snippet})
         {:ok, assign(socket, :open, [initial_snippet.id])}
      end
   end
@@ -200,16 +200,16 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
 
   @impl true
   def handle_event("open_snippet", %{"id" => id}, socket) do
-    snippet_id = String.to_integer(id)
+    snippet = Snippets.get_snippet!(socket.assigns.current_scope, String.to_integer(id))
 
     {:noreply,
-     if snippet_id in socket.assigns.open do
+     if snippet.id in socket.assigns.open do
        socket
      else
-       Snippets.increment_views(socket.assigns.current_scope, snippet_id)
-       assign(socket, open: [ snippet_id | socket.assigns.open ])
+       send(self(), {:increment_view_count, snippet})
+       assign(socket, open: [ snippet.id | socket.assigns.open ])
      end
-     |> push_event("scroll", %{id: "snippet-#{snippet_id}"})}
+     |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
   end
 
   @impl true
@@ -348,6 +348,12 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
     {:noreply, assign(socket, :active_tab, tab)}
   end
 
+
+  @impl true
+  def handle_info({:increment_view_count, snippet}, socket) do
+    Snippets.increment_views(socket.assigns.current_scope, snippet)
+    {:noreply, socket}
+  end
 
   @impl true
   def handle_info({:stop_editing, snippet}, socket) do

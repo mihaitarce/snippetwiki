@@ -507,11 +507,9 @@ defmodule Snippetwiki.Snippets do
     {:ok, with_content(snippet)}
   end
 
-  def increment_views(%Scope{} = scope, id) do
-      snippet = get_snippet!(scope, id)
-
+  def increment_views(%Scope{} = scope, snippet) do
       Snippet
-      |> where(id: ^id)
+      |> where(id: ^snippet.id)
       |> Repo.update_all(inc: [views: 1])
 
       broadcast_snippet(scope, {:updated, snippet})

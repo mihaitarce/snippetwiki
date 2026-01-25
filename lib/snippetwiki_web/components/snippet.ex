@@ -193,7 +193,10 @@ defmodule SnippetwikiWeb.SnippetComponent do
 
   defp get_file_url(title) do
     prefix_path = Application.get_env(:snippetwiki, SnippetwikiWeb.Endpoint)[:url][:path]
-
-    "#{prefix_path}/files/#{title}"
+    if prefix_path == "/" do
+      "/files/#{title}"
+    else
+      "#{prefix_path}/files/#{title}"
+    end
   end
 end

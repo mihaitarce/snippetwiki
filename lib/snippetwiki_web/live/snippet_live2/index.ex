@@ -6,7 +6,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.wiki flash={@flash}>
           <div class="flex flex-col h-svh">
               <div class="flex justify-between gap-8 px-5 py-2">
                   <div class="flex items-center gap-3">
@@ -155,7 +155,7 @@ defmodule SnippetwikiWeb.SnippetLive2.Index do
                 <% end %>
             </div>
         </div>
-    </Layouts.app>
+    </Layouts.wiki>
     """
   end
 

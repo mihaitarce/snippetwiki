@@ -16,11 +16,11 @@ defmodule SnippetwikiWeb.SnippetComponent do
               <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
             <% end %>
 
-            <div class="flex flex-col sm:flex-row gap-1 py-1">
+            <div class="flex flex-col-reverse sm:flex-row gap-1 py-1">
               <.button type="button" variant="error"
                 phx-click="delete"
                 phx-target={@myself}
-                data-confirm="Are you sure?">
+                data-confirm="Are you sure? This action cannot be undone.">
                 <.icon name="hero-trash" class="size-6" />
               </.button>
 
@@ -61,7 +61,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
             <% else %>
               <h1 class="text-3xl py-1.5">{@snippet.title}</h1>
             <% end %>
-            <div class="flex flex-col sm:flex-row gap-1 py-1">
+            <div class="flex flex-col-reverse sm:flex-row gap-1 py-1">
               <%= if is_nil(@snippet.namespace) do %>
                 <%!-- <.button phx-click="talk_page" phx-value-title={@snippet.title}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />

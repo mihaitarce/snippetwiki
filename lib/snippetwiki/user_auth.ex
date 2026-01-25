@@ -11,7 +11,8 @@ defmodule Snippetwiki.UserAuth do
       end
     end)
 
-    if Enum.empty?(result) do
+    # We need the headers to provide both email (username) and bag (group) information
+    if Enum.empty?(result) or not Map.has_key?(result, :email) or not Map.has_key?(result, :bag) do
       nil
     else
       %Scope{user: result}

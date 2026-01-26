@@ -11,7 +11,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
         <.form for={@form} class="card-body" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
           <div class="flex justify-between gap-2 min-h-16">
             <%= if is_nil(@snippet.namespace) do %>
-              <.input type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
+              <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
             <% else %>
               <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
             <% end %>
@@ -39,7 +39,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
           </div>
 
           <%= if is_nil(@snippet.content_type) or @snippet.content_type == "application/vnd.blocknote+json" do %>
-            <.input field={@form[:content]} type="textarea" />
+            <.input id={"content-#{@snippet.id}"} field={@form[:content]} type="textarea" />
             <div id={"editor-#{@snippet.id}"} phx-hook="Editor" phx-update="ignore"
                  data-id={@snippet.id} data-username={@current_scope.user.email}></div>
             <div class="text-lg text-base-content/30">Type '/' for commands, '[' for linking to other articles.</div>

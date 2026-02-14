@@ -61,7 +61,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
             <% else %>
               <h1 class="text-3xl py-1.5">{@snippet.title}</h1>
             <% end %>
-            <div class="flex flex-col-reverse sm:flex-row gap-1 py-1">
+            <div class="flex flex-col-reverse justify-end sm:flex-row gap-1 py-1">
               <%= if is_nil(@snippet.namespace) do %>
                 <%!-- <.button phx-click="talk_page" phx-value-title={@snippet.title}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />

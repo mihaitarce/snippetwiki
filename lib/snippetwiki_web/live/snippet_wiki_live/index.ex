@@ -84,7 +84,9 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
               </div>
           </div>
 
-          <div class="flex-1 h-svh hidden xl:block">
+          <div class="flex flex-col h-svh hidden xl:block">
+            <div class="flex-1 overflow-y-scroll overscroll-none max-w-screen max-h-svh">
+
               <div class="flex items-baseline gap-2 absolute right-4 text-xs p-2 opacity-30 hover:opacity-100 transition-opacity">
                 Logged in as
                 <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email} ({@current_scope.user.bag})</span>
@@ -108,9 +110,11 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                   <input type="radio" name="tabs" class="tab" aria-label="Recent" checked={@active_tab == "Recent"}
                          phx-click="change_active_tab" phx-value-tab="Recent" />
                   <div class="tab-content p-3">
-                      <.live_component module={SnippetwikiWeb.ListComponent} id="recent-snippets"
-                                       snippets={Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
-                                       open={@open} />
+                      <div class="max-h-[calc(100lvh-10rem)] overflow-y-scroll">
+                        <.live_component module={SnippetwikiWeb.ListComponent} id="recent-snippets"
+                                        snippets={Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
+                                        open={@open} />
+                      </div>
                       <%= unless Enum.empty?(@open) do %>
                         <div class="mt-4">
                           <button type="button" class="btn" phx-click="close_snippets">
@@ -124,9 +128,11 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                   <input type="radio" name="tabs" class="tab" aria-label="Files" checked={@active_tab == "Files"}
                          phx-click="change_active_tab" phx-value-tab="Files" />
                   <div class="tab-content p-3">
+                    <div class="max-h-[calc(100lvh-8rem)] overflow-y-scroll">
                       <.live_component module={SnippetwikiWeb.ListComponent} id="file-snippets"
                                        snippets={Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
                                        open={@open} />
+                    </div>
                   </div>
 
                   <%!-- <input type="radio" name="tabs" class="tab" aria-label="Map" /> --%>
@@ -134,6 +140,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                   <%!--   Concept map --%>
                   <%!-- </div> --%>
               </div>
+            </div>
           </div>
 
         <div class="fixed bottom-[-4px] w-full">

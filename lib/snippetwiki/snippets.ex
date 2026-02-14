@@ -326,7 +326,8 @@ defmodule Snippetwiki.Snippets do
   def search_snippets(%Scope{} = scope, query_string \\ nil) do
     query = from s in Snippet, as: :snippet,
       where: is_nil(s.namespace),
-      order_by: [desc: :updated_at, desc: :id]
+      order_by: [desc: :updated_at, desc: :id],
+      limit: 10
 
     if is_nil(query_string) do
       query

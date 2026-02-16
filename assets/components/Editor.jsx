@@ -78,6 +78,7 @@ export default function Editor({ textarea, options }) {
         {/* Adds an internal link menu which opens with the "[" key */}
         <SuggestionMenuController
           triggerCharacter={"["}
+          minQueryLength={1}
           getItems={async (query) =>
             // Gets the internal link menu items
             filterSuggestionItems(await getInternalLinkMenuItems(editor), query)

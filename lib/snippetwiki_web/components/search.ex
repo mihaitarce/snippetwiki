@@ -37,14 +37,16 @@ defmodule SnippetwikiWeb.SearchComponent do
     {:ok,
      socket
      |> assign(:current_scope, assigns.current_scope)
-     |> assign(:results, Snippets.search_snippets(assigns.current_scope))}
+     |> assign(:results, [])}
   end
 
   @impl true
   def handle_event("search", %{ "query" => query }, socket) do
-    IO.inspect(query)
-    {:noreply,
-     socket
-     |> assign(:results, Snippets.search_snippets(socket.assigns.current_scope, query))}
+    if String.length(query) > 0 do
+      {:noreply,
+       assign(socket, :results, Snippets.search_snippets(socket.assigns.current_scope, query))}
+    else
+      {:noreply, assign(socket, :results, [])}
+    end
   end
 end

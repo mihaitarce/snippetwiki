@@ -326,14 +326,14 @@ defmodule Snippetwiki.Snippets do
   def search_snippets(%Scope{} = scope, query_string \\ nil) do
     query = from s in Snippet, as: :snippet,
       where: is_nil(s.namespace),
-      order_by: [desc: :updated_at, desc: :id],
-      limit: 10
+      order_by: [desc: :updated_at, desc: :id]
 
     if is_nil(query_string) do
       query
     else
       query
       |> where([s], ilike(s.title, ^("%#{query_string}%")))
+      |> limit(10)
     end
     |> Repo.all_by(bag: scope.user.bag)
   end

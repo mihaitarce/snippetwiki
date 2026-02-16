@@ -175,22 +175,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     snippets = list_snippets(socket.assigns.current_scope)
     # |> stream(:snippets, list_snippets())}
 
-    socket = socket |> assign(page_title: "Snippet Wiki",
-                              active_tab: "Recent",
-                              snippets: snippets,
-                              drafts: snippets
-                                      |> Enum.filter(fn s -> s.has_draft end)
-                                      |> Enum.map(fn s -> s.id end),
-                              editing: [])
-                    |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)
-
-     initial_snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
-     if is_nil(initial_snippet) do
-        {:ok, assign(socket, :open, [])}
-     else
-        send(self(), {:increment_view_count, initial_snippet})
-        {:ok, assign(socket, :open, [initial_snippet.id])}
-     end
+    {:ok,
+     socket
+     |> assign(page_title: "Snippet Wiki",
+               active_tab: "Recent",
+               snippets: snippets,
+               open: [],
+               drafts: snippets
+                       |> Enum.filter(fn s -> s.has_draft end)
+                       |> Enum.map(fn s -> s.id end),
+               editing: [])
+     |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
   end
 
   @impl true
@@ -217,6 +212,20 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
        assign(socket, open: [ snippet.id | socket.assigns.open ])
      end
      |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
+  end
+
+  @impl true
+  def handle_event("open_initial", %{"title" => title}, socket) do
+    snippet = Snippets.find_snippet(socket.assigns.current_scope, title)
+
+    if is_nil(snippet) do
+      snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
+      send(self(), {:increment_view_count, snippet})
+      {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
+    else
+      send(self(), {:increment_view_count, snippet})
+      {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
+    end
   end
 
   @impl true

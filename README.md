@@ -29,9 +29,14 @@ Redirects requests to http://localhost:2080 to the wiki web server, passing in a
 
 ### 3) Wiki web server
 
-To initialize database:
+To initialize the database (WARNING: deletes all content!):
 ```
 mix ecto.reset
+```
+
+To update (migrate) the schema:
+```
+mix ecto.migrate
 ```
 
 To start the server:

@@ -216,12 +216,20 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
   @impl true
   def handle_event("open_initial", %{"title" => title}, socket) do
+    IO.inspect(title)
+
     snippet = Snippets.find_snippet(socket.assigns.current_scope, title)
 
     if is_nil(snippet) do
       snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
-      send(self(), {:increment_view_count, snippet})
-      {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
+
+      if is_nil(snippet) do
+        # No Welcome snippet to open
+        {:noreply, socket}
+      else
+        send(self(), {:increment_view_count, snippet})
+        {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
+      end
     else
       send(self(), {:increment_view_count, snippet})
       {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}

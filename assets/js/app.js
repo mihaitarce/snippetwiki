@@ -88,7 +88,7 @@ window.addEventListener("phx:page-loading-stop", info => {
   if (info.detail.kind === "initial") {
     const hash = window.location.hash
     if (hash.length > 1) {
-      liveSocket.js().push(document.body, "open_initial", { value: { title: hash.slice(1) } })
+      liveSocket.js().push(document.body, "open_initial", { value: { title: decodeURI(hash.slice(1)) } })
     } else {
       liveSocket.js().push(document.body, "open_initial", { value: { title: "Welcome" } })
     }

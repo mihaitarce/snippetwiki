@@ -8,7 +8,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
     ~H"""
     <div class="card bg-base-100" id={"snippet-#{@snippet.id}"}>
       <%= if @editing do %>
-        <.form for={@form} class="card-body" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
+        <.form for={@form} class="card-body z-1" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
           <div class="flex justify-between gap-2 min-h-16">
             <%= if is_nil(@snippet.namespace) do %>
               <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />

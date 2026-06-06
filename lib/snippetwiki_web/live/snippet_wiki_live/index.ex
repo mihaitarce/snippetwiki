@@ -216,9 +216,9 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
   @impl true
   def handle_event("open_initial", %{"title" => title}, socket) do
-    IO.inspect(title)
+    decoded_title = URI.decode(title)
 
-    snippet = Snippets.find_snippet(socket.assigns.current_scope, title)
+    snippet = Snippets.find_snippet(socket.assigns.current_scope, decoded_title)
 
     if is_nil(snippet) do
       snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")

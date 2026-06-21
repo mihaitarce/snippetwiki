@@ -1,0 +1,15 @@
+.git
+.gitignore
+_build
+deps
+data
+assets/node_modules
+node_modules
+.elixir_ls
+cover
+doc
+tmp
+*.env
+.env
+*.log
+erl_crash.dump

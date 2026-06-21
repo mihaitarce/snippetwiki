@@ -11,13 +11,25 @@ Elixir, npm, Docker.
 
 You will need to run these commands in separate terminals as they do not detach and log to stdout.
 
-### 1) Database
+### 1) Database and wiki app
 
 ```
-docker compose up
+docker compose up --build
 ```
 
-Starts a postgres database on default port 5432 and an adminer (web-based database admin interface) on port 8080.
+Starts Postgres on port 5432, Adminer (web-based database admin) on port 8080, and the wiki app on port 4000. Database migrations run automatically when the app container starts.
+
+Rebuild after code changes:
+
+```
+docker compose up --build
+```
+
+To initialize the database from scratch (WARNING: deletes all content!), with Postgres running:
+
+```
+mix ecto.reset
+```
 
 ### 2) Caddy reverse proxy (for authentication)
 
@@ -25,26 +37,9 @@ Starts a postgres database on default port 5432 and an adminer (web-based databa
 caddy run --config Caddyfile -w
 ```
 
-Redirects requests to http://localhost:2080 to the wiki web server, passing in authentication headers (user: caddy-user, group: caddy-group)
+Proxies http://localhost:2080 to the wiki app, passing in authentication headers (user: caddy-user, group: caddy-group).
 
-### 3) Wiki web server
-
-To initialize the database (WARNING: deletes all content!):
-```
-mix ecto.reset
-```
-
-To update (migrate) the schema:
-```
-mix ecto.migrate
-```
-
-To start the server:
-```
-mix phx.server
-```
-
-This will launch a server listening on http://localhost:4000, but since the server requires (header-based) authentication you will not be able to use it directly.
+Use the wiki at **http://localhost:2080**. Port 4000 is exposed for the app directly, but the server requires header-based authentication so you cannot use it without Caddy.
 
 ## TODO
 

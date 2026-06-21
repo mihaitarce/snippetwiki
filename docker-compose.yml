@@ -1,6 +1,7 @@
 services:
   postgres:
     image: docker.io/postgres:17-alpine
+    container_name: snippetwiki-postgres
     environment:
       POSTGRES_DB: snippetwiki
       POSTGRES_USER: postgres
@@ -24,12 +25,14 @@ services:
 
   adminer:
     image: adminer
+    container_name: snippetwiki-adminer
     restart: always
     ports:
       - 8080:8080
 
   app:
     build: .
+    container_name: snippetwiki-app
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,7 +41,9 @@ services:
       DATABASE_URL: ecto://postgres:postgres@postgres:5432/snippetwiki
       SECRET_KEY_BASE: KolmqkuRjzQ+SZuodJCe32lu45Tbj0ZL5k4LJeqW+RwFrF0yPUY3ksqCMEKA54er
       PHX_HOST: localhost
+      PHX_PATH: /
       PORT: "4000"
+      WIKIRAG_EMBED_URL: http://localhost:4010/embed.html
     ports:
       - "4000:4000"
     restart: unless-stopped

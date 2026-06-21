@@ -7,9 +7,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.wiki flash={@flash}>
-          <div class="flex flex-col h-svh">
-              <div class="flex justify-between gap-8 px-5 py-2">
-                  <div class="flex items-center gap-3">
+          <div class="flex flex-col h-svh xl:w-1/2 xl:min-w-0">
+              <div class="flex items-center gap-3 px-5 py-2">
                       <img src={~p"/images/logo.svg"} alt="snippetwiki" class="h-8 hover:scale-110 transition-transform"/>
 
                       <%!-- Add button --%>
@@ -47,14 +46,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                               </li>
                           </ul>
                       </div>
-                  </div>
-
-                  <.live_component
-                   module={SnippetwikiWeb.SearchComponent}
-                   id="search"
-                   current_scope={@current_scope}/>
               </div>
-              <div class="flex-1 overflow-y-scroll overscroll-none max-w-screen xl:w-[calc(65ch+5rem)]">
+              <div class="flex-1 overflow-y-scroll overscroll-none w-full min-w-0">
                   <div class="flex flex-col gap-4 p-4">
                     <%= if length(@uploads.documents.entries) > 0 do %>
                       <section phx-drop-target={@uploads.documents.ref}>
@@ -84,8 +77,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
               </div>
           </div>
 
-          <div class="flex flex-col h-svh hidden xl:block">
-            <div class="flex-1 overflow-y-scroll overscroll-none max-w-screen max-h-svh">
+          <div class="flex flex-col h-svh hidden xl:flex xl:w-1/2 xl:min-w-0">
+            <div class="flex-1 overflow-y-scroll overscroll-none w-full min-w-0 max-h-svh">
 
               <div class="flex items-baseline gap-2 absolute right-4 text-xs p-2 opacity-30 hover:opacity-100 transition-opacity">
                 Logged in as
@@ -100,7 +93,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                            aria-label="Journal"/>
               </div> --%>
 
-              <div class="tabs tabs-box h-svh rounded-none p-4">
+              <div class="tabs tabs-box h-svh rounded-none p-4 w-full min-w-0">
                   <%!-- <input type="radio" name="tabs" class="tab" aria-label="Sidebar" /> --%>
                   <%!-- <div class="tab-content pt-3 overflow-y-scroll overscroll-none"> --%>
                   <%!-- <div class="tab-content p-3"> --%>
@@ -133,6 +126,18 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                                        snippets={Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
                                        open={@open} />
                     </div>
+                  </div>
+
+                  <input type="radio" name="tabs" class="tab" aria-label="Ask/Search"
+                         checked={@active_tab == "Ask/Search"}
+                         phx-click="change_active_tab" phx-value-tab="Ask/Search" />
+                  <div id="wikirag-embed-wrapper" phx-hook="WikiRagEmbed" class="tab-content p-0 w-full min-w-0">
+                    <iframe
+                      id="wikirag-embed"
+                      src={@wikirag_embed_url}
+                      class="block w-full min-w-0 h-[calc(100lvh-6rem)] border border-base-300 rounded-box"
+                      title="Ask/Search"
+                    />
                   </div>
 
                   <%!-- <input type="radio" name="tabs" class="tab" aria-label="Map" /> --%>
@@ -179,6 +184,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
      socket
      |> assign(page_title: "Snippet Wiki",
                active_tab: "Recent",
+               wikirag_embed_url: Application.fetch_env!(:snippetwiki, :wikirag_embed_url),
                snippets: snippets,
                open: [],
                drafts: snippets
@@ -209,30 +215,25 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
        socket
      else
        send(self(), {:increment_view_count, snippet})
-       assign(socket, open: [ snippet.id | socket.assigns.open ])
+       assign(socket, open: [snippet.id | socket.assigns.open])
      end
      |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
   end
 
   @impl true
-  def handle_event("open_initial", %{"title" => title}, socket) do
-    decoded_title = URI.decode(title)
-
-    snippet = Snippets.find_snippet(socket.assigns.current_scope, decoded_title)
-
-    if is_nil(snippet) do
-      snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
-
-      if is_nil(snippet) do
-        # No Welcome snippet to open
+  def handle_event("open_initial", params, socket) do
+    case open_initial_title(params) do
+      nil ->
         {:noreply, socket}
-      else
-        send(self(), {:increment_view_count, snippet})
-        {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
-      end
-    else
-      send(self(), {:increment_view_count, snippet})
-      {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
+
+      title ->
+        decoded_title = URI.decode(title)
+
+        snippet =
+          Snippets.find_snippet(socket.assigns.current_scope, decoded_title) ||
+            Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
+
+        {:noreply, open_snippet_on_socket(socket, snippet)}
     end
   end
 
@@ -414,5 +415,23 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     else
       base <> " " <> Integer.to_string(i)
     end
+  end
+
+  defp open_initial_title(%{"title" => title}) when is_binary(title), do: title
+  defp open_initial_title(%{"value" => %{"title" => title}}) when is_binary(title), do: title
+  defp open_initial_title(_), do: nil
+
+  defp open_snippet_on_socket(socket, nil), do: socket
+
+  defp open_snippet_on_socket(socket, snippet) do
+    socket =
+      if snippet.id in socket.assigns.open do
+        socket
+      else
+        send(self(), {:increment_view_count, snippet})
+        assign(socket, :open, [snippet.id | socket.assigns.open])
+      end
+
+    push_event(socket, "scroll", %{id: "snippet-#{snippet.id}"})
   end
 end

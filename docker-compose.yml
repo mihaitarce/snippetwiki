@@ -44,10 +44,10 @@ services:
       PHX_SERVER: "true"
       DATABASE_URL: ecto://postgres:postgres@postgres:5432/snippetwiki
       SECRET_KEY_BASE: KolmqkuRjzQ+SZuodJCe32lu45Tbj0ZL5k4LJeqW+RwFrF0yPUY3ksqCMEKA54er
-      PHX_HOST: portfolio.hku.hk
-      PHX_PATH: /wiki2
+      PHX_HOST: localhost
+      PHX_PATH: /
       PORT: "4000"
-      WIKIRAG_EMBED_URL: https://portfolio.hku.hk/wikirag/embed.html
+      WIKIRAG_URL: http://localhost:2080/wikirag/
     ports:
       - "4000:4000"
     restart: unless-stopped
@@ -58,3 +58,5 @@ networks:
   snippetwiki-net:
     external: true
 
+include:
+  - wikirag/docker-compose.yml

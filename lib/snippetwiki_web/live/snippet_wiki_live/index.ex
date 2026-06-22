@@ -184,7 +184,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
      socket
      |> assign(page_title: "Snippet Wiki",
                active_tab: "Recent",
-               wikirag_embed_url: Application.fetch_env!(:snippetwiki, :wikirag_embed_url),
+               wikirag_embed_url: wikirag_embed_url(),
                snippets: snippets,
                open: [],
                drafts: snippets
@@ -415,6 +415,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     else
       base <> " " <> Integer.to_string(i)
     end
+  end
+
+  defp wikirag_embed_url do
+    Application.fetch_env!(:snippetwiki, :wikirag_url)
+    |> String.trim_trailing("/")
+    |> Kernel.<>("/embed.html")
   end
 
   defp open_initial_title(%{"title" => title}) when is_binary(title), do: title

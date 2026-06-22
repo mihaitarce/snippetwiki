@@ -1,29 +1,46 @@
-# SnippetWiki
+# SnippetWiki + WikiRag
 
-A collaborate wiki for short form content.
+A collaborative wiki for short-form content with RAG-powered search via WikiRag.
 
-## Dependencies
+## Quick start
 
-Elixir, npm, Docker.
+### 1. Initialize WikiRag submodule
 
-
-## Getting started
-
-You will need to run these commands in separate terminals as they do not detach and log to stdout.
-
-### 1) Database and wiki app
-
+```bash
+git submodule update --init --recursive
 ```
+
+### 2. Configure `wikirag/.env`
+
+```bash
+cp wikirag/.env.example wikirag/.env
+```
+
+Edit `wikirag/.env` for your environment:
+
+| Section | Key settings | Notes |
+|---------|--------------|-------|
+| **Wiki** | `SNIPPETWIKI_URL`, `POSTGRES_*` | WikiRag reads snippets from Postgres (not HTTP). `SNIPPETWIKI_URL` is only for citation links shown to users. |
+| **LLM** | `LLM_PROVIDER`, `VLLM_*` / `OLLAMA_*` | See `wikirag/README.md`. Ensure the shared LLM service (portfolio-ai) is running. |
+| **Admin** | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Password must be a bcrypt hash See `wikirag/README.md` |
+| **Rebuild** | `REBUILD_ENABLED`, `REBUILD_CRON` | Cron job rebuilds the vector index, default Sunday 3am (`wikirag-cron` service) |
+
+### 3. Start the stack
+
+```    
+docker network create snippetwiki-net
 docker compose up --build
 ```
 
-Starts Postgres on port 5432, Adminer (web-based database admin) on port 8080, and the wiki app on port 4000. Database migrations run automatically when the app container starts.
+Before starting, update the public URL settings in `docker-compose.yml` (`app` → `environment`) for your deployment:
 
-Rebuild after code changes:
+| Variable | Purpose |
+|----------|---------|
+| `PHX_HOST` | Public hostname users access (domain or `localhost`) |
+| `PHX_PATH` | Subpath where the wiki is mounted (e.g. `/wiki` or `/`) |
+| `WIKIRAG_URL` | WikiRag base URL; the Ask/Search tab loads `{WIKIRAG_URL}embed.html` |
 
-```
-docker compose up --build
-```
+This starts Postgres on port 5432, Adminer (web-based database admin) on port 8080, and the wiki app on port 4000. Database migrations run automatically when the app container starts.
 
 To initialize the database from scratch (WARNING: deletes all content!), with Postgres running:
 
@@ -31,7 +48,7 @@ To initialize the database from scratch (WARNING: deletes all content!), with Po
 mix ecto.reset
 ```
 
-### 2) Caddy reverse proxy (for authentication)
+### 4. Caddy reverse proxy (for authentication)
 
 ```
 caddy run --config Caddyfile -w

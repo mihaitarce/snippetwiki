@@ -26,8 +26,8 @@ config :snippetwiki, SnippetwikiWeb.Endpoint,
 config :snippetwiki, SnippetwikiWeb.Endpoint,
   url: [path: System.get_env("PHX_PATH", "/")]
 
-config :snippetwiki, :wikirag_embed_url,
-  System.get_env("WIKIRAG_EMBED_URL", "http://localhost:4010/embed.html")
+config :snippetwiki, :wikirag_url,
+  System.get_env("WIKIRAG_URL", "http://localhost:2080/wikirag/")
 
 if config_env() == :prod do
   database_url =

@@ -1,0 +1,4 @@
+[submodule "wikirag"]
+	path = wikirag
+	url = git@github.com:mihaitarce/wikirag.git
+	branch = main

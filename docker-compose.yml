@@ -22,6 +22,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - snippetwiki-net
 
   adminer:
     image: adminer
@@ -29,7 +31,9 @@ services:
     restart: always
     ports:
       - 8080:8080
-
+    networks:
+      - snippetwiki-net
+      
   app:
     build: .
     container_name: snippetwiki-app
@@ -40,10 +44,17 @@ services:
       PHX_SERVER: "true"
       DATABASE_URL: ecto://postgres:postgres@postgres:5432/snippetwiki
       SECRET_KEY_BASE: KolmqkuRjzQ+SZuodJCe32lu45Tbj0ZL5k4LJeqW+RwFrF0yPUY3ksqCMEKA54er
-      PHX_HOST: localhost
-      PHX_PATH: /
+      PHX_HOST: portfolio.hku.hk
+      PHX_PATH: /wiki2
       PORT: "4000"
-      WIKIRAG_EMBED_URL: http://localhost:4010/embed.html
+      WIKIRAG_EMBED_URL: https://portfolio.hku.hk/wikirag/embed.html
     ports:
       - "4000:4000"
     restart: unless-stopped
+    networks:
+      - snippetwiki-net
+
+networks:
+  snippetwiki-net:
+    external: true
+

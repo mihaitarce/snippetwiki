@@ -1,4 +1,11 @@
 http://localhost:2080 {
+	handle_path /wikirag/* {
+		reverse_proxy localhost:8611 {
+			header_up X-Authenticated-User "caddy-user"
+			header_up X-Authenticated-Group "caddy-group"
+		}
+	}
+	
 	handle_path /wiki* {
 		reverse_proxy localhost:4000 {
 			header_up X-Authenticated-User "caddy-wikiuser"

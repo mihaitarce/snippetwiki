@@ -1,0 +1,27 @@
+# Dependencies and build artifacts
+/deps
+/_build
+/assets/node_modules
+
+# Local database and runtime data (often root-owned from Docker Postgres)
+/data
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Git and editor
+.git
+.gitignore
+.elixir_ls
+
+# WikiRag submodule (separate image)
+/wikirag
+
+# Misc
+/tmp
+/cover
+/doc
+*.md
+wiki.tar.gz

@@ -317,15 +317,16 @@ defmodule Snippetwiki.Snippets do
     likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
 
     query = from s in Snippet, as: :snippet,
+      where: s.bag in ^scope.user.bags,
       select_merge: %{like_count: subquery(likes_count)},
       order_by: [desc: :updated_at, desc: :id]
 
-    Repo.all_by(query, bag: scope.user.bag)
+    Repo.all(query)
   end
 
   def search_snippets(%Scope{} = scope, query_string \\ nil) do
     query = from s in Snippet, as: :snippet,
-      where: is_nil(s.namespace),
+      where: is_nil(s.namespace) and s.bag in ^scope.user.bags,
       order_by: [desc: :updated_at, desc: :id]
 
     if is_nil(query_string) do
@@ -335,7 +336,7 @@ defmodule Snippetwiki.Snippets do
       |> where([s], ilike(s.title, ^("%#{query_string}%")))
       |> limit(10)
     end
-    |> Repo.all_by(bag: scope.user.bag)
+    |> Repo.all()
   end
 
   @doc """
@@ -353,31 +354,56 @@ defmodule Snippetwiki.Snippets do
 
   """
   def get_snippet!(%Scope{} = scope, id) do
-    Repo.get_by!(Snippet, id: id, bag: scope.user.bag)
+    query = from s in Snippet, as: :snippet,
+      where: s.id == ^id and s.bag in ^scope.user.bags
+
+    Repo.one!(query)
+  end
+
+  @doc """
+  Finds a single snippet by title and bag.
+
+  The bag must be one of the caller's bags. Because `(title, bag, namespace)`
+  is unique, this resolves to at most one snippet even when the same title
+  exists in several of the caller's bags. Returns nil when the bag is not
+  accessible or no snippet matches.
+  """
+  def find_snippet_in_bag(%Scope{} = scope, title, bag) do
+    if bag in scope.user.bags do
+      query = from s in Snippet, as: :snippet,
+        where: s.title == ^title and s.bag == ^bag and is_nil(s.namespace)
+
+      Repo.one(query)
+    end
   end
 
   def find_snippet(%Scope{} = scope, title) do
     query = from s in Snippet, as: :snippet,
-      where: s.title == ^title and is_nil(s.namespace)
+      where: s.title == ^title and is_nil(s.namespace) and s.bag in ^scope.user.bags,
+      order_by: [asc: s.id],
+      limit: 1
 
-    Repo.get_by(query, bag: scope.user.bag)
+    Repo.one(query)
   end
 
   def find_snippet(%Scope{} = scope, title, namespace) do
     query = from s in Snippet, as: :snippet,
-      where: s.title == ^title and s.namespace == ^namespace
+      where: s.title == ^title and s.namespace == ^namespace and s.bag in ^scope.user.bags,
+      order_by: [asc: s.id],
+      limit: 1
 
-    Repo.get_by(query, bag: scope.user.bag)
+    Repo.one(query)
   end
 
   def load_snippet!(%Scope{} = scope, title, namespace) do
     query = from s in Snippet, as: :snippet,
-      where: s.title == ^title and s.namespace == ^namespace,
+      where: s.title == ^title and s.namespace == ^namespace and s.bag in ^scope.user.bags,
       left_join: r in assoc(s, :revisions),
       select_merge: %{content: r.content, content_type: r.content_type},
-      order_by: [desc: r.version]
+      order_by: [desc: r.version],
+      limit: 1
 
-    Repo.get_by!(query, bag: scope.user.bag)
+    Repo.one!(query)
   end
 
   def with_content(snippet) do
@@ -429,7 +455,7 @@ defmodule Snippetwiki.Snippets do
 
   """
   def update_snippet(%Scope{} = scope, %Snippet{} = snippet, attrs) do
-    true = snippet.bag == scope.user.bag
+    true = snippet.bag in scope.user.bags
 
     with {:ok, snippet = %Snippet{}} <-
            snippet
@@ -453,7 +479,7 @@ defmodule Snippetwiki.Snippets do
 
   """
   def delete_snippet(%Scope{} = scope, %Snippet{} = snippet) do
-    true = snippet.bag == scope.user.bag
+    true = snippet.bag in scope.user.bags
 
     with {:ok, snippet = %Snippet{}} <-
            Repo.delete(snippet) do
@@ -472,7 +498,7 @@ defmodule Snippetwiki.Snippets do
 
   """
   def change_snippet(%Scope{} = scope, %Snippet{} = snippet, attrs \\ %{}) do
-    true = snippet.bag == scope.user.bag
+    true = snippet.bag in scope.user.bags
 
     Snippet.changeset(snippet, attrs, scope)
   end
@@ -537,14 +563,16 @@ defmodule Snippetwiki.Snippets do
 
   """
   def subscribe_snippets(%Scope{} = scope) do
-    key = scope.user.bag
+    for bag <- scope.user.bags do
+      Phoenix.PubSub.subscribe(Snippetwiki.PubSub, "bag:#{bag}:snippets")
+    end
 
-    Phoenix.PubSub.subscribe(Snippetwiki.PubSub, "bag:#{key}:snippets")
+    :ok
   end
 
-  defp broadcast_snippet(%Scope{} = scope, message) do
-    key = scope.user.bag
+  defp broadcast_snippet(%Scope{} = _scope, message) do
+    {_action, %Snippet{bag: bag}} = message
 
-    Phoenix.PubSub.broadcast(Snippetwiki.PubSub, "bag:#{key}:snippets", message)
+    Phoenix.PubSub.broadcast(Snippetwiki.PubSub, "bag:#{bag}:snippets", message)
   end
 end

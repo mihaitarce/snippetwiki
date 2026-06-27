@@ -89,7 +89,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
               <div class="flex items-baseline gap-2 absolute right-4 text-xs p-2 opacity-30 hover:opacity-100 transition-opacity">
                 Logged in as
-                <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email} ({@current_scope.user.bag})</span>
+                <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email}</span>
+                <span
+                  :for={bag <- @current_scope.user.bags}
+                  class={[
+                    "badge badge-sm",
+                    if(bag == @current_scope.user.bag, do: "badge-primary", else: "badge-primary badge-soft")
+                  ]}
+                  title={if(bag == @current_scope.user.bag, do: "New articles are saved to this bag", else: nil)}
+                >
+                  {bag}
+                </span>
               </div>
 
               <%!-- <div class="filter justify-end absolute right-4">
@@ -179,6 +189,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
      socket
      |> assign(page_title: "Snippet Wiki",
                active_tab: "Recent",
+               bag: nil,
                snippets: snippets,
                open: [],
                drafts: snippets
@@ -186,6 +197,54 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                        |> Enum.map(fn s -> s.id end),
                editing: [])
      |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
+  end
+
+  @impl true
+  def handle_params(%{"bag" => bag, "title" => title}, _uri, socket) do
+    scope = socket.assigns.current_scope
+
+    if bag in scope.user.bags do
+      case Snippets.find_snippet_in_bag(scope, title, bag) do
+        nil ->
+          {:noreply,
+           socket
+           |> assign(:bag, bag)
+           |> put_flash(:error, "Article not found.")}
+
+        snippet ->
+          {:noreply,
+           socket
+           |> assign(:bag, bag)
+           |> open_snippet_card(snippet)}
+      end
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Unknown bag.")
+       |> push_navigate(to: ~p"/")}
+    end
+  end
+
+  def handle_params(%{"bag" => bag}, _uri, socket) do
+    scope = socket.assigns.current_scope
+
+    if bag in scope.user.bags do
+      {:noreply, assign(socket, :bag, bag)}
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Unknown bag.")
+       |> push_navigate(to: ~p"/")}
+    end
+  end
+
+  def handle_params(_params, _uri, socket) do
+    socket = assign(socket, :bag, nil)
+
+    case Snippets.find_snippet(socket.assigns.current_scope, "Welcome") do
+      nil -> {:noreply, socket}
+      snippet -> {:noreply, open_snippet_card(socket, snippet)}
+    end
   end
 
   @impl true
@@ -204,35 +263,13 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def handle_event("open_snippet", %{"id" => id}, socket) do
     snippet = Snippets.get_snippet!(socket.assigns.current_scope, String.to_integer(id))
 
-    {:noreply,
-     if snippet.id in socket.assigns.open do
-       socket
-     else
-       send(self(), {:increment_view_count, snippet})
-       assign(socket, open: [ snippet.id | socket.assigns.open ])
-     end
-     |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
-  end
-
-  @impl true
-  def handle_event("open_initial", %{"title" => title}, socket) do
-    decoded_title = URI.decode(title)
-
-    snippet = Snippets.find_snippet(socket.assigns.current_scope, decoded_title)
-
-    if is_nil(snippet) do
-      snippet = Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
-
-      if is_nil(snippet) do
-        # No Welcome snippet to open
-        {:noreply, socket}
-      else
-        send(self(), {:increment_view_count, snippet})
-        {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
-      end
+    # Main articles get a bag-aware permalink; handle_params performs the open.
+    # Namespaced snippets (Talk, File) are not addressable by URL, so open them
+    # in place directly.
+    if is_nil(snippet.namespace) do
+      {:noreply, push_patch(socket, to: ~p"/bags/#{snippet.bag}/#{snippet.title}")}
     else
-      send(self(), {:increment_view_count, snippet})
-      {:noreply, assign(socket, open: [ snippet.id | socket.assigns.open ])}
+      {:noreply, open_snippet_card(socket, snippet)}
     end
   end
 
@@ -405,6 +442,18 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
   defp list_snippets(current_scope) do
     Snippets.list_snippets(current_scope)
+  end
+
+  defp open_snippet_card(socket, snippet) do
+    if snippet.id in socket.assigns.open do
+      socket
+    else
+      send(self(), {:increment_view_count, snippet})
+
+      socket
+      |> assign(:open, [snippet.id | socket.assigns.open])
+      |> push_event("scroll", %{id: "snippet-#{snippet.id}"})
+    end
   end
 
 

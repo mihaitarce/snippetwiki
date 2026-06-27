@@ -7,7 +7,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.wiki flash={@flash}>
-          <div class="flex flex-col h-svh">
+          <div class="flex flex-col h-svh w-full min-w-0 xl:flex-1 xl:basis-1/2">
               <div class="flex justify-between gap-8 px-5 py-2">
                   <div class="flex items-center gap-3">
                       <img src={~p"/images/logo.svg"} alt="snippetwiki" class="h-8 hover:scale-110 transition-transform"/>
@@ -54,7 +54,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                    id="search"
                    current_scope={@current_scope}/>
               </div>
-              <div class="flex-1 overflow-y-scroll overscroll-none max-w-screen xl:w-[calc(65ch+5rem)]">
+              <div class="flex-1 overflow-y-scroll overscroll-none min-w-0">
                   <div class="flex flex-col gap-4 p-4">
                     <%= if length(@uploads.documents.entries) > 0 do %>
                       <section phx-drop-target={@uploads.documents.ref}>
@@ -84,22 +84,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
               </div>
           </div>
 
-          <div class="flex flex-col h-svh hidden xl:block">
-            <div class="flex-1 overflow-y-scroll overscroll-none max-w-screen max-h-svh">
+          <div class="hidden h-svh min-w-0 xl:flex xl:flex-1 xl:basis-1/2 xl:flex-col">
+            <div class="flex-1 min-w-0 w-full overflow-y-scroll overscroll-none max-h-svh">
 
               <div class="flex items-baseline gap-2 absolute right-4 text-xs p-2 opacity-30 hover:opacity-100 transition-opacity">
                 Logged in as
                 <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email}</span>
-                <span
-                  :for={bag <- @current_scope.user.bags}
-                  class={[
-                    "badge badge-sm",
-                    if(bag == @current_scope.user.bag, do: "badge-primary", else: "badge-primary badge-soft")
-                  ]}
-                  title={if(bag == @current_scope.user.bag, do: "New articles are saved to this bag", else: nil)}
-                >
-                  {bag}
-                </span>
               </div>
 
               <%!-- <div class="filter justify-end absolute right-4">
@@ -110,45 +100,165 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                            aria-label="Journal"/>
               </div> --%>
 
-              <div class="tabs tabs-box h-svh rounded-none p-4">
-                  <%!-- <input type="radio" name="tabs" class="tab" aria-label="Sidebar" /> --%>
-                  <%!-- <div class="tab-content pt-3 overflow-y-scroll overscroll-none"> --%>
-                  <%!-- <div class="tab-content p-3"> --%>
-                  <%!--   <Sidebar/> --%>
-                  <%!-- </div> --%>
-
-                  <input type="radio" name="tabs" class="tab" aria-label="Recent" checked={@active_tab == "Recent"}
-                         phx-click="change_active_tab" phx-value-tab="Recent" />
+              <div class="tabs tabs-box h-svh w-full rounded-none p-4">
+                  <input
+                    type="radio"
+                    name="tabs"
+                    class="tab"
+                    aria-label="Contents"
+                    checked={@active_tab == "Contents"}
+                    phx-click="change_active_tab"
+                    phx-value-tab="Contents"
+                  />
                   <div class="tab-content p-3">
-                      <div class="max-h-[calc(100lvh-10rem)] overflow-y-scroll">
-                        <.live_component module={SnippetwikiWeb.ListComponent} id="recent-snippets"
-                                        snippets={Enum.filter(@snippets, fn s -> is_nil(s.namespace) end)}
-                                        open={@open} />
-                      </div>
-                      <%= unless Enum.empty?(@open) do %>
-                        <div class="mt-4">
-                          <button type="button" class="btn" phx-click="close_snippets">
-                            <.icon name="hero-x-mark" />
-                            Close all
-                          </button>
+                    <div class="max-h-[calc(100lvh-10rem)] overflow-y-scroll">
+                      <%= if Enum.empty?(toc_groups(@snippets, @current_scope.user.bags)) do %>
+                        <div class="text-base-content/50 italic px-1">No articles yet</div>
+                      <% else %>
+                        <div :for={{bag, articles} <- toc_groups(@snippets, @current_scope.user.bags)} class="mb-2">
+                          <details class="group" open={length(@current_scope.user.bags) == 1}>
+                            <summary class="text-sm font-medium opacity-70 cursor-pointer py-1 select-none list-none flex items-center gap-2">
+                              <.icon name="hero-chevron-right" class="size-3 group-open:rotate-90 transition-transform" />
+                              <span class="truncate">{bag}</span>
+                              <span class="text-xs opacity-50">({length(articles)})</span>
+                            </summary>
+                            <ul class="pl-5 mt-1 border-l border-base-300 ml-1">
+                              <li :for={snippet <- articles} id={"toc-#{bag}-#{snippet.id}"} class="pb-1">
+                                <a
+                                  phx-click="open_snippet"
+                                  phx-value-id={snippet.id}
+                                  class={[
+                                    "hover:text-primary transition-colors",
+                                    snippet.id in @open && "font-semibold text-primary"
+                                  ]}
+                                >
+                                  {snippet.title}
+                                </a>
+                                <%= if snippet.has_draft do %>
+                                  <.icon name="hero-pencil" class="size-3 ms-1 opacity-50" />
+                                <% end %>
+                              </li>
+                            </ul>
+                          </details>
                         </div>
                       <% end %>
-                  </div>
-
-                  <input type="radio" name="tabs" class="tab" aria-label="Files" checked={@active_tab == "Files"}
-                         phx-click="change_active_tab" phx-value-tab="Files" />
-                  <div class="tab-content p-3">
-                    <div class="max-h-[calc(100lvh-8rem)] overflow-y-scroll">
-                      <.live_component module={SnippetwikiWeb.ListComponent} id="file-snippets"
-                                       snippets={Enum.filter(@snippets, fn s -> s.namespace == "File" end)}
-                                       open={@open} />
                     </div>
                   </div>
 
-                  <%!-- <input type="radio" name="tabs" class="tab" aria-label="Map" /> --%>
-                  <%!-- <div class="tab-content pt-3"> --%>
-                  <%!--   Concept map --%>
-                  <%!-- </div> --%>
+                  <input
+                    type="radio"
+                    name="tabs"
+                    class="tab"
+                    aria-label="Open"
+                    checked={@active_tab == "Open"}
+                    phx-click="change_active_tab"
+                    phx-value-tab="Open"
+                  />
+                  <div class="tab-content p-3">
+                    <div class="max-h-[calc(100lvh-10rem)] overflow-y-scroll">
+                      <%= if Enum.empty?(@open) do %>
+                        <div class="text-base-content/50 italic px-1">Nothing open</div>
+                      <% else %>
+                        <.live_component
+                          module={SnippetwikiWeb.ListComponent}
+                          id="open-snippets"
+                          snippets={open_snippets(@snippets, @open)}
+                          open={@open}
+                        />
+                      <% end %>
+                    </div>
+                    <%= unless Enum.empty?(@open) do %>
+                      <div class="mt-4">
+                        <button type="button" class="btn" phx-click="close_snippets">
+                          <.icon name="hero-x-mark" />
+                          Close all
+                        </button>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <input
+                    type="radio"
+                    name="tabs"
+                    class="tab"
+                    aria-label="Recent"
+                    checked={@active_tab == "Recent"}
+                    phx-click="change_active_tab"
+                    phx-value-tab="Recent"
+                  />
+                  <div class="tab-content p-3">
+                    <div class="max-h-[calc(100lvh-8rem)] overflow-y-scroll">
+                      <%= if Enum.empty?(recent_by_date(@snippets)) do %>
+                        <div class="text-base-content/50 italic px-1">No recent articles</div>
+                      <% else %>
+                        <div :for={{date, day_snippets} <- recent_by_date(@snippets)} class="mb-4">
+                          <div class="text-sm opacity-70 mb-1">{format_recent_date(date)}</div>
+                          <ul class="pl-4">
+                            <li
+                              :for={snippet <- day_snippets}
+                              id={"recent-#{snippet.id}"}
+                              class="pb-1"
+                            >
+                              <a
+                                phx-click="open_snippet"
+                                phx-value-id={snippet.id}
+                                class={[
+                                  "hover:text-primary transition-colors",
+                                  snippet.id in @open && "font-semibold text-primary"
+                                ]}
+                              >
+                                {snippet.title}
+                              </a>
+                              <%= if snippet.has_draft do %>
+                                <.icon name="hero-pencil" class="size-3 ms-1 opacity-50" />
+                              <% end %>
+                            </li>
+                          </ul>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <input
+                    type="radio"
+                    name="tabs"
+                    class="tab"
+                    aria-label="Files"
+                    checked={@active_tab == "Files"}
+                    phx-click="change_active_tab"
+                    phx-value-tab="Files"
+                  />
+                  <div class="tab-content p-3">
+                    <div class="max-h-[calc(100lvh-10rem)] overflow-y-scroll">
+                      <%= if Enum.empty?(file_groups(@snippets, @current_scope.user.bags)) do %>
+                        <div class="text-base-content/50 italic px-1">No files yet</div>
+                      <% else %>
+                        <div :for={{bag, files} <- file_groups(@snippets, @current_scope.user.bags)} class="mb-2">
+                          <details class="group" open={length(@current_scope.user.bags) == 1}>
+                            <summary class="text-sm font-medium opacity-70 cursor-pointer py-1 select-none list-none flex items-center gap-2">
+                              <.icon name="hero-chevron-right" class="size-3 group-open:rotate-90 transition-transform" />
+                              <span class="truncate">{bag}</span>
+                              <span class="text-xs opacity-50">({length(files)})</span>
+                            </summary>
+                            <ul class="pl-5 mt-1 border-l border-base-300 ml-1">
+                              <li :for={snippet <- files} id={"files-#{bag}-#{snippet.id}"} class="pb-1">
+                                <a
+                                  phx-click="open_snippet"
+                                  phx-value-id={snippet.id}
+                                  class={[
+                                    "hover:text-primary transition-colors",
+                                    snippet.id in @open && "font-semibold text-primary"
+                                  ]}
+                                >
+                                  {snippet.title}
+                                </a>
+                              </li>
+                            </ul>
+                          </details>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
               </div>
             </div>
           </div>
@@ -188,7 +298,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     {:ok,
      socket
      |> assign(page_title: "Snippet Wiki",
-               active_tab: "Recent",
+               active_tab: "Contents",
                bag: nil,
                snippets: snippets,
                open: [],
@@ -453,6 +563,63 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
       socket
       |> assign(:open, [snippet.id | socket.assigns.open])
       |> push_event("scroll", %{id: "snippet-#{snippet.id}"})
+    end
+  end
+
+  # Articles or files grouped by bag in recipe order, sorted by title.
+  defp toc_groups(snippets, bags_order) do
+    groups_by_bag(snippets, bags_order, &is_nil(&1.namespace))
+  end
+
+  defp file_groups(snippets, bags_order) do
+    groups_by_bag(snippets, bags_order, &(&1.namespace == "File"))
+  end
+
+  defp groups_by_bag(snippets, bags_order, filter_fn) do
+    grouped =
+      snippets
+      |> Enum.filter(filter_fn)
+      |> Enum.group_by(& &1.bag)
+
+    bags_order
+    |> Enum.map(fn bag ->
+      {bag, Map.get(grouped, bag, []) |> Enum.sort_by(& &1.title, :asc)}
+    end)
+    |> Enum.reject(fn {_bag, items} -> items == [] end)
+  end
+
+  defp open_snippets(snippets, open_ids) do
+    open_ids
+    |> Enum.map(fn id -> Enum.find(snippets, &(&1.id == id)) end)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp recent_snippets(snippets) do
+    Enum.filter(snippets, &is_nil(&1.namespace))
+  end
+
+  defp recent_by_date(snippets) do
+    snippets
+    |> recent_snippets()
+    |> Enum.group_by(fn snippet -> DateTime.to_date(snippet.updated_at) end)
+    |> Enum.sort_by(fn {date, _} -> date end, {:desc, Date})
+    |> Enum.map(fn {date, day_snippets} ->
+      {date, Enum.sort_by(day_snippets, & &1.updated_at, {:desc, DateTime})}
+    end)
+  end
+
+  defp format_recent_date(%Date{} = date) do
+    "#{ordinal_day(date.day)} #{Calendar.strftime(date, "%B %Y")}"
+  end
+
+  defp ordinal_day(day) when day in 11..13, do: "#{day}th"
+
+  defp ordinal_day(day) do
+    case rem(day, 10) do
+      1 -> "#{day}st"
+      2 -> "#{day}nd"
+      3 -> "#{day}rd"
+      _ -> "#{day}th"
     end
   end
 

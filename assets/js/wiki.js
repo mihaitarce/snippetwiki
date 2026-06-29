@@ -185,5 +185,35 @@ export const hooks = {
         updated() {
             this.updateComponent()
         }
+    },
+
+    WikiRagEmbed: {
+        mounted() {
+            this.onMessage = (event) => {
+                const {action, title} = event.data ?? {}
+                if (action !== "openSnippet" || typeof title !== "string" || !title) {
+                    return
+                }
+
+                const iframe = this.el.querySelector("#wikirag-embed")
+                if (iframe?.src) {
+                    try {
+                        if (event.origin !== new URL(iframe.src).origin) {
+                            return
+                        }
+                    } catch {
+                        return
+                    }
+                }
+
+                this.pushEvent("open_initial", {value: {title}})
+            }
+
+            window.addEventListener("message", this.onMessage)
+        },
+
+        destroyed() {
+            window.removeEventListener("message", this.onMessage)
+        }
     }
 }

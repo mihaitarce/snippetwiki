@@ -69,11 +69,6 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                           </ul>
                       </div>
                   </div>
-
-                  <.live_component
-                   module={SnippetwikiWeb.SearchComponent}
-                   id="search"
-                   current_scope={@current_scope}/>
               </div>
               <div class="flex-1 overflow-y-scroll overscroll-none min-w-0">
                   <div class="flex flex-col gap-4 p-4">
@@ -300,6 +295,28 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                       <% end %>
                     </div>
                   </div>
+
+                  <input
+                    type="radio"
+                    name="tabs"
+                    class="tab"
+                    aria-label="Ask/Search"
+                    checked={@active_tab == "Ask/Search"}
+                    phx-click="change_active_tab"
+                    phx-value-tab="Ask/Search"
+                  />
+                  <div
+                    id="wikirag-embed-wrapper"
+                    phx-hook="WikiRagEmbed"
+                    class="tab-content w-full min-w-0 pt-[10px] pr-[10px]"
+                  >
+                    <iframe
+                      id="wikirag-embed"
+                      src={@wikirag_embed_url}
+                      class="block w-full min-w-0 h-[calc(100lvh-6rem)] border border-base-300 rounded-box"
+                      title="Ask/Search"
+                    />
+                  </div>
               </div>
             </div>
           </div>
@@ -341,6 +358,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
      |> assign(page_title: "Snippet Wiki",
                active_tab: "Contents",
                bag: nil,
+               wikirag_embed_url: wikirag_embed_url(),
                snippets: snippets,
                open: [],
                drafts: snippets
@@ -411,6 +429,23 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
      |> assign(:open, [snippet.id | socket.assigns.open])
      |> assign(:editing, [snippet.id | socket.assigns.editing])
      |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])}
+  end
+
+  @impl true
+  def handle_event("open_initial", params, socket) do
+    case open_initial_title(params) do
+      nil ->
+        {:noreply, socket}
+
+      title ->
+        decoded_title = URI.decode(title)
+
+        snippet =
+          Snippets.find_snippet(socket.assigns.current_scope, decoded_title) ||
+            Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
+
+        {:noreply, open_snippet_on_socket(socket, snippet)}
+    end
   end
 
   @impl true
@@ -692,5 +727,29 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     else
       base <> " " <> Integer.to_string(i)
     end
+  end
+
+  defp wikirag_embed_url do
+    Application.fetch_env!(:snippetwiki, :wikirag_url)
+    |> String.trim_trailing("/")
+    |> Kernel.<>("/embed.html")
+  end
+
+  defp open_initial_title(%{"title" => title}) when is_binary(title), do: title
+  defp open_initial_title(%{"value" => %{"title" => title}}) when is_binary(title), do: title
+  defp open_initial_title(_), do: nil
+
+  defp open_snippet_on_socket(socket, nil), do: socket
+
+  defp open_snippet_on_socket(socket, snippet) do
+    socket =
+      if snippet.id in socket.assigns.open do
+        socket
+      else
+        send(self(), {:increment_view_count, snippet})
+        assign(socket, :open, [snippet.id | socket.assigns.open])
+      end
+
+    push_event(socket, "scroll", %{id: "snippet-#{snippet.id}"})
   end
 end

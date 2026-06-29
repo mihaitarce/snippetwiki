@@ -1,15 +1,16 @@
+(auth) {
+	header_up X-Authenticated-User "caddy-user"
+	header_up X-Authenticated-Group "caddy-group"
+}
+
 http://localhost:2080 {
-	handle_path /wiki* {
-		reverse_proxy localhost:4000 {
-			header_up X-Authenticated-User "caddy-wikiuser"
-			header_up X-Authenticated-Group "caddy-wikigroup"
+	handle_path /wikirag/* {
+		reverse_proxy localhost:8611 {
+			import auth
 		}
 	}
 
-	handle_path /* {
-		reverse_proxy localhost:4000 {
-			header_up X-Authenticated-User "caddy-user"
-			header_up X-Authenticated-Group "caddy-group"
-		}
+	reverse_proxy localhost:4000 {
+		import auth
 	}
 }

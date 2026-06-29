@@ -7,7 +7,17 @@ defmodule SnippetwikiWeb.ListComponent do
     <ul>
       <li :for={snippet <- @snippets}
             id={"#{@id}-#{snippet.id}"} class="pb-1">
-          <a phx-click="open_snippet" phx-value-id={snippet.id}>{snippet.title}</a>
+          <button
+            type="button"
+            phx-click="open_snippet"
+            phx-value-id={snippet.id}
+            class={[
+              "hover:text-primary transition-colors text-left",
+              snippet.id in @open && "font-semibold text-primary"
+            ]}
+          >
+            {snippet.title}
+          </button>
           <%= if snippet.has_draft do %>
             <.icon name="hero-pencil" class="size-4 ms-2" />
           <% end %>

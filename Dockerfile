@@ -13,4 +13,5 @@ RUN MIX_ENV=prod mix assets.deploy
 RUN MIX_ENV=prod mix phx.digest
 RUN MIX_ENV=prod mix release
 
-CMD ["_build/prod/rel/snippetwiki/bin/snippetwiki", "start"]
+RUN chmod +x docker/entrypoint.sh
+ENTRYPOINT ["docker/entrypoint.sh"]

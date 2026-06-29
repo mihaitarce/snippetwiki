@@ -32,8 +32,7 @@ defmodule SnippetwikiWeb.Router do
       live "/snippets/:id", SnippetLive.Show, :show
       live "/snippets/:id/edit", SnippetLive.Form, :edit
 
-      live "/bags/:bag", SnippetWikiLive.Index, :index
-      live "/bags/:bag/:title", SnippetWikiLive.Index, :show
+      live "/contents/:scope/:title", SnippetWikiLive.Index, :show
     end
 
     get "/api/snippets", SnippetController, :index

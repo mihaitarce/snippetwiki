@@ -9,11 +9,29 @@ defmodule SnippetwikiWeb.SnippetComponent do
     <div class="card bg-base-100" id={"snippet-#{@snippet.id}"}>
       <%= if @editing do %>
         <.form for={@form} class="card-body z-1" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
-          <div class="flex justify-between gap-2 min-h-16">
-            <%= if is_nil(@snippet.namespace) do %>
-              <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full" />
+          <div class="flex justify-between gap-2 items-start relative z-10">
+            <%= if @new_snippet and is_nil(@snippet.namespace) do %>
+              <div class="flex flex-col gap-2 min-w-0 flex-1 [&_.fieldset]:mb-0">
+                <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full min-w-0" />
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-base-content/60 shrink-0">Save to</span>
+                  <.bag_indicator
+                    bag={@snippet.bag}
+                    snippet_id={@snippet.id}
+                    selectable={length(@current_scope.user.bags) > 1}
+                    bags={@current_scope.user.bags}
+                    myself={@myself}
+                  />
+                </div>
+              </div>
             <% else %>
-              <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
+              <div class="min-w-0 flex-1 [&_.fieldset]:mb-0">
+                <%= if is_nil(@snippet.namespace) do %>
+                  <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full min-w-0" />
+                <% else %>
+                  <h1 class="text-3xl truncate min-w-0 leading-tight" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
+                <% end %>
+              </div>
             <% end %>
 
             <div class="flex flex-col-reverse sm:flex-row gap-1 py-1">
@@ -55,12 +73,18 @@ defmodule SnippetwikiWeb.SnippetComponent do
         </.form>
       <% else %>
         <div class="card-body">
-          <div class="flex justify-between gap-2 min-h-16">
-            <%= if @snippet.namespace do %>
-              <h1 class="text-3xl truncate py-1.5" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
-            <% else %>
-              <h1 class="text-3xl py-1.5">{@snippet.title}</h1>
-            <% end %>
+          <div class="flex justify-between gap-2 items-start">
+            <div class="min-w-0 flex-1">
+              <%= if @snippet.namespace do %>
+                <h1 class="text-3xl leading-tight break-words" title={@snippet.title}>
+                  {@snippet.namespace}:{@snippet.title}<.bag_indicator inline bag={@snippet.bag} snippet_id={@snippet.id} />
+                </h1>
+              <% else %>
+                <h1 class="text-3xl leading-tight break-words">
+                  {@snippet.title}<.bag_indicator inline bag={@snippet.bag} snippet_id={@snippet.id} />
+                </h1>
+              <% end %>
+            </div>
             <div class="flex flex-col-reverse justify-end sm:flex-row gap-1 py-1">
               <%= if is_nil(@snippet.namespace) do %>
                 <%!-- <.button phx-click="talk_page" phx-value-title={@snippet.title}>
@@ -133,18 +157,28 @@ defmodule SnippetwikiWeb.SnippetComponent do
 
   @impl true
   def update(assigns, socket) do
-    socket = socket
+    was_editing = Map.get(socket.assigns, :editing, false)
+    prior_snippet_id = get_in(socket.assigns, [:snippet, Access.key(:id)])
+
+    socket =
+      socket
       |> assign(:snippet, assigns.snippet)
       |> assign(:current_scope, assigns.current_scope)
       |> assign(:editing, assigns.editing)
+      |> assign(:new_snippet, Map.get(assigns, :new_snippet, false))
 
-    if (assigns.editing) do
-      {:ok,
-       socket
-       |> assign(:form, to_form(Snippets.change_snippet(assigns.current_scope, assigns.snippet)))}
-    else
-      {:ok, socket}
-    end
+    needs_form =
+      assigns.editing &&
+        (!was_editing || prior_snippet_id != assigns.snippet.id || is_nil(socket.assigns[:form]))
+
+    socket =
+      if needs_form do
+        assign(socket, :form, to_form(Snippets.change_snippet(assigns.current_scope, assigns.snippet)))
+      else
+        socket
+      end
+
+    {:ok, socket}
   end
 
   @impl true
@@ -154,14 +188,55 @@ defmodule SnippetwikiWeb.SnippetComponent do
   end
 
   @impl true
+  def handle_event("change_bag", %{"snippet" => %{"bag" => bag}}, socket) do
+    if socket.assigns.snippet.bag == bag do
+      {:noreply, socket}
+    else
+      case Snippets.update_snippet(
+             socket.assigns.current_scope,
+             socket.assigns.snippet,
+             %{"bag" => bag}
+           ) do
+        {:ok, snippet} ->
+          {:noreply, assign(socket, :snippet, snippet)}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          message =
+            changeset
+            |> Ecto.Changeset.traverse_errors(fn {msg, _opts} -> msg end)
+            |> Enum.map_join("; ", fn {field, errors} ->
+              "#{field} #{Enum.join(errors, ", ")}"
+            end)
+
+          {:noreply, put_flash(socket, :error, "Could not change bag: #{message}")}
+      end
+    end
+  end
+
+  @impl true
   def handle_event("validate", %{"snippet" => snippet_params}, socket) do
-    changeset = Snippets.change_snippet(socket.assigns.current_scope, socket.assigns.snippet, snippet_params)
+    changeset =
+      Snippets.change_snippet(socket.assigns.current_scope, socket.assigns.snippet, snippet_params)
+
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   @impl true
-  def handle_event("save_changes", %{"snippet" => %{"title" => title, "content" => content}}, socket) do
-    {:ok, snippet} = Snippets.create_new_revision(socket.assigns.current_scope, socket.assigns.snippet, %{"title" => title, "has_draft" => false}, content)
+  def handle_event("save_changes", %{"snippet" => snippet_params}, socket) do
+    attrs =
+      snippet_params
+      |> Map.take(["title", "bag"])
+      |> Map.put("has_draft", false)
+
+    content = Map.get(snippet_params, "content")
+
+    {:ok, snippet} =
+      Snippets.create_new_revision(
+        socket.assigns.current_scope,
+        socket.assigns.snippet,
+        attrs,
+        content
+      )
       # {:error, %Ecto.Changeset{} = changeset} ->
       #   {:noreply, assign(socket, form: to_form(changeset))}
 
@@ -198,5 +273,45 @@ defmodule SnippetwikiWeb.SnippetComponent do
     else
       "#{prefix_path}/files/#{title}"
     end
+  end
+
+  attr :inline, :boolean, default: false
+  attr :bag, :string, required: true
+  attr :snippet_id, :integer, required: true
+  attr :selectable, :boolean, default: false
+  attr :bags, :list, default: []
+  attr :myself, :any, default: nil
+
+  defp bag_indicator(assigns) do
+    ~H"""
+    <%= if @selectable do %>
+      <select
+        id={"bag-#{@snippet_id}"}
+        name="snippet[bag]"
+        phx-change="change_bag"
+        phx-target={@myself}
+        aria-label="Save to bag"
+        title="The collection this article will be saved to"
+        class="select select-sm select-bordered w-fit shrink-0 h-9 min-h-9 py-0 pl-2 pr-7 text-sm font-medium field-sizing-content"
+      >
+        <%= for {label, value} <- bag_options(@bags) do %>
+          <option value={value} selected={value == @bag}>{label}</option>
+        <% end %>
+      </select>
+    <% else %>
+      <span
+        class={[
+          "badge badge-outline badge-sm font-medium",
+          @inline && "inline-flex align-middle ml-2",
+          !@inline && "shrink-0"
+        ]}
+        title="The collection this article belongs to"
+      >{@bag}</span>
+    <% end %>
+    """
+  end
+
+  defp bag_options(bags) do
+    Enum.map(bags, fn bag -> {bag, bag} end)
   end
 end

@@ -20,11 +20,29 @@ defmodule Snippetwiki.Snippets.Snippet do
 
   @doc false
   def changeset(snippet, attrs, user_scope) do
+    bags = user_scope.user.bags
+
     snippet
-    |> cast(attrs, [:title, :namespace, :has_draft, :views, :content])
+    |> cast(attrs, [:title, :namespace, :has_draft, :views, :content, :bag])
     |> validate_required([:title])
-    |> put_change(:bag, user_scope.user.bag)
+    |> default_bag(user_scope)
+    |> validate_inclusion(:bag, bags, message: "must be one of your bags")
     |> unique_constraint([:title, :bag, :namespace])
+  end
+
+  defp default_bag(changeset, user_scope) do
+    case get_change(changeset, :bag) do
+      nil ->
+        bag =
+          if changeset.data.bag in user_scope.user.bags,
+            do: changeset.data.bag,
+            else: user_scope.user.bag
+
+        put_change(changeset, :bag, bag)
+
+      _ ->
+        changeset
+    end
   end
 
   def create_unique_filename(filename) do

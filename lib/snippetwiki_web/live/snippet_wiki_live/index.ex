@@ -13,16 +13,30 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                       <img src={~p"/images/logo.svg"} alt="snippetwiki" class="h-8 hover:scale-110 transition-transform"/>
 
                       <%!-- Add button --%>
-                      <div class="dropdown">
-                          <div tabIndex={0} role="button" class="btn btn-square btn-ghost">
+                      <div id="add-dropdown" class="dropdown">
+                          <div
+                            id="add-dropdown-trigger"
+                            tabIndex={0}
+                            role="button"
+                            class="btn btn-square btn-ghost"
+                            phx-click={JS.remove_class("dropdown-close", to: "#add-dropdown")}
+                          >
                               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                   stroke="currentColor" class="size-6">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                               </svg>
                           </div>
-                          <ul tabIndex={0} class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm mt-2">
+                          <ul id="add-dropdown-menu" tabIndex={0} class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm mt-2">
                               <li>
-                                  <button type="button" phx-click="new_snippet">
+                                  <button
+                                    type="button"
+                                    phx-click={
+                                      JS.push("new_snippet")
+                                      |> JS.add_class("dropdown-close", to: "#add-dropdown")
+                                      |> JS.dispatch("blur", to: "#add-dropdown-trigger")
+                                      |> JS.dispatch("blur", to: "#add-dropdown-menu")
+                                    }
+                                  >
                                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                           stroke="currentColor" class="size-5">
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
@@ -32,7 +46,14 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                               </li>
                               <li>
                                 <form id="upload" phx-change="validate_upload" phx-submit="save_upload">
-                                  <label class="flex gap-2">
+                                  <label
+                                    class="flex gap-2"
+                                    phx-click={
+                                      JS.add_class("dropdown-close", to: "#add-dropdown")
+                                      |> JS.dispatch("blur", to: "#add-dropdown-trigger")
+                                      |> JS.dispatch("blur", to: "#add-dropdown-menu")
+                                    }
+                                  >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                         stroke="currentColor" class="size-5 inline">
                                         <path strokeLinecap="round" strokeLinejoin="round"
@@ -69,7 +90,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                         id={snippet.id}
                         current_scope={@current_scope}
                         snippet={Snippets.with_content(snippet)}
-                        editing={Enum.member?(@editing, snippet.id)} />
+                        editing={Enum.member?(@editing, snippet.id)}
+                        new_snippet={snippet.id in @new_snippets} />
                     <% end %>
 
                     <%= if length(@uploads.documents.entries) == 0 and length(@open) == 0 do %>
@@ -84,10 +106,10 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
               </div>
           </div>
 
-          <div class="hidden h-svh min-w-0 xl:flex xl:flex-1 xl:basis-1/2 xl:flex-col">
-            <div class="flex-1 min-w-0 w-full overflow-y-scroll overscroll-none max-h-svh">
+          <div class="hidden h-svh min-w-0 w-full bg-base-200 xl:flex xl:flex-1 xl:basis-1/2 xl:flex-col">
+            <div class="relative flex min-h-0 w-full flex-1 flex-col bg-base-200 pl-4">
 
-              <div class="flex items-baseline gap-2 absolute right-4 text-xs p-2 opacity-30 hover:opacity-100 transition-opacity">
+              <div class="absolute right-4 top-0 z-10 flex items-baseline gap-2 p-2 text-xs opacity-30 transition-opacity hover:opacity-100">
                 Logged in as
                 <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email}</span>
               </div>
@@ -100,7 +122,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                            aria-label="Journal"/>
               </div> --%>
 
-              <div class="tabs tabs-box h-svh w-full rounded-none p-4">
+              <div class="tabs tabs-box h-full min-h-0 w-full min-w-0 flex-1 rounded-none p-1 shadow-none">
                   <input
                     type="radio"
                     name="tabs"
@@ -116,30 +138,39 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                         <div class="text-base-content/50 italic px-1">No articles yet</div>
                       <% else %>
                         <div :for={{bag, articles} <- toc_groups(@snippets, @current_scope.user.bags)} class="mb-2">
-                          <details class="group" open={length(@current_scope.user.bags) == 1}>
-                            <summary class="text-sm font-medium opacity-70 cursor-pointer py-1 select-none list-none flex items-center gap-2">
-                              <.icon name="hero-chevron-right" class="size-3 group-open:rotate-90 transition-transform" />
-                              <span class="truncate">{bag}</span>
-                              <span class="text-xs opacity-50">({length(articles)})</span>
-                            </summary>
+                          <button
+                            type="button"
+                            phx-click="toggle_toc_bag"
+                            phx-value-bag={bag}
+                            class="text-sm font-medium opacity-70 cursor-pointer py-1 select-none flex items-center gap-2 w-full text-left"
+                          >
+                            <.icon
+                              name="hero-chevron-right"
+                              class={["size-3 transition-transform", bag in @expanded_bags && "rotate-90"]}
+                            />
+                            <span class="truncate">{bag}</span>
+                            <span class="text-xs opacity-50">({length(articles)})</span>
+                          </button>
+                          <%= if bag in @expanded_bags do %>
                             <ul class="pl-5 mt-1 border-l border-base-300 ml-1">
                               <li :for={snippet <- articles} id={"toc-#{bag}-#{snippet.id}"} class="pb-1">
-                                <a
+                                <button
+                                  type="button"
                                   phx-click="open_snippet"
                                   phx-value-id={snippet.id}
                                   class={[
-                                    "hover:text-primary transition-colors",
+                                    "hover:text-primary transition-colors text-left",
                                     snippet.id in @open && "font-semibold text-primary"
                                   ]}
                                 >
                                   {snippet.title}
-                                </a>
+                                </button>
                                 <%= if snippet.has_draft do %>
                                   <.icon name="hero-pencil" class="size-3 ms-1 opacity-50" />
                                 <% end %>
                               </li>
                             </ul>
-                          </details>
+                          <% end %>
                         </div>
                       <% end %>
                     </div>
@@ -199,16 +230,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                               id={"recent-#{snippet.id}"}
                               class="pb-1"
                             >
-                              <a
+                              <button
+                                type="button"
                                 phx-click="open_snippet"
                                 phx-value-id={snippet.id}
                                 class={[
-                                  "hover:text-primary transition-colors",
+                                  "hover:text-primary transition-colors text-left",
                                   snippet.id in @open && "font-semibold text-primary"
                                 ]}
                               >
                                 {snippet.title}
-                              </a>
+                              </button>
                               <%= if snippet.has_draft do %>
                                 <.icon name="hero-pencil" class="size-3 ms-1 opacity-50" />
                               <% end %>
@@ -234,27 +266,36 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                         <div class="text-base-content/50 italic px-1">No files yet</div>
                       <% else %>
                         <div :for={{bag, files} <- file_groups(@snippets, @current_scope.user.bags)} class="mb-2">
-                          <details class="group" open={length(@current_scope.user.bags) == 1}>
-                            <summary class="text-sm font-medium opacity-70 cursor-pointer py-1 select-none list-none flex items-center gap-2">
-                              <.icon name="hero-chevron-right" class="size-3 group-open:rotate-90 transition-transform" />
-                              <span class="truncate">{bag}</span>
-                              <span class="text-xs opacity-50">({length(files)})</span>
-                            </summary>
+                          <button
+                            type="button"
+                            phx-click="toggle_toc_bag"
+                            phx-value-bag={bag}
+                            class="text-sm font-medium opacity-70 cursor-pointer py-1 select-none flex items-center gap-2 w-full text-left"
+                          >
+                            <.icon
+                              name="hero-chevron-right"
+                              class={["size-3 transition-transform", bag in @expanded_bags && "rotate-90"]}
+                            />
+                            <span class="truncate">{bag}</span>
+                            <span class="text-xs opacity-50">({length(files)})</span>
+                          </button>
+                          <%= if bag in @expanded_bags do %>
                             <ul class="pl-5 mt-1 border-l border-base-300 ml-1">
                               <li :for={snippet <- files} id={"files-#{bag}-#{snippet.id}"} class="pb-1">
-                                <a
+                                <button
+                                  type="button"
                                   phx-click="open_snippet"
                                   phx-value-id={snippet.id}
                                   class={[
-                                    "hover:text-primary transition-colors",
+                                    "hover:text-primary transition-colors text-left",
                                     snippet.id in @open && "font-semibold text-primary"
                                   ]}
                                 >
                                   {snippet.title}
-                                </a>
+                                </button>
                               </li>
                             </ul>
-                          </details>
+                          <% end %>
                         </div>
                       <% end %>
                     </div>
@@ -305,12 +346,14 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                drafts: snippets
                        |> Enum.filter(fn s -> s.has_draft end)
                        |> Enum.map(fn s -> s.id end),
-               editing: [])
+               editing: [],
+               new_snippets: [],
+               expanded_bags: MapSet.new())
      |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
   end
 
   @impl true
-  def handle_params(%{"bag" => bag, "title" => title}, _uri, socket) do
+  def handle_params(%{"scope" => bag, "title" => title}, _uri, socket) do
     scope = socket.assigns.current_scope
 
     if bag in scope.user.bags do
@@ -330,12 +373,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     else
       {:noreply,
        socket
-       |> put_flash(:error, "Unknown bag.")
+       |> put_flash(:error, "Unknown scope.")
        |> push_navigate(to: ~p"/")}
     end
   end
 
-  def handle_params(%{"bag" => bag}, _uri, socket) do
+  def handle_params(%{"scope" => bag}, _uri, socket) do
     scope = socket.assigns.current_scope
 
     if bag in scope.user.bags do
@@ -343,7 +386,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     else
       {:noreply,
        socket
-       |> put_flash(:error, "Unknown bag.")
+       |> put_flash(:error, "Unknown scope.")
        |> push_navigate(to: ~p"/")}
     end
   end
@@ -366,18 +409,22 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     {:noreply,
      socket
      |> assign(:open, [snippet.id | socket.assigns.open])
-     |> assign(:editing, [snippet.id | socket.assigns.editing])}
+     |> assign(:editing, [snippet.id | socket.assigns.editing])
+     |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])}
   end
 
   @impl true
   def handle_event("open_snippet", %{"id" => id}, socket) do
     snippet = Snippets.get_snippet!(socket.assigns.current_scope, String.to_integer(id))
 
+    socket =
+      assign(socket, :expanded_bags, MapSet.put(socket.assigns.expanded_bags, snippet.bag))
+
     # Main articles get a bag-aware permalink; handle_params performs the open.
     # Namespaced snippets (Talk, File) are not addressable by URL, so open them
     # in place directly.
     if is_nil(snippet.namespace) do
-      {:noreply, push_patch(socket, to: ~p"/bags/#{snippet.bag}/#{snippet.title}")}
+      {:noreply, push_patch(socket, to: ~p"/contents/#{snippet.bag}/#{snippet.title}")}
     else
       {:noreply, open_snippet_card(socket, snippet)}
     end
@@ -519,6 +566,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     {:noreply, assign(socket, :active_tab, tab)}
   end
 
+  @impl true
+  def handle_event("toggle_toc_bag", %{"bag" => bag}, socket) do
+    expanded =
+      if MapSet.member?(socket.assigns.expanded_bags, bag) do
+        MapSet.delete(socket.assigns.expanded_bags, bag)
+      else
+        MapSet.put(socket.assigns.expanded_bags, bag)
+      end
+
+    {:noreply, assign(socket, :expanded_bags, expanded)}
+  end
 
   @impl true
   def handle_info({:increment_view_count, snippet}, socket) do
@@ -531,7 +589,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     {:noreply,
      socket
      |> assign(:editing, Enum.reject(socket.assigns.editing, fn id -> id == snippet.id end))
-    }
+     |> assign(:new_snippets, Enum.reject(socket.assigns.new_snippets, fn id -> id == snippet.id end))}
   end
 
   @impl true
@@ -547,7 +605,9 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                          |> Enum.map(fn s -> s.id end))
      |> assign(:open, socket.assigns.open
                       |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end))
-    }
+     |> assign(:new_snippets, Enum.filter(socket.assigns.new_snippets, fn id ->
+          Enum.find_value(snippets, false, fn s -> s.id == id end)
+        end))}
   end
 
   defp list_snippets(current_scope) do
@@ -555,6 +615,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   end
 
   defp open_snippet_card(socket, snippet) do
+    socket = assign(socket, :expanded_bags, MapSet.put(socket.assigns.expanded_bags, snippet.bag))
+
     if snippet.id in socket.assigns.open do
       socket
     else

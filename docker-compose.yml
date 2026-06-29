@@ -1,14 +1,17 @@
 services:
   postgres:
     image: docker.io/postgres:17-alpine
+    container_name: snippetwiki-postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: snippetwiki_dev
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
-      - ./data/pgdata:/var/lib/postgresql/data
+      - ${POSTGRES_DATA}:/var/lib/postgresql/data
     tmpfs:
       - /tmp
     command:
@@ -21,9 +24,37 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - snippetwiki-net
 
   adminer:
     image: adminer
+    container_name: snippetwiki-adminer
     restart: always
     ports:
-      - 8080:8080
+      - ${ADMINER_PORT}:8080
+    networks:
+      - snippetwiki-net
+      
+  app:
+    build: .
+    container_name: snippetwiki-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ecto://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PHX_SERVER: ${PHX_SERVER}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      PHX_HOST: ${PHX_HOST}
+      PHX_PATH: ${PHX_PATH}
+      PORT: ${PORT}
+    ports:
+      - ${PORT}:${PORT}
+    restart: unless-stopped
+    networks:
+      - snippetwiki-net
+
+networks:
+  snippetwiki-net:
+    external: true

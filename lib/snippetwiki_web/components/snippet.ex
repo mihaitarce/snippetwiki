@@ -6,7 +6,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="card bg-base-100" id={"snippet-#{@snippet.id}"}>
+    <div class="card bg-base-100">
       <%= if @editing do %>
         <.form for={@form} class="card-body z-1 p-4 sm:p-6" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
           <div class="flex justify-between gap-2 items-start relative z-10">

@@ -85,5 +85,21 @@ if (process.env.NODE_ENV === "development") {
 }
 
 window.addEventListener("phx:scroll", (e) => {
-  document.getElementById(e.detail.id).scrollIntoView({ behavior: 'smooth' })
+  const scrollTo = (retries = 20) => {
+    const el = document.getElementById(e.detail.id)
+    const container = document.getElementById("articles-scroll")
+
+    if (el && container) {
+      const elRect = el.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      container.scrollTo({
+        top: container.scrollTop + (elRect.top - containerRect.top),
+        behavior: "smooth",
+      })
+    } else if (retries > 0) {
+      requestAnimationFrame(() => scrollTo(retries - 1))
+    }
+  }
+
+  scrollTo()
 })

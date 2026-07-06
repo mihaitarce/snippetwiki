@@ -74,7 +74,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                       </div>
                   </div>
               </div>
-              <div class="flex-1 overflow-y-auto overscroll-none min-w-0 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] xl:pb-0">
+              <div id="articles-scroll" class="flex-1 overflow-y-auto overscroll-none min-w-0 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] xl:pb-0">
                   <div class="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4">
                     <%= if length(@uploads.documents.entries) > 0 do %>
                       <section phx-drop-target={@uploads.documents.ref}>
@@ -83,14 +83,18 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                     <% end %>
 
                     <%= if length(@open) > 0 do %>
-                      <.live_component
+                      <div
                         :for={snippet <- Enum.filter(Enum.map(@open, fn snippet_id -> Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end) end), fn s -> s != nil end)}
-                        module={SnippetwikiWeb.SnippetComponent}
-                        id={snippet.id}
-                        current_scope={@current_scope}
-                        snippet={Snippets.with_content(snippet)}
-                        editing={Enum.member?(@editing, snippet.id)}
-                        new_snippet={snippet.id in @new_snippets} />
+                        id={"snippet-#{snippet.id}"}
+                      >
+                        <.live_component
+                          module={SnippetwikiWeb.SnippetComponent}
+                          id={snippet.id}
+                          current_scope={@current_scope}
+                          snippet={Snippets.with_content(snippet)}
+                          editing={Enum.member?(@editing, snippet.id)}
+                          new_snippet={snippet.id in @new_snippets} />
+                      </div>
                     <% end %>
 
                     <%= if length(@uploads.documents.entries) == 0 and length(@open) == 0 and is_nil(@missing_article) do %>
@@ -493,10 +497,13 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
     {:noreply,
      socket
+     |> assign(:snippets, [snippet | socket.assigns.snippets])
      |> assign(missing_article: nil, bag: bag)
+     |> assign(:mobile_view, "articles")
      |> assign(:open, [snippet.id | socket.assigns.open])
      |> assign(:editing, [snippet.id | socket.assigns.editing])
-     |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])}
+     |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])
+     |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
   end
 
   @impl true
@@ -515,9 +522,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
       {:ok, snippet} ->
         {:noreply,
          socket
+         |> assign(:snippets, [snippet | socket.assigns.snippets])
+         |> assign(:mobile_view, "articles")
          |> assign(:open, [snippet.id | socket.assigns.open])
          |> assign(:editing, [snippet.id | socket.assigns.editing])
-         |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])}
+         |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])
+         |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Unable to create snippet. Please try again.")}

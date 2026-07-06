@@ -34,7 +34,78 @@ function randomColor() {
     return colorList[Math.floor(Math.random() * colorList.length)];
 }
 
+function safeDecodeHashTitle(rawHashTitle) {
+    try {
+        return decodeURIComponent(rawHashTitle)
+    } catch {
+        try {
+            const repaired = rawHashTitle.replace(/%(?![0-9A-Fa-f]{2})/g, "%25")
+            return decodeURIComponent(repaired)
+        } catch {
+            return rawHashTitle
+        }
+    }
+}
+
+function normalizeHashTitle(rawTitle) {
+    const withoutPrefix = rawTitle.replace(/^Notes:\s*/i, "")
+    const withoutSuffix = withoutPrefix
+        .replace(/\s*\(#\d+\)\s*$/, "")
+        .replace(/\s*\(#\d+.*$/, "")
+    const normalized = withoutSuffix.trim()
+
+    return normalized || rawTitle.trim()
+}
+
 export const hooks = {
+    WikiHashOpen: {
+        mounted() {
+            this.clearHashFromUrl = () => {
+                if (!window.location.hash) {
+                    return
+                }
+
+                const cleanUrl = `${window.location.pathname}${window.location.search}`
+                window.history.replaceState(null, "", cleanUrl)
+            }
+
+            this.openFromHash = () => {
+                const rawHash = window.location.hash
+                if (!rawHash || rawHash.length <= 1) {
+                    return
+                }
+
+                let title
+                try {
+                    title = safeDecodeHashTitle(rawHash.slice(1)).trim()
+                } catch {
+                    return
+                }
+
+                if (!title) {
+                    return
+                }
+
+                title = normalizeHashTitle(title)
+
+                const bag = this.el.dataset.defaultBag
+                if (!bag) {
+                    return
+                }
+
+                this.pushEvent("open_initial", {value: {title, bag}})
+                this.clearHashFromUrl()
+            }
+
+            this.openFromHash()
+            window.addEventListener("hashchange", this.openFromHash)
+        },
+
+        destroyed() {
+            window.removeEventListener("hashchange", this.openFromHash)
+        }
+    },
+
     Editor: {
         mounted() {
             const id = this.el.dataset.id

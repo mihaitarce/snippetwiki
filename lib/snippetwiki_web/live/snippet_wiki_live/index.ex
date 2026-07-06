@@ -7,6 +7,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.wiki flash={@flash}>
+          <div id="wiki-hash-open" phx-hook="WikiHashOpen" data-default-bag={@current_scope.user.bag}></div>
           <div class={[
             "flex flex-col h-svh w-full min-w-0 min-h-0",
             "xl:flex-1 xl:basis-1/2",
@@ -14,7 +15,9 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
           ]}>
               <div class="flex justify-between gap-3 sm:gap-8 px-3 sm:px-5 py-2 shrink-0">
                   <div class="flex items-center gap-3">
-                      <img src={~p"/images/logo.svg"} alt="snippetwiki" class="h-8 hover:scale-110 transition-transform"/>
+                      <a href="/">
+                        <img src={~p"/images/logo.svg"} alt="snippetwiki" class="h-8 hover:scale-110 transition-transform"/>
+                      </a>
 
                       <%!-- Add button --%>
                       <div id="add-dropdown" class="dropdown">
@@ -549,19 +552,23 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
       nil ->
         {:noreply, socket}
 
-      %{title: title, bag: bag} ->
-        case open_article_in_bag(socket, bag, title) do
-          {:ok, snippet} ->
+      %{title: raw_title, bag: bag} ->
+        title = normalize_open_initial_title(raw_title)
+        scope = socket.assigns.current_scope
+
+        case Snippets.find_snippet(scope, title) do
+          nil ->
+            if bag in scope.user.bags do
+              {:noreply, assign(socket, :missing_article, {bag, title})}
+            else
+              {:noreply, put_flash(socket, :error, "Unknown scope.")}
+            end
+
+          snippet ->
             {:noreply,
              socket
-             |> assign(:bag, bag)
+             |> assign(:bag, snippet.bag)
              |> open_snippet_card(snippet)}
-
-          {:error, :not_found} ->
-            {:noreply, put_flash(socket, :error, "Article not found.")}
-
-          {:error, :unknown_scope} ->
-            {:noreply, put_flash(socket, :error, "Unknown scope.")}
         end
     end
   end
@@ -924,7 +931,15 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     end
   end
 
+  defp open_initial_params(%{"title" => title, "bag" => bag, "autocreate" => _autocreate})
+       when is_binary(title) and title != "" and is_binary(bag) and bag != "",
+       do: %{title: title, bag: bag}
+
   defp open_initial_params(%{"title" => title, "bag" => bag})
+       when is_binary(title) and title != "" and is_binary(bag) and bag != "",
+       do: %{title: title, bag: bag}
+
+  defp open_initial_params(%{"value" => %{"title" => title, "bag" => bag, "autocreate" => _autocreate}})
        when is_binary(title) and title != "" and is_binary(bag) and bag != "",
        do: %{title: title, bag: bag}
 
@@ -933,6 +948,21 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
        do: %{title: title, bag: bag}
 
   defp open_initial_params(_), do: nil
+
+  defp normalize_open_initial_title(title) do
+    title
+    |> decode_open_initial_title()
+    |> String.replace(~r/^Notes:\s*/i, "")
+    |> String.replace(~r/\s*\(#\d+\)\s*$/, "")
+    |> String.replace(~r/\s*\(#\d+.*$/, "")
+    |> String.trim()
+  end
+
+  defp decode_open_initial_title(title) do
+    URI.decode(title)
+  rescue
+    ArgumentError -> title
+  end
 
   defp snippet_title(snippets, id) do
     case Enum.find(snippets, fn s -> s.id == id end) do

@@ -50,6 +50,7 @@ services:
       PHX_PATH: ${PHX_PATH}
       PORT: ${PORT}
       WIKIRAG_URL: ${WIKIRAG_URL}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
     ports:
       - ${PORT}:${PORT}
     restart: unless-stopped

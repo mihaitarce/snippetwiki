@@ -26,6 +26,27 @@ config :snippetwiki, SnippetwikiWeb.Endpoint,
 config :snippetwiki, SnippetwikiWeb.Endpoint,
   url: [path: System.get_env("PHX_PATH", "/")]
 
+unless config_env() == :test do
+  allowed_hosts =
+    System.get_env("ALLOWED_HOSTS", "")
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(fn host ->
+      host
+      |> String.downcase()
+      |> String.split(":")
+      |> hd()
+    end)
+
+  config :snippetwiki, :allowed_hosts, allowed_hosts
+
+  if allowed_hosts != [] do
+    config :snippetwiki, SnippetwikiWeb.Endpoint,
+      check_origin: Enum.map(allowed_hosts, &"//#{&1}")
+  end
+end
+
 config :snippetwiki, :wikirag_url,
   System.get_env("WIKIRAG_URL", "http://localhost:2080/wikirag/")
 

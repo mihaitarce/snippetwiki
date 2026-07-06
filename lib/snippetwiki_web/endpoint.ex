@@ -55,5 +55,6 @@ defmodule SnippetwikiWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug SnippetwikiWeb.Plugs.AllowedHosts
   plug SnippetwikiWeb.Router
 end

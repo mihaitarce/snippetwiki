@@ -49,7 +49,7 @@ services:
       PHX_HOST: ${PHX_HOST}
       PHX_PATH: ${PHX_PATH}
       PORT: ${PORT}
-      WIKIRAG_URL: http://localhost:2080/wikirag/
+      WIKIRAG_URL: ${WIKIRAG_URL}
     ports:
       - ${PORT}:${PORT}
     restart: unless-stopped

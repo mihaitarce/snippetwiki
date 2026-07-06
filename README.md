@@ -49,6 +49,21 @@ caddy run --config Caddyfile -w
 
 Redirects requests to http://localhost:2080 to the wiki web server, passing in authentication headers (user: caddy-user, group: caddy-group)
 
+### Article URLs
+
+Each wiki article has a stable path:
+
+```
+{PHX_PATH}/contents/{bag}/{title}
+```
+
+Example: `http://localhost:2080/contents/caddy-group/Article%20guidelines`
+
+- `{bag}` — snippet collection (scope)
+- `{title}` — URL-encoded article title
+
+Defined in `lib/snippetwiki_web/router.ex`. WikiRag citation links use the same pattern via `SNIPPETWIKI_URL` + `/contents/{bag}/{title}`.
+
 ## TODO
 
 - Highlight like button if user has already liked it, unlike on second click

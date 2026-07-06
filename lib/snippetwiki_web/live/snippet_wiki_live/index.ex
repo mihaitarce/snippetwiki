@@ -7,8 +7,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.wiki flash={@flash}>
-          <div class="flex flex-col h-svh w-full min-w-0 xl:flex-1 xl:basis-1/2">
-              <div class="flex justify-between gap-8 px-5 py-2">
+          <div class={[
+            "flex flex-col h-svh w-full min-w-0 min-h-0",
+            "xl:flex-1 xl:basis-1/2",
+            @mobile_view != "articles" && "hidden xl:flex"
+          ]}>
+              <div class="flex justify-between gap-3 sm:gap-8 px-3 sm:px-5 py-2 shrink-0">
                   <div class="flex items-center gap-3">
                       <img src={~p"/images/logo.svg"} alt="snippetwiki" class="h-8 hover:scale-110 transition-transform"/>
 
@@ -70,8 +74,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                       </div>
                   </div>
               </div>
-              <div class="flex-1 overflow-y-scroll overscroll-none min-w-0">
-                  <div class="flex flex-col gap-4 p-4">
+              <div class="flex-1 overflow-y-auto overscroll-none min-w-0 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] xl:pb-0">
+                  <div class="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4">
                     <%= if length(@uploads.documents.entries) > 0 do %>
                       <section phx-drop-target={@uploads.documents.ref}>
                         <.upload uploads={@uploads} />
@@ -89,7 +93,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                         new_snippet={snippet.id in @new_snippets} />
                     <% end %>
 
-                    <%= if length(@uploads.documents.entries) == 0 and length(@open) == 0 do %>
+                    <%= if length(@uploads.documents.entries) == 0 and length(@open) == 0 and is_nil(@missing_article) do %>
                       <div class="card p-6 select-none">
                           <div class="mx-auto py-12 mt-6 text-2xl flex flex-col items-center gap-12">
                               <img src={~p(/images/logo.svg)} alt="" class="h-[25vh] grayscale opacity-10"/>
@@ -101,12 +105,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
               </div>
           </div>
 
-          <div class="hidden h-svh min-w-0 w-full bg-base-200 xl:flex xl:flex-1 xl:basis-1/2 xl:flex-col">
-            <div class="relative flex min-h-0 w-full flex-1 flex-col bg-base-200 pl-4">
+          <div class={[
+            "h-svh min-h-0 min-w-0 w-full bg-base-200 flex flex-col",
+            "pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] xl:pb-0",
+            @mobile_view != "browse" && "hidden",
+            "xl:flex xl:flex-1 xl:basis-1/2"
+          ]}>
+            <div class="relative flex min-h-0 w-full flex-1 flex-col bg-base-200 px-2 sm:pl-4 sm:pr-0">
 
-              <div class="absolute right-4 top-0 z-10 flex items-baseline gap-2 p-2 text-xs opacity-30 transition-opacity hover:opacity-100">
-                Logged in as
-                <span class="badge badge-primary badge-soft badge-sm">{@current_scope.user.email}</span>
+              <div class="absolute right-2 sm:right-4 top-0 z-10 flex max-w-[55%] items-baseline gap-1.5 p-2 text-xs opacity-30 transition-opacity hover:opacity-100 sm:max-w-none">
+                <span class="hidden sm:inline">Logged in as</span>
+                <span class="badge badge-primary badge-soft badge-sm truncate max-w-full">{@current_scope.user.email}</span>
               </div>
 
               <%!-- <div class="filter justify-end absolute right-4">
@@ -117,7 +126,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                            aria-label="Journal"/>
               </div> --%>
 
-              <div class="tabs tabs-box h-full min-h-0 w-full min-w-0 flex-1 rounded-none p-1 shadow-none">
+              <div class="wiki-sidebar-tabs tabs tabs-box tabs-top h-full min-h-0 w-full min-w-0 flex-1 rounded-none p-1 shadow-none">
                   <input
                     type="radio"
                     name="tabs"
@@ -308,12 +317,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                   <div
                     id="wikirag-embed-wrapper"
                     phx-hook="WikiRagEmbed"
-                    class="tab-content w-full min-w-0 pt-[10px] pr-[10px]"
+                    class="tab-content w-full min-w-0 pt-2 sm:pt-[10px] pr-1 sm:pr-[10px]"
                   >
                     <iframe
                       id="wikirag-embed"
                       src={@wikirag_embed_url}
-                      class="block w-full min-w-0 h-[calc(100lvh-6rem)] border border-base-300 rounded-box"
+                      class="block w-full min-w-0 xl:h-[calc(100lvh-6rem)] border border-base-300 rounded-box"
                       title="Ask/Search"
                     />
                   </div>
@@ -321,7 +330,40 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
             </div>
           </div>
 
-        <div class="fixed bottom-[-4px] w-full">
+        <nav
+          id="mobile-nav"
+          class="fixed inset-x-0 bottom-0 z-40 border-t border-base-300 bg-base-100/95 backdrop-blur-sm xl:hidden pb-[env(safe-area-inset-bottom,0px)]"
+          aria-label="Mobile navigation"
+        >
+          <div class="grid h-14 grid-cols-2">
+            <button
+              type="button"
+              phx-click="set_mobile_view"
+              phx-value-view="articles"
+              class={[
+                "flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors",
+                @mobile_view == "articles" && "bg-primary/10 text-primary"
+              ]}
+            >
+              <.icon name="hero-document-text" class="size-5" />
+              <span>Read</span>
+            </button>
+            <button
+              type="button"
+              phx-click="set_mobile_view"
+              phx-value-view="browse"
+              class={[
+                "flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors",
+                @mobile_view == "browse" && "bg-primary/10 text-primary"
+              ]}
+            >
+              <.icon name="hero-squares-2x2" class="size-5" />
+              <span>Browse</span>
+            </button>
+          </div>
+        </nav>
+
+        <div class="fixed bottom-14 xl:bottom-[-4px] inset-x-0 z-30 pb-[env(safe-area-inset-bottom,0px)] xl:pb-0">
             <div class="flex gap-2 px-4 overflow-y-hidden overflow-x-scroll">
                 <%= for draft_id <- @drafts -- @open do %>
                   <button class="btn btn-warning btn-sm text-nowrap"
@@ -340,6 +382,27 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                 <% end %>
             </div>
         </div>
+
+      <%= if @missing_article do %>
+        <% {bag, title} = @missing_article %>
+        <div id="missing-article-modal" class="modal modal-open">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg">Article not found</h3>
+            <p class="py-4">
+              "{title}" was not found in {bag}. Create new article?
+            </p>
+            <div class="modal-action">
+              <button type="button" class="btn btn-ghost" phx-click="dismiss_missing_snippet">
+                No
+              </button>
+              <button type="button" class="btn btn-primary" phx-click="create_missing_snippet">
+                Yes
+              </button>
+            </div>
+          </div>
+          <button type="button" class="modal-backdrop" phx-click="dismiss_missing_snippet" aria-label="Close" />
+        </div>
+      <% end %>
     </Layouts.wiki>
     """
   end
@@ -351,48 +414,39 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     end
 
     snippets = list_snippets(socket.assigns.current_scope)
-    # |> stream(:snippets, list_snippets())}
 
     {:ok,
      socket
-     |> assign(page_title: "Snippet Wiki",
-               active_tab: "Contents",
-               bag: nil,
-               wikirag_embed_url: wikirag_embed_url(),
-               snippets: snippets,
-               open: [],
-               drafts: snippets
-                       |> Enum.filter(fn s -> s.has_draft end)
-                       |> Enum.map(fn s -> s.id end),
-               editing: [],
-               new_snippets: [],
-               expanded_bags: MapSet.new())
+     |> assign(
+       page_title: "Snippet Wiki",
+       active_tab: "Contents",
+       mobile_view: "articles",
+       bag: nil,
+       wikirag_embed_url: wikirag_embed_url(),
+       snippets: snippets
+     )
+     |> assign_new(:open, fn -> [] end)
+     |> assign_new(:editing, fn -> [] end)
+     |> assign_new(:new_snippets, fn -> [] end)
+     |> assign_new(:expanded_bags, fn -> MapSet.new() end)
+     |> assign_new(:drafts, fn ->
+       snippets
+       |> Enum.filter(fn s -> s.has_draft end)
+       |> Enum.map(fn s -> s.id end)
+     end)
+     |> assign_new(:pending_deep_link, fn -> nil end)
+     |> assign_new(:missing_article, fn -> nil end)
      |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
   end
 
   @impl true
   def handle_params(%{"scope" => bag, "title" => title}, _uri, socket) do
-    scope = socket.assigns.current_scope
+    pending = {bag, URI.decode(title)}
 
-    if bag in scope.user.bags do
-      case Snippets.find_snippet_in_bag(scope, title, bag) do
-        nil ->
-          {:noreply,
-           socket
-           |> assign(:bag, bag)
-           |> put_flash(:error, "Article not found.")}
-
-        snippet ->
-          {:noreply,
-           socket
-           |> assign(:bag, bag)
-           |> open_snippet_card(snippet)}
-      end
+    if connected?(socket) do
+      {:noreply, socket |> apply_deep_link(pending) |> push_patch(to: ~p"/")}
     else
-      {:noreply,
-       socket
-       |> put_flash(:error, "Unknown scope.")
-       |> push_navigate(to: ~p"/")}
+      {:noreply, assign(socket, :pending_deep_link, pending)}
     end
   end
 
@@ -409,13 +463,48 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     end
   end
 
-  def handle_params(_params, _uri, socket) do
-    socket = assign(socket, :bag, nil)
+  def handle_params(%{"title" => title}, _uri, socket) do
+    bag = socket.assigns.current_scope.user.bag
+    pending = {bag, URI.decode(title)}
 
-    case Snippets.find_snippet(socket.assigns.current_scope, "Welcome") do
-      nil -> {:noreply, socket}
-      snippet -> {:noreply, open_snippet_card(socket, snippet)}
+    if connected?(socket) do
+      {:noreply, socket |> apply_deep_link(pending) |> push_patch(to: ~p"/")}
+    else
+      {:noreply, assign(socket, :pending_deep_link, pending)}
     end
+  end
+
+  def handle_params(_params, _uri, socket) do
+    socket = assign(socket, bag: nil, pending_deep_link: nil)
+
+    if socket.assigns.open != [] or socket.assigns.missing_article do
+      {:noreply, socket}
+    else
+      {:noreply, maybe_open_welcome(socket)}
+    end
+  end
+
+  @impl true
+  def handle_event("create_missing_snippet", _, socket) do
+    {bag, title} = socket.assigns.missing_article
+
+    {:ok, snippet} =
+      Snippets.create_snippet(socket.assigns.current_scope, %{title: title, bag: bag})
+
+    {:noreply,
+     socket
+     |> assign(missing_article: nil, bag: bag)
+     |> assign(:open, [snippet.id | socket.assigns.open])
+     |> assign(:editing, [snippet.id | socket.assigns.editing])
+     |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])}
+  end
+
+  @impl true
+  def handle_event("dismiss_missing_snippet", _, socket) do
+    {:noreply,
+     socket
+     |> assign(missing_article: nil)
+     |> maybe_open_welcome()}
   end
 
   @impl true
@@ -433,18 +522,24 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
   @impl true
   def handle_event("open_initial", params, socket) do
-    case open_initial_title(params) do
+    case open_initial_params(params) do
       nil ->
         {:noreply, socket}
 
-      title ->
-        decoded_title = URI.decode(title)
+      %{title: title, bag: bag} ->
+        case open_article_in_bag(socket, bag, title) do
+          {:ok, snippet} ->
+            {:noreply,
+             socket
+             |> assign(:bag, bag)
+             |> open_snippet_card(snippet)}
 
-        snippet =
-          Snippets.find_snippet(socket.assigns.current_scope, decoded_title) ||
-            Snippets.find_snippet(socket.assigns.current_scope, "Welcome")
+          {:error, :not_found} ->
+            {:noreply, put_flash(socket, :error, "Article not found.")}
 
-        {:noreply, open_snippet_on_socket(socket, snippet)}
+          {:error, :unknown_scope} ->
+            {:noreply, put_flash(socket, :error, "Unknown scope.")}
+        end
     end
   end
 
@@ -452,17 +547,10 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def handle_event("open_snippet", %{"id" => id}, socket) do
     snippet = Snippets.get_snippet!(socket.assigns.current_scope, String.to_integer(id))
 
-    socket =
-      assign(socket, :expanded_bags, MapSet.put(socket.assigns.expanded_bags, snippet.bag))
-
-    # Main articles get a bag-aware permalink; handle_params performs the open.
-    # Namespaced snippets (Talk, File) are not addressable by URL, so open them
-    # in place directly.
-    if is_nil(snippet.namespace) do
-      {:noreply, push_patch(socket, to: ~p"/contents/#{snippet.bag}/#{snippet.title}")}
-    else
-      {:noreply, open_snippet_card(socket, snippet)}
-    end
+    {:noreply,
+     socket
+     |> assign(:expanded_bags, MapSet.put(socket.assigns.expanded_bags, snippet.bag))
+     |> open_snippet_card(snippet)}
   end
 
   @impl true
@@ -597,6 +685,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   end
 
   @impl true
+  def handle_event("set_mobile_view", %{"view" => view}, socket)
+      when view in ["articles", "browse"] do
+    {:noreply, assign(socket, :mobile_view, view)}
+  end
+
+  @impl true
   def handle_event("change_active_tab", %{"tab" => tab}, socket) do
     {:noreply, assign(socket, :active_tab, tab)}
   end
@@ -650,17 +744,21 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   end
 
   defp open_snippet_card(socket, snippet) do
-    socket = assign(socket, :expanded_bags, MapSet.put(socket.assigns.expanded_bags, snippet.bag))
-
-    if snippet.id in socket.assigns.open do
+    socket =
       socket
-    else
-      send(self(), {:increment_view_count, snippet})
+      |> assign(:expanded_bags, MapSet.put(socket.assigns.expanded_bags, snippet.bag))
+      |> assign(:mobile_view, "articles")
 
-      socket
-      |> assign(:open, [snippet.id | socket.assigns.open])
-      |> push_event("scroll", %{id: "snippet-#{snippet.id}"})
-    end
+    socket =
+      if snippet.id in socket.assigns.open do
+        socket
+      else
+        send(self(), {:increment_view_count, snippet})
+
+        assign(socket, :open, [snippet.id | socket.assigns.open])
+      end
+
+    push_event(socket, "scroll", %{id: "snippet-#{snippet.id}"})
   end
 
   # Articles or files grouped by bag in recipe order, sorted by title.
@@ -735,21 +833,56 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     |> Kernel.<>("/embed.html")
   end
 
-  defp open_initial_title(%{"title" => title}) when is_binary(title), do: title
-  defp open_initial_title(%{"value" => %{"title" => title}}) when is_binary(title), do: title
-  defp open_initial_title(_), do: nil
-
-  defp open_snippet_on_socket(socket, nil), do: socket
-
-  defp open_snippet_on_socket(socket, snippet) do
-    socket =
-      if snippet.id in socket.assigns.open do
-        socket
-      else
-        send(self(), {:increment_view_count, snippet})
-        assign(socket, :open, [snippet.id | socket.assigns.open])
+  defp maybe_open_welcome(socket) do
+    if socket.assigns.open != [] do
+      socket
+    else
+      case Snippets.find_snippet(socket.assigns.current_scope, "Welcome") do
+        nil -> socket
+        snippet -> open_snippet_card(socket, snippet)
       end
-
-    push_event(socket, "scroll", %{id: "snippet-#{snippet.id}"})
+    end
   end
+
+  defp apply_deep_link(socket, {bag, title}) do
+    case open_article_in_bag(socket, bag, title) do
+      {:ok, snippet} ->
+        socket
+        |> assign(bag: bag, pending_deep_link: nil)
+        |> open_snippet_card(snippet)
+
+      {:error, :not_found} ->
+        socket
+        |> assign(bag: bag, pending_deep_link: nil, missing_article: {bag, title})
+
+      {:error, :unknown_scope} ->
+        socket
+        |> assign(:pending_deep_link, nil)
+        |> put_flash(:error, "Unknown scope.")
+    end
+  end
+
+  defp open_article_in_bag(socket, bag, title) do
+    title = URI.decode(title)
+    scope = socket.assigns.current_scope
+
+    if bag in scope.user.bags do
+      case Snippets.find_snippet_in_bag(scope, title, bag) do
+        nil -> {:error, :not_found}
+        snippet -> {:ok, snippet}
+      end
+    else
+      {:error, :unknown_scope}
+    end
+  end
+
+  defp open_initial_params(%{"title" => title, "bag" => bag})
+       when is_binary(title) and title != "" and is_binary(bag) and bag != "",
+       do: %{title: title, bag: bag}
+
+  defp open_initial_params(%{"value" => %{"title" => title, "bag" => bag}})
+       when is_binary(title) and title != "" and is_binary(bag) and bag != "",
+       do: %{title: title, bag: bag}
+
+  defp open_initial_params(_), do: nil
 end

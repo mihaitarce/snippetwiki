@@ -8,7 +8,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
     ~H"""
     <div class="card bg-base-100" id={"snippet-#{@snippet.id}"}>
       <%= if @editing do %>
-        <.form for={@form} class="card-body z-1" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
+        <.form for={@form} class="card-body z-1 p-4 sm:p-6" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
           <div class="flex justify-between gap-2 items-start relative z-10">
             <%= if @new_snippet and is_nil(@snippet.namespace) do %>
               <div class="flex flex-col gap-2 min-w-0 flex-1 [&_.fieldset]:mb-0">
@@ -29,7 +29,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
                 <%= if is_nil(@snippet.namespace) do %>
                   <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full min-w-0" />
                 <% else %>
-                  <h1 class="text-3xl truncate min-w-0 leading-tight" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
+                  <h1 class="text-2xl sm:text-3xl truncate min-w-0 leading-tight" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
                 <% end %>
               </div>
             <% end %>
@@ -72,15 +72,15 @@ defmodule SnippetwikiWeb.SnippetComponent do
           <% end %>
         </.form>
       <% else %>
-        <div class="card-body">
+        <div class="card-body p-4 sm:p-6">
           <div class="flex justify-between gap-2 items-start">
             <div class="min-w-0 flex-1">
               <%= if @snippet.namespace do %>
-                <h1 class="text-3xl leading-tight break-words" title={@snippet.title}>
+                <h1 class="text-2xl sm:text-3xl leading-tight break-words" title={@snippet.title}>
                   {@snippet.namespace}:{@snippet.title}<.bag_indicator inline bag={@snippet.bag} snippet_id={@snippet.id} />
                 </h1>
               <% else %>
-                <h1 class="text-3xl leading-tight break-words">
+                <h1 class="text-2xl sm:text-3xl leading-tight break-words">
                   {@snippet.title}<.bag_indicator inline bag={@snippet.bag} snippet_id={@snippet.id} />
                 </h1>
               <% end %>

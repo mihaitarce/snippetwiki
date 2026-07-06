@@ -74,7 +74,7 @@ defmodule SnippetwikiWeb.Layouts do
 
   def wiki(assigns) do
     ~H"""
-    <main role="main" class="flex h-svh w-full min-h-0 flex-col transition-colors xl:flex-row xl:items-stretch xl:overflow-hidden">
+    <main role="main" class="flex h-svh w-full min-h-0 flex-col overflow-hidden transition-colors xl:flex-row xl:items-stretch">
       {render_slot(@inner_block)}
     </main>
 

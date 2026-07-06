@@ -190,8 +190,8 @@ export const hooks = {
     WikiRagEmbed: {
         mounted() {
             this.onMessage = (event) => {
-                const {action, title} = event.data ?? {}
-                if (action !== "openSnippet" || typeof title !== "string" || !title) {
+                const {action, title, bag} = event.data ?? {}
+                if (action !== "openSnippet" || typeof title !== "string" || !title || typeof bag !== "string" || !bag) {
                     return
                 }
 
@@ -206,7 +206,7 @@ export const hooks = {
                     }
                 }
 
-                this.pushEvent("open_initial", {value: {title}})
+                this.pushEvent("open_initial", {value: {title, bag}})
             }
 
             window.addEventListener("message", this.onMessage)

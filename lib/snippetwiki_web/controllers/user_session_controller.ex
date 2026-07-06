@@ -49,14 +49,21 @@ defmodule SnippetwikiWeb.UserSessionController do
   def update_password(conn, %{"user" => user_params} = params) do
     user = conn.assigns.current_scope.user
     true = Snippets.sudo_mode?(user)
-    {:ok, {_user, expired_tokens}} = Snippets.update_user_password(user, user_params)
 
-    # disconnect all existing LiveViews with old sessions
-    UserAuth.disconnect_sessions(expired_tokens)
+    case Snippets.update_user_password(user, user_params) do
+      {:ok, {_user, expired_tokens}} ->
+        # disconnect all existing LiveViews with old sessions
+        UserAuth.disconnect_sessions(expired_tokens)
 
-    conn
-    |> put_session(:user_return_to, ~p"/users/settings")
-    |> create(params, "Password updated successfully!")
+        conn
+        |> put_session(:user_return_to, ~p"/users/settings")
+        |> create(params, "Password updated successfully!")
+
+      {:error, _changeset} ->
+        conn
+        |> put_flash(:error, "Unable to update password. Please try again.")
+        |> redirect(to: ~p"/users/settings")
+    end
   end
 
   def delete(conn, _params) do

@@ -183,8 +183,13 @@ defmodule SnippetwikiWeb.SnippetComponent do
 
   @impl true
   def handle_event("like_snippet", _, socket) do
-    {:ok, _} = Snippets.like_snippet(socket.assigns.current_scope, socket.assigns.snippet)
-    {:noreply, socket}
+    case Snippets.like_snippet(socket.assigns.current_scope, socket.assigns.snippet) do
+      {:ok, _} ->
+        {:noreply, socket}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Unable to like snippet.")}
+    end
   end
 
   @impl true
@@ -230,40 +235,52 @@ defmodule SnippetwikiWeb.SnippetComponent do
 
     content = Map.get(snippet_params, "content")
 
-    {:ok, snippet} =
-      Snippets.create_new_revision(
-        socket.assigns.current_scope,
-        socket.assigns.snippet,
-        attrs,
-        content
-      )
-      # {:error, %Ecto.Changeset{} = changeset} ->
-      #   {:noreply, assign(socket, form: to_form(changeset))}
+    case Snippets.create_new_revision(
+           socket.assigns.current_scope,
+           socket.assigns.snippet,
+           attrs,
+           content
+         ) do
+      {:ok, snippet} ->
+        send(self(), {:stop_editing, snippet})
 
-    send(self(), {:stop_editing, snippet})
+        {:noreply,
+         socket
+         |> assign(:snippet, snippet)
+         |> put_flash(:info, "Snippet updated successfully")}
 
-    {:noreply,
-      socket
-      |> assign(:snippet, snippet)
-      |> put_flash(:info, "Snippet updated successfully")}
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, form: to_form(changeset))}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Unable to save snippet. Please try again.")}
+    end
   end
 
   @impl true
   def handle_event("discard_changes", _, socket) do
-    {:ok, snippet} = Snippets.discard_draft(socket.assigns.current_scope, socket.assigns.snippet)
+    case Snippets.discard_draft(socket.assigns.current_scope, socket.assigns.snippet) do
+      {:ok, snippet} ->
+        send(self(), {:stop_editing, snippet})
 
-    send(self(), {:stop_editing, snippet})
+        {:noreply,
+         socket
+         |> assign(:snippet, snippet)}
 
-    {:noreply,
-     socket
-     |> assign(:snippet, snippet)}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Unable to discard changes.")}
+    end
   end
 
   @impl true
   def handle_event("delete", _, socket) do
-    {:ok, _} = Snippets.delete_snippet(socket.assigns.current_scope, socket.assigns.snippet)
+    case Snippets.delete_snippet(socket.assigns.current_scope, socket.assigns.snippet) do
+      {:ok, _} ->
+        {:noreply, socket}
 
-    {:noreply, socket}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Unable to delete snippet.")}
+    end
   end
 
   defp get_file_url(title) do

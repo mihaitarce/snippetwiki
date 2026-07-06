@@ -189,8 +189,11 @@ defmodule Snippetwiki.Snippets do
   If the token is valid `{user, token_inserted_at}` is returned, otherwise `nil` is returned.
   """
   def get_user_by_session_token(token) do
-    {:ok, query} = UserToken.verify_session_token_query(token)
-    Repo.one(query)
+    with {:ok, query} <- UserToken.verify_session_token_query(token) do
+      Repo.one(query)
+    else
+      _ -> nil
+    end
   end
 
   @doc """
@@ -224,29 +227,33 @@ defmodule Snippetwiki.Snippets do
      `mix help phx.gen.auth`.
   """
   def login_user_by_magic_link(token) do
-    {:ok, query} = UserToken.verify_magic_link_token_query(token)
+    case UserToken.verify_magic_link_token_query(token) do
+      {:ok, query} ->
+        case Repo.one(query) do
+          # Prevent session fixation attacks by disallowing magic links for unconfirmed users with password
+          {%User{confirmed_at: nil, hashed_password: hash}, _token} when not is_nil(hash) ->
+            raise """
+            magic link log in is not allowed for unconfirmed users with a password set!
 
-    case Repo.one(query) do
-      # Prevent session fixation attacks by disallowing magic links for unconfirmed users with password
-      {%User{confirmed_at: nil, hashed_password: hash}, _token} when not is_nil(hash) ->
-        raise """
-        magic link log in is not allowed for unconfirmed users with a password set!
+            This cannot happen with the default implementation, which indicates that you
+            might have adapted the code to a different use case. Please make sure to read the
+            "Mixing magic link and password registration" section of `mix help phx.gen.auth`.
+            """
 
-        This cannot happen with the default implementation, which indicates that you
-        might have adapted the code to a different use case. Please make sure to read the
-        "Mixing magic link and password registration" section of `mix help phx.gen.auth`.
-        """
+          {%User{confirmed_at: nil} = user, _token} ->
+            user
+            |> User.confirm_changeset()
+            |> update_user_and_delete_all_tokens()
 
-      {%User{confirmed_at: nil} = user, _token} ->
-        user
-        |> User.confirm_changeset()
-        |> update_user_and_delete_all_tokens()
+          {user, token} ->
+            Repo.delete!(token)
+            {:ok, {user, []}}
 
-      {user, token} ->
-        Repo.delete!(token)
-        {:ok, {user, []}}
+          nil ->
+            {:error, :not_found}
+        end
 
-      nil ->
+      _ ->
         {:error, :not_found}
     end
   end
@@ -524,14 +531,21 @@ defmodule Snippetwiki.Snippets do
   end
 
   def create_new_revision(%Scope{} = scope, snippet, attrs, content, content_type \\ "application/vnd.blocknote+json") do
-    # TODO Use transaction
+    case Repo.transaction(fn ->
+           case Repo.insert(%Revision{snippet: snippet, content: content, content_type: content_type}) do
+             {:ok, _revision} ->
+               case update_snippet(scope, snippet, attrs) do
+                 {:ok, updated_snippet} -> {:ok, with_content(updated_snippet)}
+                 {:error, changeset} -> Repo.rollback({:error, changeset})
+               end
 
-    # Create new revision
-    {:ok, _} = Repo.insert(%Revision{snippet: snippet, content: content, content_type: content_type})
-
-    # Update snippet
-    {:ok, snippet} = update_snippet(scope, snippet, attrs)
-    {:ok, with_content(snippet)}
+             {:error, changeset} ->
+               Repo.rollback({:error, changeset})
+           end
+         end) do
+      {:ok, {:ok, updated_snippet}} -> {:ok, updated_snippet}
+      {:error, {:error, changeset}} -> {:error, changeset}
+    end
   end
 
   def increment_views(%Scope{} = scope, snippet) do

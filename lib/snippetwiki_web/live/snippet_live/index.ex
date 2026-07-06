@@ -58,9 +58,14 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     snippet = Snippets.get_snippet!(socket.assigns.current_scope, id)
-    {:ok, _} = Snippets.delete_snippet(socket.assigns.current_scope, snippet)
 
-    {:noreply, stream_delete(socket, :snippets, snippet)}
+    case Snippets.delete_snippet(socket.assigns.current_scope, snippet) do
+      {:ok, _} ->
+        {:noreply, stream_delete(socket, :snippets, snippet)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Unable to delete snippet.")}
+    end
   end
 
   @impl true

@@ -74,7 +74,11 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                       </div>
                   </div>
               </div>
-              <div id="articles-scroll" class="flex-1 overflow-y-auto overscroll-none min-w-0 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] xl:pb-0">
+              <div id="articles-scroll" class={[
+                "flex-1 overflow-y-auto overscroll-none min-w-0 xl:pb-0",
+                length(@drafts -- @open) > 0 && "pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]",
+                length(@drafts -- @open) == 0 && "pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]"
+              ]}>
                   <div class="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4">
                     <%= if length(@uploads.documents.entries) > 0 do %>
                       <section phx-drop-target={@uploads.documents.ref}>
@@ -380,7 +384,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                               strokeLinejoin="round"/>
                       </svg>
                       <span class="max-w-24 md:max-w-48 truncate">
-                        {Enum.find(@snippets, fn s -> s.id == draft_id end).title}
+                        {snippet_title(@snippets, draft_id)}
                       </span>
                   </button>
                 <% end %>
@@ -388,12 +392,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         </div>
 
       <%= if @missing_article do %>
-        <% {bag, title} = @missing_article %>
+        <% {_bag, title} = @missing_article %>
         <div id="missing-article-modal" class="modal modal-open">
           <div class="modal-box">
             <h3 class="font-bold text-lg">Article not found</h3>
             <p class="py-4">
-              "{title}" was not found in {bag}. Create new article?
+              "{title}" was not found. Create new article?
             </p>
             <div class="modal-action">
               <button type="button" class="btn btn-ghost" phx-click="dismiss_missing_snippet">
@@ -492,18 +496,22 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def handle_event("create_missing_snippet", _, socket) do
     {bag, title} = socket.assigns.missing_article
 
-    {:ok, snippet} =
-      Snippets.create_snippet(socket.assigns.current_scope, %{title: title, bag: bag})
+    case Snippets.create_snippet(socket.assigns.current_scope, %{title: title, bag: bag}) do
+      {:ok, snippet} ->
+        {:noreply,
+         socket
+         |> assign(:snippets, [snippet | socket.assigns.snippets])
+         |> assign(missing_article: nil, bag: bag)
+         |> assign(:mobile_view, "articles")
+         |> assign(:open, [snippet.id | socket.assigns.open])
+         |> assign(:editing, [snippet.id | socket.assigns.editing])
+         |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])
+         |> push_event("scroll", %{id: "snippet-#{snippet.id}"})
+         |> push_event("focus", %{id: "title-#{snippet.id}", select: true})}
 
-    {:noreply,
-     socket
-     |> assign(:snippets, [snippet | socket.assigns.snippets])
-     |> assign(missing_article: nil, bag: bag)
-     |> assign(:mobile_view, "articles")
-     |> assign(:open, [snippet.id | socket.assigns.open])
-     |> assign(:editing, [snippet.id | socket.assigns.editing])
-     |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])
-     |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Unable to create article. Please try again.")}
+    end
   end
 
   @impl true
@@ -527,7 +535,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
          |> assign(:open, [snippet.id | socket.assigns.open])
          |> assign(:editing, [snippet.id | socket.assigns.editing])
          |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])
-         |> push_event("scroll", %{id: "snippet-#{snippet.id}"})}
+         |> push_event("scroll", %{id: "snippet-#{snippet.id}"})
+         |> push_event("focus", %{id: "title-#{snippet.id}", select: true})}
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Unable to create snippet. Please try again.")}
@@ -572,11 +581,20 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     snippet_id = String.to_integer(id)
     snippet = Snippets.get_snippet!(socket.assigns.current_scope, snippet_id)
 
-    unless snippet.has_draft do
-      {:ok, _} = Snippets.create_draft(socket.assigns.current_scope, snippet)
-    end
+    socket =
+      unless snippet.has_draft do
+        case Snippets.create_draft(socket.assigns.current_scope, snippet) do
+          {:ok, _} -> socket
+          {:error, _} -> put_flash(socket, :error, "Unable to start editing right now.")
+        end
+      else
+        socket
+      end
 
-    socket = assign(socket, :editing, [ snippet.id | socket.assigns.editing ])
+    socket =
+      socket
+      |> assign(:mobile_view, "articles")
+      |> assign(:editing, [ snippet.id | socket.assigns.editing ])
 
     {:noreply,
      if snippet_id in socket.assigns.open do
@@ -595,14 +613,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     {:noreply,
     socket
     |> assign(:open, Enum.reject(socket.assigns.open, fn id -> id == snippet_id end))
-    |> assign(:editing, Enum.reject(socket.assigns.editing, fn id -> id == snippet_id end))}
+    |> assign(:editing, Enum.reject(socket.assigns.editing, fn id -> id == snippet_id end))
+    |> assign(:new_snippets, Enum.reject(socket.assigns.new_snippets, fn id -> id == snippet_id end))}
   end
 
   @impl true
   def handle_event("close_snippets", _, socket) do
     {:noreply,
     socket
-    |> assign(:open, [])}
+    |> assign(:open, [])
+    |> assign(:editing, [])
+    |> assign(:new_snippets, [])}
   end
 
 
@@ -610,10 +631,15 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     talk_page = Snippets.find_snippet(socket.assigns.current_scope, title, "Talk")
 
     if is_nil(talk_page) do
-      {:ok, talk_page} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: title, namespace: "Talk" })
-      {:noreply,
-       socket
-       |> assign(:open, [talk_page.id | socket.assigns.open])}
+      case Snippets.create_snippet(socket.assigns.current_scope, %{ title: title, namespace: "Talk" }) do
+        {:ok, talk_page} ->
+          {:noreply,
+           socket
+           |> assign(:open, [talk_page.id | socket.assigns.open])}
+
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Unable to create talk page. Please try again.")}
+      end
     else
       if talk_page.id in socket.assigns.open do
         {:noreply, socket}
@@ -665,25 +691,31 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   @impl true
   def handle_event("save_upload", _params, socket) do
     created_snippets = consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
-      snippet = if is_nil(Snippets.find_snippet(socket.assigns.current_scope, entry.client_name, "File")) do
-        {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
-        snippet
+      with {:ok, snippet} <-
+             (if is_nil(Snippets.find_snippet(socket.assigns.current_scope, entry.client_name, "File")) do
+               Snippets.create_snippet(socket.assigns.current_scope, %{ title: entry.client_name, namespace: "File" })
+             else
+               filename = Snippets.Snippet.create_unique_filename(entry.client_name)
+               Snippets.create_snippet(socket.assigns.current_scope, %{ title: filename, namespace: "File" })
+             end),
+           {:ok, content} <- File.read(path),
+           {:ok, _updated_snippet} <- Snippets.create_new_revision(socket.assigns.current_scope, snippet, %{}, content, entry.client_type) do
+        {:ok, snippet}
       else
-        filename = Snippets.Snippet.create_unique_filename(entry.client_name)
-
-        {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{ title: filename, namespace: "File" })
-        snippet
+        _ -> {:ok, nil}
       end
-
-      {:ok, content} = File.read(path)
-      Snippets.create_new_revision(socket.assigns.current_scope, snippet, %{}, content, entry.client_type)
-
-      {:ok, snippet}
     end)
+    |> Enum.reject(&is_nil/1)
 
     {:noreply,
      socket
-     |> put_flash(:info, "#{length(created_snippets)} file(s) uploaded successfully")}
+     |> then(fn socket ->
+       if created_snippets == [] do
+         put_flash(socket, :error, "Unable to upload file(s). Please try again.")
+       else
+         put_flash(socket, :info, "#{length(created_snippets)} file(s) uploaded successfully")
+       end
+     end)}
   end
 
   @impl true
@@ -747,6 +779,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
                          |> Enum.filter(fn s -> s.has_draft end)
                          |> Enum.map(fn s -> s.id end))
      |> assign(:open, socket.assigns.open
+                      |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end))
+     |> assign(:editing, socket.assigns.editing
                       |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end))
      |> assign(:new_snippets, Enum.filter(socket.assigns.new_snippets, fn id ->
           Enum.find_value(snippets, false, fn s -> s.id == id end)
@@ -899,4 +933,11 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
        do: %{title: title, bag: bag}
 
   defp open_initial_params(_), do: nil
+
+  defp snippet_title(snippets, id) do
+    case Enum.find(snippets, fn s -> s.id == id end) do
+      nil -> "Draft"
+      snippet -> snippet.title
+    end
+  end
 end

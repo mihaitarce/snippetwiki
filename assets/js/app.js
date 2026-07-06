@@ -85,21 +85,44 @@ if (process.env.NODE_ENV === "development") {
 }
 
 window.addEventListener("phx:scroll", (e) => {
-  const scrollTo = (retries = 20) => {
+  const scrollTo = (retries = 120) => {
     const el = document.getElementById(e.detail.id)
     const container = document.getElementById("articles-scroll")
 
     if (el && container) {
-      const elRect = el.getBoundingClientRect()
-      const containerRect = container.getBoundingClientRect()
-      container.scrollTo({
-        top: container.scrollTop + (elRect.top - containerRect.top),
-        behavior: "smooth",
-      })
+      const scrollToTarget = () => {
+        const elRect = el.getBoundingClientRect()
+        const containerRect = container.getBoundingClientRect()
+        container.scrollTo({
+          top: container.scrollTop + (elRect.top - containerRect.top),
+          behavior: "smooth",
+        })
+      }
+
+      scrollToTarget()
+      // Heavy LiveView patches can finish layout a frame later.
+      requestAnimationFrame(scrollToTarget)
     } else if (retries > 0) {
-      requestAnimationFrame(() => scrollTo(retries - 1))
+      setTimeout(() => scrollTo(retries - 1), 16)
     }
   }
 
   scrollTo()
+})
+
+window.addEventListener("phx:focus", (e) => {
+  const focusEl = (retries = 120) => {
+    const el = document.getElementById(e.detail.id)
+
+    if (el) {
+      el.focus()
+      if (e.detail.select && typeof el.select === "function") {
+        el.select()
+      }
+    } else if (retries > 0) {
+      setTimeout(() => focusEl(retries - 1), 16)
+    }
+  }
+
+  focusEl()
 })

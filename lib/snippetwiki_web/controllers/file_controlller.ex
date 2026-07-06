@@ -9,19 +9,23 @@ defmodule SnippetwikiWeb.FileController do
   end
 
   def upload(conn, %{"file" => upload}) do
-    snippet = if is_nil(Snippets.find_snippet(conn.assigns.current_scope, upload.filename, "File")) do
-      {:ok, snippet} = Snippets.create_snippet(conn.assigns.current_scope, %{ title: upload.filename, namespace: "File" })
-      snippet
+    snippet_result =
+      if is_nil(Snippets.find_snippet(conn.assigns.current_scope, upload.filename, "File")) do
+        Snippets.create_snippet(conn.assigns.current_scope, %{ title: upload.filename, namespace: "File" })
+      else
+        filename = Snippets.Snippet.create_unique_filename(upload.filename)
+        Snippets.create_snippet(conn.assigns.current_scope, %{ title: filename, namespace: "File" })
+      end
+
+    with {:ok, snippet} <- snippet_result,
+         {:ok, content} <- File.read(upload.path),
+         {:ok, _updated_snippet} <- Snippets.create_new_revision(conn.assigns.current_scope, snippet, %{}, content, upload.content_type) do
+      json(conn, %{data: %{url: snippet.title}})
     else
-      filename = Snippets.Snippet.create_unique_filename(upload.filename)
-
-      {:ok, snippet} = Snippets.create_snippet(conn.assigns.current_scope, %{ title: filename, namespace: "File" })
-      snippet
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "Unable to upload file"})
     end
-
-    {:ok, content} = File.read(upload.path)
-    Snippets.create_new_revision(conn.assigns.current_scope, snippet, %{}, content, upload.content_type)
-
-    json(conn, %{data: %{url: snippet.title}})
   end
 end

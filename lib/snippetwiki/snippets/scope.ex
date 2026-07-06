@@ -26,8 +26,17 @@ defmodule Snippetwiki.Snippets.Scope do
   Returns nil if no user is given.
   """
   def for_user(%User{} = user) do
+    user =
+      user
+      |> Map.put(:bags, normalize_bags(user.bags))
+      |> Map.put(:bag, user.bag || List.first(normalize_bags(user.bags)))
+
     %__MODULE__{user: user}
   end
 
   def for_user(nil), do: nil
+
+  defp normalize_bags(nil), do: ["main"]
+  defp normalize_bags([]), do: ["main"]
+  defp normalize_bags(bags), do: bags
 end

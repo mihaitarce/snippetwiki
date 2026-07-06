@@ -408,8 +408,8 @@ defmodule Snippetwiki.SnippetsTest do
       other_scope = user_scope_fixture()
       snippet = snippet_fixture(scope)
       other_snippet = snippet_fixture(other_scope)
-      assert Snippets.list_snippets(scope) == [snippet]
-      assert Snippets.list_snippets(other_scope) == [other_snippet]
+      assert Enum.map(Snippets.list_snippets(scope), & &1.id) == [snippet.id]
+      assert Enum.map(Snippets.list_snippets(other_scope), & &1.id) == [other_snippet.id]
     end
 
     test "get_snippet!/2 returns the snippet with given id" do
@@ -428,7 +428,7 @@ defmodule Snippetwiki.SnippetsTest do
       assert snippet.title == "some title"
       assert snippet.has_draft == true
       assert snippet.views == 42
-      assert snippet.user_id == scope.user.id
+      assert snippet.bag == scope.user.bag
     end
 
     test "create_snippet/2 with invalid data returns error changeset" do

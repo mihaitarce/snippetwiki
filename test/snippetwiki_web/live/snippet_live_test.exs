@@ -4,7 +4,7 @@ defmodule SnippetwikiWeb.SnippetLiveTest do
   import Phoenix.LiveViewTest
   import Snippetwiki.SnippetsFixtures
 
-  @create_attrs %{title: "some title", has_draft: true, views: 42}
+  @create_attrs %{title: "some new title", has_draft: true, views: 42}
   @update_attrs %{title: "some updated title", has_draft: false, views: 43}
   @invalid_attrs %{title: nil, has_draft: false, views: nil}
 
@@ -49,7 +49,7 @@ defmodule SnippetwikiWeb.SnippetLiveTest do
 
       html = render(index_live)
       assert html =~ "Snippet created successfully"
-      assert html =~ "some title"
+      assert html =~ "some new title"
     end
 
     test "updates snippet in listing", %{conn: conn, snippet: snippet} do

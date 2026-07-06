@@ -47,7 +47,8 @@ defmodule Snippetwiki.SnippetsFixtures do
   end
 
   def user_scope_fixture(user) do
-    Scope.for_user(user)
+    bag = "bag-#{user.id}"
+    Scope.for_user(%{user | bag: bag, bags: [bag]})
   end
 
   def set_password(user) do

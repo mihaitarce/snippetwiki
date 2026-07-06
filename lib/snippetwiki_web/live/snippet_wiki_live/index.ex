@@ -511,13 +511,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def handle_event("new_snippet", _, socket) do
     title = find_available_title("New snippet", 1, list_snippets(socket.assigns.current_scope))
 
-    {:ok, snippet} = Snippets.create_snippet(socket.assigns.current_scope, %{title: title})
+    case Snippets.create_snippet(socket.assigns.current_scope, %{title: title}) do
+      {:ok, snippet} ->
+        {:noreply,
+         socket
+         |> assign(:open, [snippet.id | socket.assigns.open])
+         |> assign(:editing, [snippet.id | socket.assigns.editing])
+         |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])}
 
-    {:noreply,
-     socket
-     |> assign(:open, [snippet.id | socket.assigns.open])
-     |> assign(:editing, [snippet.id | socket.assigns.editing])
-     |> assign(:new_snippets, [snippet.id | socket.assigns.new_snippets])}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Unable to create snippet. Please try again.")}
+    end
   end
 
   @impl true

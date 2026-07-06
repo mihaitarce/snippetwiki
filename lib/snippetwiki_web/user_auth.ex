@@ -267,7 +267,13 @@ defmodule SnippetwikiWeb.UserAuth do
   end
 
   defp mount_current_scope(socket, session) do
-    headers = Phoenix.LiveView.get_connect_info(socket, :x_headers)
+    headers =
+      if Phoenix.LiveView.connected?(socket) do
+        Phoenix.LiveView.get_connect_info(socket, :x_headers)
+      else
+        []
+      end
+
     scope = UserAuth.process_auth_headers(headers)
 
     if is_nil(scope) do

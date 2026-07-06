@@ -4,6 +4,8 @@ defmodule Snippetwiki.Snippets.User do
 
   schema "users" do
     field :email, :string
+    field :bag, :string, virtual: true, default: "main"
+    field :bags, {:array, :string}, virtual: true, default: ["main"]
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime

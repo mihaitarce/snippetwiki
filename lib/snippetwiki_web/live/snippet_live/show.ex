@@ -28,7 +28,13 @@ defmodule SnippetwikiWeb.SnippetLive.Show do
           <div id={"editor-#{@snippet.id}"} phx-hook="BlockNote" phx-update="ignore"></div>
         </:item>
         <:item title="Views">
-          <div id={"views-#{@snippet.id}"} phx-hook="Number" data-number={@snippet.views} phx-update="ignore"></div>
+          <div
+            id={"views-#{@snippet.id}"}
+            phx-hook="Number"
+            data-number={@snippet.views}
+            phx-update="ignore"
+          >
+          </div>
         </:item>
       </.list>
     </Layouts.app>

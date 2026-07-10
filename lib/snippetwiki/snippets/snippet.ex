@@ -49,6 +49,6 @@ defmodule Snippetwiki.Snippets.Snippet do
     extension = Path.extname(filename)
     basename = Path.basename(filename, extension)
 
-    "#{basename}_#{IO.inspect Enum.to_list(?a..?f) ++ Enum.to_list(?0..?9) |> Enum.take_random(6)}#{extension}"
+    "#{basename}_#{IO.inspect((Enum.to_list(?a..?f) ++ Enum.to_list(?0..?9)) |> Enum.take_random(6))}#{extension}"
   end
 end

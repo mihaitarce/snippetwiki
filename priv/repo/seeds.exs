@@ -34,8 +34,11 @@ Snippetwiki.Repo.insert!(%Snippetwiki.Snippets.Like{
   snippet: snippet
 })
 
-
-snippet = Snippetwiki.Repo.insert!(%Snippetwiki.Snippets.Snippet{bag: "Private", title: "Invisible snippet"})
+snippet =
+  Snippetwiki.Repo.insert!(%Snippetwiki.Snippets.Snippet{
+    bag: "Private",
+    title: "Invisible snippet"
+  })
 
 Snippetwiki.Repo.insert!(%Snippetwiki.Snippets.Revision{
   content: """

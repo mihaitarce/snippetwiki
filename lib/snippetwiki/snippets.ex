@@ -8,7 +8,7 @@ defmodule Snippetwiki.Snippets do
 
   alias Snippetwiki.Snippets.{User, UserToken, UserNotifier}
 
-    ## Database getters
+  ## Database getters
 
   @doc """
   Gets a user by email.
@@ -307,7 +307,6 @@ defmodule Snippetwiki.Snippets do
     end)
   end
 
-
   alias Snippetwiki.Snippets.{Snippet, Revision, Like}
   alias Snippetwiki.Snippets.Scope
 
@@ -323,24 +322,28 @@ defmodule Snippetwiki.Snippets do
   def list_snippets(%Scope{} = scope) do
     likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
 
-    query = from s in Snippet, as: :snippet,
-      where: s.bag in ^scope.user.bags,
-      select_merge: %{like_count: subquery(likes_count)},
-      order_by: [desc: :updated_at, desc: :id]
+    query =
+      from s in Snippet,
+        as: :snippet,
+        where: s.bag in ^scope.user.bags,
+        select_merge: %{like_count: subquery(likes_count)},
+        order_by: [desc: :updated_at, desc: :id]
 
     Repo.all(query)
   end
 
   def search_snippets(%Scope{} = scope, query_string \\ nil) do
-    query = from s in Snippet, as: :snippet,
-      where: is_nil(s.namespace) and s.bag in ^scope.user.bags,
-      order_by: [desc: :updated_at, desc: :id]
+    query =
+      from s in Snippet,
+        as: :snippet,
+        where: is_nil(s.namespace) and s.bag in ^scope.user.bags,
+        order_by: [desc: :updated_at, desc: :id]
 
     if is_nil(query_string) do
       query
     else
       query
-      |> where([s], ilike(s.title, ^("%#{query_string}%")))
+      |> where([s], ilike(s.title, ^"%#{query_string}%"))
       |> limit(10)
     end
     |> Repo.all()
@@ -361,8 +364,10 @@ defmodule Snippetwiki.Snippets do
 
   """
   def get_snippet!(%Scope{} = scope, id) do
-    query = from s in Snippet, as: :snippet,
-      where: s.id == ^id and s.bag in ^scope.user.bags
+    query =
+      from s in Snippet,
+        as: :snippet,
+        where: s.id == ^id and s.bag in ^scope.user.bags
 
     Repo.one!(query)
   end
@@ -377,38 +382,46 @@ defmodule Snippetwiki.Snippets do
   """
   def find_snippet_in_bag(%Scope{} = scope, title, bag) do
     if bag in scope.user.bags do
-      query = from s in Snippet, as: :snippet,
-        where: s.title == ^title and s.bag == ^bag and is_nil(s.namespace)
+      query =
+        from s in Snippet,
+          as: :snippet,
+          where: s.title == ^title and s.bag == ^bag and is_nil(s.namespace)
 
       Repo.one(query)
     end
   end
 
   def find_snippet(%Scope{} = scope, title) do
-    query = from s in Snippet, as: :snippet,
-      where: s.title == ^title and is_nil(s.namespace) and s.bag in ^scope.user.bags,
-      order_by: [asc: s.id],
-      limit: 1
+    query =
+      from s in Snippet,
+        as: :snippet,
+        where: s.title == ^title and is_nil(s.namespace) and s.bag in ^scope.user.bags,
+        order_by: [asc: s.id],
+        limit: 1
 
     Repo.one(query)
   end
 
   def find_snippet(%Scope{} = scope, title, namespace) do
-    query = from s in Snippet, as: :snippet,
-      where: s.title == ^title and s.namespace == ^namespace and s.bag in ^scope.user.bags,
-      order_by: [asc: s.id],
-      limit: 1
+    query =
+      from s in Snippet,
+        as: :snippet,
+        where: s.title == ^title and s.namespace == ^namespace and s.bag in ^scope.user.bags,
+        order_by: [asc: s.id],
+        limit: 1
 
     Repo.one(query)
   end
 
   def load_snippet!(%Scope{} = scope, title, namespace) do
-    query = from s in Snippet, as: :snippet,
-      where: s.title == ^title and s.namespace == ^namespace and s.bag in ^scope.user.bags,
-      left_join: r in assoc(s, :revisions),
-      select_merge: %{content: r.content, content_type: r.content_type},
-      order_by: [desc: r.version],
-      limit: 1
+    query =
+      from s in Snippet,
+        as: :snippet,
+        where: s.title == ^title and s.namespace == ^namespace and s.bag in ^scope.user.bags,
+        left_join: r in assoc(s, :revisions),
+        select_merge: %{content: r.content, content_type: r.content_type},
+        order_by: [desc: r.version],
+        limit: 1
 
     Repo.one!(query)
   end
@@ -416,13 +429,15 @@ defmodule Snippetwiki.Snippets do
   def with_content(snippet) do
     likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
 
-    query = from s in Snippet, as: :snippet,
-      where: s.id == ^snippet.id,
-      left_join: r in assoc(s, :revisions),
-      select_merge: %{like_count: subquery(likes_count)},
-      select_merge: %{content: r.content, content_type: r.content_type},
-      order_by: [desc: r.version],
-      limit: 1
+    query =
+      from s in Snippet,
+        as: :snippet,
+        where: s.id == ^snippet.id,
+        left_join: r in assoc(s, :revisions),
+        select_merge: %{like_count: subquery(likes_count)},
+        select_merge: %{content: r.content, content_type: r.content_type},
+        order_by: [desc: r.version],
+        limit: 1
 
     Repo.one(query)
   end
@@ -473,7 +488,7 @@ defmodule Snippetwiki.Snippets do
     end
   end
 
-@doc """
+  @doc """
   Deletes a snippet.
 
   ## Examples
@@ -530,9 +545,19 @@ defmodule Snippetwiki.Snippets do
     {:ok, snippet}
   end
 
-  def create_new_revision(%Scope{} = scope, snippet, attrs, content, content_type \\ "application/vnd.blocknote+json") do
+  def create_new_revision(
+        %Scope{} = scope,
+        snippet,
+        attrs,
+        content,
+        content_type \\ "application/vnd.blocknote+json"
+      ) do
     case Repo.transaction(fn ->
-           case Repo.insert(%Revision{snippet: snippet, content: content, content_type: content_type}) do
+           case Repo.insert(%Revision{
+                  snippet: snippet,
+                  content: content,
+                  content_type: content_type
+                }) do
              {:ok, _revision} ->
                case update_snippet(scope, snippet, attrs) do
                  {:ok, updated_snippet} -> {:ok, with_content(updated_snippet)}
@@ -549,22 +574,20 @@ defmodule Snippetwiki.Snippets do
   end
 
   def increment_views(%Scope{} = scope, snippet) do
-      Snippet
-      |> where(id: ^snippet.id)
-      |> Repo.update_all(inc: [views: 1])
-
-      broadcast_snippet(scope, {:updated, snippet})
-      {:ok, snippet}
-  end
-
-
-  def like_snippet(%Scope{} = scope, snippet) do
-    Repo.insert(%Like{ snippet: snippet, user_id: scope.user.id }, on_conflict: :nothing)
+    Snippet
+    |> where(id: ^snippet.id)
+    |> Repo.update_all(inc: [views: 1])
 
     broadcast_snippet(scope, {:updated, snippet})
     {:ok, snippet}
   end
 
+  def like_snippet(%Scope{} = scope, snippet) do
+    Repo.insert(%Like{snippet: snippet, user_id: scope.user.id}, on_conflict: :nothing)
+
+    broadcast_snippet(scope, {:updated, snippet})
+    {:ok, snippet}
+  end
 
   @doc """
   Subscribes to scoped notifications about any snippet changes.

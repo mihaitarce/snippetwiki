@@ -71,7 +71,8 @@ defmodule SnippetwikiWeb.SnippetLive.Index do
   @impl true
   def handle_info({type, %Snippetwiki.Snippets.Snippet{}}, socket)
       when type in [:created, :updated, :deleted] do
-    {:noreply, stream(socket, :snippets, list_snippets(socket.assigns.current_scope), reset: true)}
+    {:noreply,
+     stream(socket, :snippets, list_snippets(socket.assigns.current_scope), reset: true)}
   end
 
   defp list_snippets(current_scope) do

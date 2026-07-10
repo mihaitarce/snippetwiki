@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import { useAppTheme } from "./useAppTheme";
 import { SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 // Or, you can use ariakit, shadcn, etc.
 import { BlockNoteView } from "@blocknote/mantine";
@@ -22,8 +23,8 @@ function initials(name) {
 }
 
 async function getInternalLinkMenuItems(editor) {
-  results = await fetch(pathPrefix + "/api/snippets")
-  json = await results.json()
+  const results = await fetch(pathPrefix + "/api/snippets")
+  const json = await results.json()
 
   return json.data.snippets.map((snippet) => ({
     title: snippet.title,
@@ -60,6 +61,7 @@ export default function Editor({ textarea, options }) {
   }, [])
 
   const editor = useCreateBlockNote(options);
+  const theme = useAppTheme();
 
   // Render the editor
   return (<div className="textarea w-full min-h-38 relative mt-4">
@@ -70,7 +72,7 @@ export default function Editor({ textarea, options }) {
           {usersPresent.map((u) => <div key={u.name} className="badge" style={{backgroundColor: u.color}}>{initials(u.name)}</div>)}
       </div>}
 
-      <BlockNoteView editor={editor}>
+      <BlockNoteView editor={editor} theme={theme}>
         {/* TODO Upload image or select from existing images */}
         
         {/* TODO Upload file or select from existing files (PDF) */}

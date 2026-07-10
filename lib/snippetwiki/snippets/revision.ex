@@ -4,8 +4,10 @@ defmodule Snippetwiki.Snippets.Revision do
 
   schema "revisions" do
     belongs_to :snippet, Snippetwiki.Snippets.Snippet
+
     many_to_many :authors, Snippetwiki.Snippets.User,
       join_through: Snippetwiki.Snippets.RevisionAuthor
+
     field :version, :integer
     field :content, :string
     field :content_type, :string, default: "application/vnd.blocknote+json"
@@ -20,7 +22,6 @@ defmodule Snippetwiki.Snippets.Revision do
     |> validate_required([:content, :snippet_id, :authors])
   end
 end
-
 
 defmodule Snippetwiki.Snippets.RevisionAuthor do
   use Ecto.Schema

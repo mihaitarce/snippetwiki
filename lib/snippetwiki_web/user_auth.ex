@@ -66,8 +66,9 @@ defmodule SnippetwikiWeb.UserAuth do
   Will reissue the session token if it is older than the configured age.
   """
   def fetch_current_scope_for_user(conn, _opts) do
-    headers = ["x-authenticated-user", "x-authenticated-group"]
-      |> Enum.map(fn h -> {h, conn |> get_req_header(h) |> List.first} end)
+    headers =
+      ["x-authenticated-user", "x-authenticated-group"]
+      |> Enum.map(fn h -> {h, conn |> get_req_header(h) |> List.first()} end)
       |> Enum.filter(fn {_, v} -> v != nil end)
 
     scope = UserAuth.process_auth_headers(headers)
@@ -75,7 +76,7 @@ defmodule SnippetwikiWeb.UserAuth do
     if is_nil(scope) do
       # Website-based login flow
       with {token, conn} <- ensure_user_token(conn),
-          {user, token_inserted_at} <- Snippets.get_user_by_session_token(token) do
+           {user, token_inserted_at} <- Snippets.get_user_by_session_token(token) do
         conn
         |> assign(:current_scope, Scope.for_user(user))
         |> maybe_reissue_user_session_token(user, token_inserted_at)
@@ -85,6 +86,7 @@ defmodule SnippetwikiWeb.UserAuth do
     else
       # Header-based login flow
       user = Snippets.get_user_by_email(scope.user.email)
+
       if is_nil(user) do
         user = Snippets.create_user!(scope.user.email)
         updated_scope = Map.update!(scope, :user, fn u -> Map.put(u, :id, user.id) end)
@@ -287,6 +289,7 @@ defmodule SnippetwikiWeb.UserAuth do
       end)
     else
       user = Snippets.get_user_by_email(scope.user.email)
+
       if is_nil(user) do
         user = Snippets.create_user!(scope.user.email)
         updated_scope = Map.update!(scope, :user, fn u -> Map.put(u, :id, user.id) end)

@@ -6,13 +6,28 @@ defmodule SnippetwikiWeb.SnippetComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="card bg-base-100">
+    <div class={[
+      "card group bg-base-100 border transition-shadow",
+      @editing && "border-primary/30 ring-1 ring-primary/20 shadow-md",
+      !@editing && "border-base-300/60 shadow-sm hover:shadow-md"
+    ]}>
       <%= if @editing do %>
-        <.form for={@form} class="card-body z-1 p-4 sm:p-6" phx-change="validate" phx-submit="save_changes" phx-target={@myself}>
+        <.form
+          for={@form}
+          class="card-body z-1 p-4 sm:p-6"
+          phx-change="validate"
+          phx-submit="save_changes"
+          phx-target={@myself}
+        >
           <div class="flex justify-between gap-2 items-start relative z-10">
             <%= if @new_snippet and is_nil(@snippet.namespace) do %>
               <div class="flex flex-col gap-2 min-w-0 flex-1 [&_.fieldset]:mb-0">
-                <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full min-w-0" />
+                <.input
+                  id={"title-#{@snippet.id}"}
+                  type="text"
+                  field={@form[:title]}
+                  class="title text-2xl input input-lg w-full min-w-0"
+                />
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-base-content/60 shrink-0">Save to</span>
                   <.bag_indicator
@@ -27,48 +42,75 @@ defmodule SnippetwikiWeb.SnippetComponent do
             <% else %>
               <div class="min-w-0 flex-1 [&_.fieldset]:mb-0">
                 <%= if is_nil(@snippet.namespace) do %>
-                  <.input id={"title-#{@snippet.id}"} type="text" field={@form[:title]} class="title text-2xl input input-lg w-full min-w-0" />
+                  <.input
+                    id={"title-#{@snippet.id}"}
+                    type="text"
+                    field={@form[:title]}
+                    class="title text-2xl input input-lg w-full min-w-0"
+                  />
                 <% else %>
-                  <h1 class="text-2xl sm:text-3xl truncate min-w-0 leading-tight" title={@snippet.title}>{@snippet.namespace}:{@snippet.title}</h1>
+                  <h1
+                    class="text-2xl sm:text-3xl truncate min-w-0 leading-tight"
+                    title={@snippet.title}
+                  >
+                    {@snippet.namespace}:{@snippet.title}
+                  </h1>
                 <% end %>
               </div>
             <% end %>
 
             <div class="flex flex-col-reverse sm:flex-row gap-1 py-1">
-              <.button type="button" variant="error"
+              <.button
+                square
+                type="button"
+                variant="error"
                 phx-click="delete"
                 phx-target={@myself}
-                data-confirm="Are you sure? This action cannot be undone.">
-                <.icon name="hero-trash" class="size-6" />
+                data-confirm="Are you sure? This action cannot be undone."
+              >
+                <.icon name="hero-trash" class="size-5" />
               </.button>
 
               <%= if is_nil(@snippet.namespace) do %>
-                <.button type="submit" variant="success">
-                  <.icon name="hero-check" class="size-7" />
+                <.button square type="submit" variant="success">
+                  <.icon name="hero-check" class="size-5" />
                 </.button>
-                <%!-- <.button phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
+                <%!-- <.button square phx-disable-with="Saving..." variant="primary">Save Snippet</.button> --%>
               <% end %>
 
-              <.button type="button" phx-click="discard_changes" phx-target={@myself}>
-                <.icon name="hero-x-mark" class="size-7" />
+              <.button square type="button" phx-click="discard_changes" phx-target={@myself}>
+                <.icon name="hero-x-mark" class="size-5" />
               </.button>
-              <%!-- <.button navigate={return_path(@return_to, @snippet)}>Cancel</.button> --%>
+              <%!-- <.button square navigate={return_path(@return_to, @snippet)}>Cancel</.button> --%>
             </div>
           </div>
 
           <%= if is_nil(@snippet.content_type) or @snippet.content_type == "application/vnd.blocknote+json" do %>
             <.input id={"content-#{@snippet.id}"} field={@form[:content]} type="textarea" />
-            <div id={"editor-#{@snippet.id}"} phx-hook="Editor" phx-update="ignore"
-                 data-id={@snippet.id} data-username={@current_scope.user.email}></div>
-            <div class="text-lg text-base-content/30">Type '/' for commands, '[' for linking to other articles.</div>
+            <div
+              id={"editor-#{@snippet.id}"}
+              phx-hook="Editor"
+              phx-update="ignore"
+              data-id={@snippet.id}
+              data-username={@current_scope.user.email}
+            >
+            </div>
+            <div class="text-sm text-base-content/40">
+              Type '/' for commands, '[' for linking to other articles.
+            </div>
           <% end %>
 
           <%= if @snippet.content_type == "image/jpeg" do %>
-            <img src={get_file_url(@snippet.title)} alt={@snippet.title}>
+            <img src={get_file_url(@snippet.title)} alt={@snippet.title} />
           <% end %>
 
           <%= if @snippet.content_type == "application/pdf" do %>
-            <iframe src={get_file_url(@snippet.title)} title={@snippet.title} class="w-full aspect-square"></iframe>
+            <iframe
+              src={get_file_url(@snippet.title)}
+              title={@snippet.title}
+              class="w-full aspect-square"
+            >
+            </iframe>
           <% end %>
         </.form>
       <% else %>
@@ -77,7 +119,11 @@ defmodule SnippetwikiWeb.SnippetComponent do
             <div class="min-w-0 flex-1">
               <%= if @snippet.namespace do %>
                 <h1 class="text-2xl sm:text-3xl leading-tight break-words" title={@snippet.title}>
-                  {@snippet.namespace}:{@snippet.title}<.bag_indicator inline bag={@snippet.bag} snippet_id={@snippet.id} />
+                  {@snippet.namespace}:{@snippet.title}<.bag_indicator
+                    inline
+                    bag={@snippet.bag}
+                    snippet_id={@snippet.id}
+                  />
                 </h1>
               <% else %>
                 <h1 class="text-2xl sm:text-3xl leading-tight break-words">
@@ -85,43 +131,51 @@ defmodule SnippetwikiWeb.SnippetComponent do
                 </h1>
               <% end %>
             </div>
-            <div class="flex flex-col-reverse justify-end sm:flex-row gap-1 py-1">
+            <div class="flex flex-col-reverse justify-end sm:flex-row gap-1 py-1 xl:opacity-60 xl:group-hover:opacity-100 xl:focus-within:opacity-100 transition-opacity">
               <%= if is_nil(@snippet.namespace) do %>
-                <%!-- <.button phx-click="talk_page" phx-value-title={@snippet.title}>
+                <%!-- <.button square phx-click="talk_page" phx-value-title={@snippet.title}>
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />
                 </.button> --%>
               <% end %>
 
               <%= if @snippet.namespace == "File" do %>
-                <a href={~p"/files/#{@snippet.title}"} target="_blank"
-                   class="btn btn-ghost btn-square btn-soft btn-primary">
-                  <.icon name="hero-arrow-down-tray" class="size-6" />
+                <a
+                  href={~p"/files/#{@snippet.title}"}
+                  target="_blank"
+                  class="btn btn-ghost btn-square btn-soft btn-primary"
+                >
+                  <.icon name="hero-arrow-down-tray" class="size-5" />
                 </a>
               <% end %>
 
               <%= if is_nil(@snippet.namespace) or @snippet.namespace == "File" do %>
                 <%= if @snippet.has_draft do %>
-                  <.button phx-click="edit_snippet" phx-value-id={@snippet.id} variant="warning"
-                           title="Someone has started editing this snippet.">
-                    <.icon name="hero-pencil" class="size-6" />
+                  <.button
+                    square
+                    phx-click="edit_snippet"
+                    phx-value-id={@snippet.id}
+                    variant="warning"
+                    title="Someone has started editing this snippet."
+                  >
+                    <.icon name="hero-pencil" class="size-5" />
                   </.button>
                 <% else %>
-                  <.button phx-click="edit_snippet" phx-value-id={@snippet.id}>
-                    <.icon name="hero-pencil" class="size-6" />
+                  <.button square phx-click="edit_snippet" phx-value-id={@snippet.id}>
+                    <.icon name="hero-pencil" class="size-5" />
                   </.button>
                 <% end %>
               <% end %>
 
-              <.button phx-click="close_snippet" phx-value-id={@snippet.id}>
-                <.icon name="hero-x-mark" class="size-7" />
+              <.button square phx-click="close_snippet" phx-value-id={@snippet.id}>
+                <.icon name="hero-x-mark" class="size-5" />
               </.button>
             </div>
           </div>
 
           <%= if is_nil(@snippet.content) do %>
             <div class="flex items-center justify-center p-10.5">
-                <p class="text-lg text-center text-base-content/30">Empty snippet</p>
-              </div>
+              <p class="text-lg text-center text-base-content/30">Empty snippet</p>
+            </div>
           <% else %>
             <%= if @snippet.content_type == "application/vnd.blocknote+json" do %>
               <textarea class="hidden">{@snippet.content}</textarea>
@@ -129,24 +183,46 @@ defmodule SnippetwikiWeb.SnippetComponent do
             <% end %>
 
             <%= if @snippet.content_type == "image/jpeg" do %>
-              <img src={get_file_url(@snippet.title)} alt={@snippet.title}>
+              <img src={get_file_url(@snippet.title)} alt={@snippet.title} />
             <% end %>
 
             <%= if @snippet.content_type == "application/pdf" do %>
-              <iframe src={get_file_url(@snippet.title)} title={@snippet.title} class="w-full aspect-square"></iframe>
+              <iframe
+                src={get_file_url(@snippet.title)}
+                title={@snippet.title}
+                class="w-full aspect-square"
+              >
+              </iframe>
             <% end %>
           <% end %>
 
           <%= if is_nil(@snippet.namespace) do %>
-            <div class="flex items-center gap-6 mt-2">
-                <div class="flex items-center gap-2">
-                  <.icon name="hero-eye" />
-                  <div id={"views-#{@snippet.id}"} phx-hook="Number" data-number={@snippet.views} phx-update="ignore"></div>
+            <div class="flex items-center gap-4 mt-2 text-base-content/60">
+              <div class="flex items-center gap-1.5 px-1" title="Views">
+                <.icon name="hero-eye" class="size-4" />
+                <div
+                  id={"views-#{@snippet.id}"}
+                  phx-hook="Number"
+                  data-number={@snippet.views}
+                  phx-update="ignore"
+                >
                 </div>
-                <button class="btn" phx-click="like_snippet" phx-target={@myself}>
-                  <.icon name="hero-hand-thumb-up" />
-                  <div id={"likes-#{@snippet.id}"} phx-hook="Number" data-number={@snippet.like_count} phx-update="ignore"></div>
-                </button>
+              </div>
+              <button
+                class="btn btn-ghost btn-sm gap-1.5 text-base-content/60 hover:text-primary transition-colors"
+                phx-click="like_snippet"
+                phx-target={@myself}
+                title="Like"
+              >
+                <.icon name="hero-hand-thumb-up" class="size-4" />
+                <div
+                  id={"likes-#{@snippet.id}"}
+                  phx-hook="Number"
+                  data-number={@snippet.like_count}
+                  phx-update="ignore"
+                >
+                </div>
+              </button>
             </div>
           <% end %>
         </div>
@@ -173,7 +249,11 @@ defmodule SnippetwikiWeb.SnippetComponent do
 
     socket =
       if needs_form do
-        assign(socket, :form, to_form(Snippets.change_snippet(assigns.current_scope, assigns.snippet)))
+        assign(
+          socket,
+          :form,
+          to_form(Snippets.change_snippet(assigns.current_scope, assigns.snippet))
+        )
       else
         socket
       end
@@ -183,13 +263,8 @@ defmodule SnippetwikiWeb.SnippetComponent do
 
   @impl true
   def handle_event("like_snippet", _, socket) do
-    case Snippets.like_snippet(socket.assigns.current_scope, socket.assigns.snippet) do
-      {:ok, _} ->
-        {:noreply, socket}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Unable to like snippet.")}
-    end
+    {:ok, _} = Snippets.like_snippet(socket.assigns.current_scope, socket.assigns.snippet)
+    {:noreply, socket}
   end
 
   @impl true
@@ -213,7 +288,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
               "#{field} #{Enum.join(errors, ", ")}"
             end)
 
-          {:noreply, put_flash(socket, :error, "Could not change bag: #{message}")}
+          {:noreply, notify_flash(socket, :error, "Could not change bag: #{message}")}
       end
     end
   end
@@ -221,7 +296,11 @@ defmodule SnippetwikiWeb.SnippetComponent do
   @impl true
   def handle_event("validate", %{"snippet" => snippet_params}, socket) do
     changeset =
-      Snippets.change_snippet(socket.assigns.current_scope, socket.assigns.snippet, snippet_params)
+      Snippets.change_snippet(
+        socket.assigns.current_scope,
+        socket.assigns.snippet,
+        snippet_params
+      )
 
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
@@ -247,29 +326,22 @@ defmodule SnippetwikiWeb.SnippetComponent do
         {:noreply,
          socket
          |> assign(:snippet, snippet)
-         |> put_flash(:info, "Snippet updated successfully")}
+         |> notify_flash(:info, "Snippet updated successfully")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Unable to save snippet. Please try again.")}
+        {:noreply, notify_flash(socket, :error, "Unable to save snippet. Please try again.")}
     end
   end
 
   @impl true
   def handle_event("discard_changes", _, socket) do
-    case Snippets.discard_draft(socket.assigns.current_scope, socket.assigns.snippet) do
-      {:ok, snippet} ->
-        send(self(), {:stop_editing, snippet})
+    {:ok, snippet} = Snippets.discard_draft(socket.assigns.current_scope, socket.assigns.snippet)
+    send(self(), {:stop_editing, snippet})
 
-        {:noreply,
-         socket
-         |> assign(:snippet, snippet)}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Unable to discard changes.")}
-    end
+    {:noreply, assign(socket, :snippet, snippet)}
   end
 
   @impl true
@@ -279,12 +351,20 @@ defmodule SnippetwikiWeb.SnippetComponent do
         {:noreply, socket}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Unable to delete snippet.")}
+        {:noreply, notify_flash(socket, :error, "Unable to delete snippet.")}
     end
+  end
+
+  # put_flash/3 on a LiveComponent socket is discarded; flashes must be set on
+  # the parent LiveView, so hand them over as a message.
+  defp notify_flash(socket, kind, msg) do
+    send(self(), {:flash, kind, msg})
+    socket
   end
 
   defp get_file_url(title) do
     prefix_path = Application.get_env(:snippetwiki, SnippetwikiWeb.Endpoint)[:url][:path]
+
     if prefix_path == "/" do
       "/files/#{title}"
     else
@@ -323,7 +403,9 @@ defmodule SnippetwikiWeb.SnippetComponent do
           !@inline && "shrink-0"
         ]}
         title="The collection this article belongs to"
-      >{@bag}</span>
+      >
+        {@bag}
+      </span>
     <% end %>
     """
   end

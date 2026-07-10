@@ -27,14 +27,14 @@ services:
     networks:
       - snippetwiki-net
 
-  adminer:
-    image: adminer
-    container_name: snippetwiki-adminer
-    restart: always
-    ports:
-      - ${ADMINER_PORT}:8080
-    networks:
-      - snippetwiki-net
+  # adminer:
+  #   image: adminer
+  #   container_name: snippetwiki-adminer
+  #   restart: always
+  #   ports:
+  #     - ${ADMINER_PORT}:8080
+  #   networks:
+  #     - snippetwiki-net
       
   app:
     build: .

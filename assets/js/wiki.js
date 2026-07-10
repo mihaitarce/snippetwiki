@@ -59,6 +59,34 @@ function normalizeHashTitle(rawTitle) {
 
 export const hooks = {
     WikiHashOpen: {
+        // Also persists the set of open snippet cards so a page reload
+        // restores the reading session instead of dropping it.
+        persistOpenSnippets() {
+            const ids = Array
+                .from(document.querySelectorAll('#article-stream > div[id^="snippet-"]'))
+                .map(el => parseInt(el.id.replace("snippet-", ""), 10))
+                .filter(Number.isInteger)
+
+            try {
+                localStorage.setItem("wiki:openSnippets", JSON.stringify(ids))
+            } catch {
+                // Storage full or unavailable; persistence is best-effort.
+            }
+        },
+
+        restoreOpenSnippets() {
+            let ids
+            try {
+                ids = JSON.parse(localStorage.getItem("wiki:openSnippets") || "[]")
+            } catch {
+                return
+            }
+
+            if (Array.isArray(ids) && ids.length > 0) {
+                this.pushEvent("restore_open", {ids})
+            }
+        },
+
         mounted() {
             this.clearHashFromUrl = () => {
                 if (!window.location.hash) {
@@ -99,10 +127,19 @@ export const hooks = {
 
             this.openFromHash()
             window.addEventListener("hashchange", this.openFromHash)
+
+            this.restoreOpenSnippets()
+
+            const stream = document.getElementById("article-stream")
+            if (stream) {
+                this.openObserver = new MutationObserver(() => this.persistOpenSnippets())
+                this.openObserver.observe(stream, {childList: true})
+            }
         },
 
         destroyed() {
             window.removeEventListener("hashchange", this.openFromHash)
+            this.openObserver?.disconnect()
         }
     },
 

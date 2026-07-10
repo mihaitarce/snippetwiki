@@ -115,14 +115,14 @@ pre,
   font-family: 'Noto Sans Mono Variable', monospace;
 }
 
-a:not(.btn) {
+a:not(.btn):not(.menu *) {
   color: var(--color-primary);
   text-decoration: underline;
   font-weight: 500;
   cursor: pointer;
 }
 
-a:not(.btn):hover {
+a:not(.btn):not(.menu *):hover {
   background-color: var(--color-primary-content);
 }
 
@@ -155,42 +155,4 @@ h1, h1 *,
 
 .bn-editor-readonly .bn-editor > .bn-block-group > .bn-block-outer:last-child {
   display: none;
-}
-
-/* Wiki mobile: compact sidebar tabs + embed below tab bar */
-@media (max-width: 1279px) {
-  .wiki-sidebar-tabs.tabs.tabs-box > .tab {
-    font-size: 0.75rem;
-    padding-inline: 0.625rem;
-  }
-
-  .wiki-sidebar-tabs.tabs.tabs-box {
-    flex-wrap: wrap;
-    align-content: flex-start;
-  }
-
-  .wiki-sidebar-tabs.tabs.tabs-box > .tab-content {
-    flex-basis: 100%;
-    width: 100%;
-    order: 10;
-  }
-
-  /* top tab row + bottom nav (h-14) + gap; wrapper sits below tabs */
-  #wikirag-embed-wrapper.tab-content {
-    box-sizing: border-box;
-    height: calc(
-      100svh - 5rem - 3.5rem - 0.75rem - env(safe-area-inset-bottom, 0px)
-    );
-    max-height: calc(
-      100svh - 5rem - 3.5rem - 0.75rem - env(safe-area-inset-bottom, 0px)
-    );
-    overflow: hidden;
-  }
-
-  #wikirag-embed {
-    display: block;
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
-  }
 }

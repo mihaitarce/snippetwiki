@@ -17,7 +17,18 @@ defmodule SnippetwikiWeb.SnippetLive.Form do
         <.input field={@form[:title]} type="text" label="Title" />
 
         <.input field={@form[:content]} type="textarea" label="Content" class="hidden" />
-        <div id={if @snippet.id do "editor-#{@snippet.id}" else "editor-new" end} phx-hook="BlockNote" phx-update="ignore"></div>
+        <div
+          id={
+            if @snippet.id do
+              "editor-#{@snippet.id}"
+            else
+              "editor-new"
+            end
+          }
+          phx-hook="BlockNote"
+          phx-update="ignore"
+        >
+        </div>
 
         <.input field={@form[:has_draft]} type="checkbox" label="Has draft" />
         <.input field={@form[:views]} type="number" label="Views" />
@@ -61,7 +72,13 @@ defmodule SnippetwikiWeb.SnippetLive.Form do
 
   @impl true
   def handle_event("validate", %{"snippet" => snippet_params}, socket) do
-    changeset = Snippets.change_snippet(socket.assigns.current_scope, socket.assigns.snippet, snippet_params)
+    changeset =
+      Snippets.change_snippet(
+        socket.assigns.current_scope,
+        socket.assigns.snippet,
+        snippet_params
+      )
+
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -70,7 +87,11 @@ defmodule SnippetwikiWeb.SnippetLive.Form do
   end
 
   defp save_snippet(socket, :edit, snippet_params) do
-    case Snippets.update_snippet(socket.assigns.current_scope, socket.assigns.snippet, snippet_params) do
+    case Snippets.update_snippet(
+           socket.assigns.current_scope,
+           socket.assigns.snippet,
+           snippet_params
+         ) do
       {:ok, snippet} ->
         {:noreply,
          socket

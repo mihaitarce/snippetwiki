@@ -91,6 +91,7 @@ defmodule SnippetwikiWeb.CoreComponents do
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
   attr :class, :any
   attr :variant, :string, values: ~w(primary success warning error)
+  attr :square, :boolean, default: false, doc: "renders a square icon button"
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
@@ -104,7 +105,7 @@ defmodule SnippetwikiWeb.CoreComponents do
 
     assigns =
       assign_new(assigns, :class, fn ->
-        ["btn", "btn-square", Map.fetch!(variants, assigns[:variant])]
+        ["btn", assigns.square && "btn-square", Map.fetch!(variants, assigns[:variant])]
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
@@ -282,7 +283,7 @@ defmodule SnippetwikiWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div class="fieldset mb-2">
-      <label class="w-full")>
+      <label class="w-full" )>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input
           type={@type}

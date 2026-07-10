@@ -31,8 +31,7 @@ defmodule YPhoenixWeb.UserSocket do
   def connect(_params, socket, connect_info) do
     scope = UserAuth.process_auth_headers(connect_info.x_headers)
 
-    {:ok,
-     socket |> assign(:current_scope, scope)}
+    {:ok, socket |> assign(:current_scope, scope)}
   end
 
   # Socket IDs are topics that allow you to identify all sockets for a given user:

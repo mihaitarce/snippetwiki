@@ -35,34 +35,26 @@ defmodule SnippetwikiWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
+    <header class="navbar gap-2 border-b border-base-300 bg-base-100 px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+        <a href={~p"/"} class="flex w-fit items-center gap-2" title="Back to the wiki">
+          <img src={~p"/images/logo.svg"} alt="snippetwiki" width="36" />
+          <span class="font-serif text-lg">SnippetWiki</span>
         </a>
       </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
-          </li>
-        </ul>
+      <div class="flex flex-none items-center gap-3">
+        <span
+          :if={@current_scope}
+          class="badge badge-primary badge-soft badge-sm hidden max-w-48 truncate sm:inline-flex"
+          title={@current_scope.user.email}
+        >
+          {@current_scope.user.email}
+        </span>
+        <.theme_toggle />
       </div>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
+    <main class="px-4 py-16 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
         {render_slot(@inner_block)}
       </div>
@@ -72,11 +64,33 @@ defmodule SnippetwikiWeb.Layouts do
     """
   end
 
+  @doc """
+  App shell for the wiki screen: full-width header on top, a flex row for
+  sidebar / article stream / Ask panel, and a fixed bottom nav on mobile.
+
+  The middle row reserves space for the mobile bottom nav via padding so
+  scrollable children never hide behind it.
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+
+  slot :header
+  slot :bottom
+  slot :inner_block, required: true
+
   def wiki(assigns) do
     ~H"""
-    <main role="main" class="flex h-svh w-full min-h-0 flex-col overflow-hidden transition-colors xl:flex-row xl:items-stretch">
-      {render_slot(@inner_block)}
-    </main>
+    <div class="flex h-svh min-h-0 w-full flex-col overflow-hidden bg-base-200 transition-colors">
+      {render_slot(@header)}
+
+      <main
+        role="main"
+        class="flex min-h-0 w-full flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] xl:pb-0"
+      >
+        {render_slot(@inner_block)}
+      </main>
+
+      {render_slot(@bottom)}
+    </div>
 
     <.flash_group flash={@flash} />
     """

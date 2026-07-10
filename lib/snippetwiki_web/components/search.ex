@@ -6,28 +6,41 @@ defmodule SnippetwikiWeb.SearchComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <form class="dropdown dropdown-end w-full" onsubmit="event.preventDefault()">
-        <label tabIndex={0} role="button" class="input w-full">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                  stroke="currentColor"
-                  class="h-[1em] opacity-50">
-                <path strokeLinecap="round" strokeLinejoin="round"
-                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-            </svg>
-            <input name="query" type="search" class="grow" placeholder="Search" autocomplete="off"
-                   phx-change="search" phx-target={@myself} phx-debounce="200" />
-        </label>
-        <ul tabIndex={-1} class="dropdown-content bg-base-100 rounded-box shadow-sm z-1 p-2 mt-3 w-full text-base-content/70">
-          <%= if Enum.empty?(@results) do %>
-            <div class="text-base-content/50 italic px-2">No matches found</div>
-          <% else %>
-            <li :for={result <- @results} id={"search-result-#{result.id}"}
-              class="px-2 py-1 truncate hover:bg-primary-content/70 hover:text-primary/70"
-              phx-click="open_snippet" phx-value-id={result.id}>
-              <a>{result.title}</a>
-            </li>
-          <% end %>
-        </ul>
+    <form id={@id} class="dropdown w-full" onsubmit="event.preventDefault()">
+      <label tabindex="0" role="button" class="input input-sm sm:input-md w-full">
+        <.icon name="hero-magnifying-glass" class="size-4 shrink-0 opacity-50" />
+        <input
+          name="query"
+          type="search"
+          class="grow min-w-0"
+          placeholder="Search articles…"
+          autocomplete="off"
+          phx-change="search"
+          phx-target={@myself}
+          phx-debounce="200"
+        />
+      </label>
+      <ul
+        tabindex="-1"
+        class="dropdown-content menu z-40 mt-2 w-full rounded-box border border-base-300/60 bg-base-100 p-2 shadow-lg"
+      >
+        <%= if Enum.empty?(@results) do %>
+          <li class="pointer-events-none px-2 py-1 italic text-base-content/50">No matches found</li>
+        <% else %>
+          <li :for={result <- @results} id={"search-result-#{result.id}"}>
+            <button
+              type="button"
+              class="truncate rounded-field px-2 py-1.5 text-left transition-colors hover:bg-base-200 hover:text-primary"
+              phx-click={
+                JS.push("open_snippet", value: %{id: to_string(result.id)})
+                |> JS.dispatch("blur")
+              }
+            >
+              {result.title}
+            </button>
+          </li>
+        <% end %>
+      </ul>
     </form>
     """
   end
@@ -36,12 +49,13 @@ defmodule SnippetwikiWeb.SearchComponent do
   def update(assigns, socket) do
     {:ok,
      socket
+     |> assign(:id, assigns.id)
      |> assign(:current_scope, assigns.current_scope)
      |> assign(:results, [])}
   end
 
   @impl true
-  def handle_event("search", %{ "query" => query }, socket) do
+  def handle_event("search", %{"query" => query}, socket) do
     if String.length(query) > 0 do
       {:noreply,
        assign(socket, :results, Snippets.search_snippets(socket.assigns.current_scope, query))}

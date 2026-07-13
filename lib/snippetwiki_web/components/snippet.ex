@@ -172,7 +172,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
             </div>
           </div>
 
-          <%= if is_nil(@snippet.content) do %>
+          <%= if blank_content?(@snippet) do %>
             <div class="flex items-center justify-center p-10.5">
               <p class="text-lg text-center text-base-content/30">Empty snippet</p>
             </div>
@@ -369,6 +369,30 @@ defmodule SnippetwikiWeb.SnippetComponent do
     send(self(), {:flash, kind, msg})
     socket
   end
+
+  # An article counts as empty when it has no content at all, or when its
+  # BlockNote document contains only text blocks with nothing in them
+  # (saving a cleared editor stores an empty-paragraph doc, not nil).
+  defp blank_content?(%{content: nil}), do: true
+
+  defp blank_content?(%{content: content, content_type: type})
+       when type in [nil, "application/vnd.blocknote+json"] do
+    case Jason.decode(content) do
+      {:ok, blocks} when is_list(blocks) -> not Enum.any?(blocks, &block_has_content?/1)
+      _ -> String.trim(content) == ""
+    end
+  end
+
+  defp blank_content?(_snippet), do: false
+
+  @text_block_types ~w(paragraph heading quote bulletListItem numberedListItem codeBlock)
+
+  defp block_has_content?(%{"type" => type, "content" => content})
+       when type in @text_block_types and is_list(content),
+       do: content != []
+
+  # Non-text blocks (images, files, tables, ...) always count as content.
+  defp block_has_content?(_block), do: true
 
   defp get_file_url(title) do
     prefix_path = Application.get_env(:snippetwiki, SnippetwikiWeb.Endpoint)[:url][:path]

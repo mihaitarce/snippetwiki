@@ -1,6 +1,5 @@
 import React from "react"
 import { InternalLink } from "./InternalLink";
-import { useAppTheme } from "./useAppTheme";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteSchema, createHeadingBlockSpec, defaultInlineContentSpecs } from "@blocknote/core";
 // Or, you can use ariakit, shadcn, etc.
@@ -38,9 +37,8 @@ export default function Viewer({ id, textarea }) {
     }
 
     const editor = useCreateBlockNote(options);
-    const theme = useAppTheme();
 
     return (<div className="bn-editor-readonly">
-        <BlockNoteView editor={editor} editable={false} theme={theme} />
+        <BlockNoteView editor={editor} editable={false} theme="light" />
     </div>)
 }

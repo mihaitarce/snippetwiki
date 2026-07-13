@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-import { useAppTheme } from "./useAppTheme";
 import { SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 // Or, you can use ariakit, shadcn, etc.
 import { BlockNoteView } from "@blocknote/mantine";
@@ -61,7 +60,6 @@ export default function Editor({ textarea, options }) {
   }, [])
 
   const editor = useCreateBlockNote(options);
-  const theme = useAppTheme();
 
   // Render the editor
   return (<div className="textarea w-full min-h-38 relative mt-4">
@@ -72,7 +70,7 @@ export default function Editor({ textarea, options }) {
           {usersPresent.map((u) => <div key={u.name} className="badge" style={{backgroundColor: u.color}}>{initials(u.name)}</div>)}
       </div>}
 
-      <BlockNoteView editor={editor} theme={theme}>
+      <BlockNoteView editor={editor} theme="light">
         {/* TODO Upload image or select from existing images */}
         
         {/* TODO Upload file or select from existing files (PDF) */}

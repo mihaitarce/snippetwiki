@@ -147,6 +147,35 @@ defmodule SnippetwikiWeb.SnippetWikiLiveTest do
       assert has_element?(view, "#snippet-#{snippet.id}")
       assert Snippets.get_snippet!(scope, snippet.id).views == snippet.views
     end
+
+    test "a restored session takes precedence over the Welcome fallback", %{
+      conn: conn,
+      scope: scope,
+      snippet: snippet
+    } do
+      welcome = snippet_fixture(scope, %{title: "Welcome", has_draft: false})
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      render_hook(view, "restore_open", %{"ids" => [snippet.id]})
+
+      assert has_element?(view, "#snippet-#{snippet.id}")
+      refute has_element?(view, "#snippet-#{welcome.id}")
+    end
+
+    test "an empty saved session falls back to the Welcome article", %{
+      conn: conn,
+      scope: scope
+    } do
+      welcome = snippet_fixture(scope, %{title: "Welcome", has_draft: false})
+
+      {:ok, view, _html} = live(conn, ~p"/")
+      refute has_element?(view, "#snippet-#{welcome.id}")
+
+      render_hook(view, "restore_open", %{"ids" => []})
+
+      assert has_element?(view, "#snippet-#{welcome.id}")
+    end
   end
 
   describe "component flashes" do
@@ -190,6 +219,24 @@ defmodule SnippetwikiWeb.SnippetWikiLiveTest do
       render_hook(view, "open_initial", %{"value" => %{"title" => "Ghost article", "bag" => bag}})
 
       assert view |> element("#missing-article-modal") |> render() =~ "Ghost article"
+    end
+  end
+
+  describe "empty articles" do
+    setup [:create_article]
+
+    test "an empty BlockNote document shows the Empty snippet placeholder", %{
+      conn: conn,
+      scope: scope,
+      snippet: snippet
+    } do
+      empty_doc = ~s([{"id":"a","type":"paragraph","props":{},"content":[],"children":[]}])
+      {:ok, _} = Snippets.create_new_revision(scope, snippet, %{}, empty_doc)
+
+      {:ok, view, _html} = live(conn, ~p"/")
+      render_hook(view, "restore_open", %{"ids" => [snippet.id]})
+
+      assert view |> element("#snippet-#{snippet.id}") |> render() =~ "Empty snippet"
     end
   end
 

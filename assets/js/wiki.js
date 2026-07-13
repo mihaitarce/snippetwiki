@@ -79,12 +79,12 @@ export const hooks = {
             try {
                 ids = JSON.parse(localStorage.getItem("wiki:openSnippets") || "[]")
             } catch {
-                return
+                ids = []
             }
 
-            if (Array.isArray(ids) && ids.length > 0) {
-                this.pushEvent("restore_open", {ids})
-            }
+            // Always report, even an empty list: the server only opens the
+            // Welcome fallback when it knows there is no session to restore.
+            this.pushEvent("restore_open", {ids: Array.isArray(ids) ? ids : []})
         },
 
         mounted() {

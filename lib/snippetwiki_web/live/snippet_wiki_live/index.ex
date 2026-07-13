@@ -39,7 +39,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         <div id="articles-scroll" class="min-w-0 flex-1 overflow-y-auto overscroll-none">
           <div
             id="article-stream"
-            class="mx-auto flex w-full max-w-3xl flex-col gap-3 sm:gap-4 p-3 sm:p-6"
+            class="mx-auto flex w-full max-w-5xl flex-col gap-3 sm:gap-4 p-3 sm:p-6"
           >
             <%= if length(@uploads.documents.entries) > 0 do %>
               <section phx-drop-target={@uploads.documents.ref}>
@@ -161,13 +161,10 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   end
 
   def handle_params(_params, _uri, socket) do
-    socket = assign(socket, bag: nil, pending_deep_link: nil)
-
-    if socket.assigns.open != [] or socket.assigns.missing_article do
-      {:noreply, socket}
-    else
-      {:noreply, maybe_open_welcome(socket)}
-    end
+    # The Welcome fallback is NOT opened here: the client reports its saved
+    # session via "restore_open" right after mount, and Welcome should only
+    # open when that report comes back empty (see the restore_open handler).
+    {:noreply, assign(socket, bag: nil, pending_deep_link: nil)}
   end
 
   @impl true
@@ -453,20 +450,27 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         id && MapSet.member?(known, id) && id not in socket.assigns.open
       end)
 
-    if restored == [] do
-      {:noreply, socket}
-    else
-      # Restoring a previous session is not a new read, so views are not
-      # incremented here (unlike open_snippet_card/2).
-      expanded =
-        socket.assigns.snippets
-        |> Enum.filter(&(&1.id in restored))
-        |> Enum.reduce(socket.assigns.expanded_bags, &MapSet.put(&2, &1.bag))
+    cond do
+      restored != [] ->
+        # Restoring a previous session is not a new read, so views are not
+        # incremented here (unlike open_snippet_card/2).
+        expanded =
+          socket.assigns.snippets
+          |> Enum.filter(&(&1.id in restored))
+          |> Enum.reduce(socket.assigns.expanded_bags, &MapSet.put(&2, &1.bag))
 
-      {:noreply,
-       socket
-       |> assign(:open, socket.assigns.open ++ restored)
-       |> assign(:expanded_bags, expanded)}
+        {:noreply,
+         socket
+         |> assign(:open, socket.assigns.open ++ restored)
+         |> assign(:expanded_bags, expanded)}
+
+      socket.assigns.open == [] and is_nil(socket.assigns.missing_article) ->
+        # Nothing saved and nothing open (fresh visit or cleared session):
+        # fall back to the Welcome article.
+        {:noreply, maybe_open_welcome(socket)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 

@@ -236,9 +236,17 @@ defmodule SnippetwikiWeb.SnippetComponent do
     was_editing = Map.get(socket.assigns, :editing, false)
     prior_snippet_id = get_in(socket.assigns, [:snippet, Access.key(:id)])
 
+    # Content is loaded here rather than by the parent so the query only runs
+    # when this card's assigns actually changed (LiveView skips update/2 for
+    # equal assigns), not on every parent re-render. A nil result means the
+    # snippet was deleted concurrently; keep the last known state and let the
+    # parent's {:deleted} broadcast close the card.
+    snippet =
+      Snippets.with_content(assigns.snippet) || socket.assigns[:snippet] || assigns.snippet
+
     socket =
       socket
-      |> assign(:snippet, assigns.snippet)
+      |> assign(:snippet, snippet)
       |> assign(:current_scope, assigns.current_scope)
       |> assign(:editing, assigns.editing)
       |> assign(:new_snippet, Map.get(assigns, :new_snippet, false))
@@ -252,7 +260,7 @@ defmodule SnippetwikiWeb.SnippetComponent do
         assign(
           socket,
           :form,
-          to_form(Snippets.change_snippet(assigns.current_scope, assigns.snippet))
+          to_form(Snippets.change_snippet(assigns.current_scope, snippet))
         )
       else
         socket

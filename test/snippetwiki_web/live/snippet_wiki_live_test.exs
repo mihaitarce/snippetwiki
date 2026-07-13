@@ -169,6 +169,30 @@ defmodule SnippetwikiWeb.SnippetWikiLiveTest do
     end
   end
 
+  describe "open_initial" do
+    setup [:create_article, :bag]
+
+    test "opens the article from the provided bag", %{
+      conn: conn,
+      snippet: snippet,
+      bag: bag
+    } do
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      render_hook(view, "open_initial", %{"value" => %{"title" => snippet.title, "bag" => bag}})
+
+      assert has_element?(view, "#snippet-#{snippet.id}")
+    end
+
+    test "unknown title in a known bag prompts creation", %{conn: conn, bag: bag} do
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      render_hook(view, "open_initial", %{"value" => %{"title" => "Ghost article", "bag" => bag}})
+
+      assert view |> element("#missing-article-modal") |> render() =~ "Ghost article"
+    end
+  end
+
   describe "search" do
     setup [:create_article]
 
@@ -211,6 +235,22 @@ defmodule SnippetwikiWeb.SnippetWikiLiveTest do
 
       refute has_element?(view, "#missing-article-modal")
       assert view |> element("#article-stream form") |> render() =~ "Never written"
+    end
+
+    test "titles with percent signs survive deep linking undamaged", %{
+      conn: conn,
+      scope: scope,
+      bag: bag
+    } do
+      crashy = snippet_fixture(scope, %{title: "50% off", has_draft: false})
+      encoded = snippet_fixture(scope, %{title: "Test%20name", has_draft: false})
+
+      {:ok, view, _html} = live(conn, ~p"/contents/#{bag}/#{crashy.title}")
+      assert has_element?(view, "#snippet-#{crashy.id}")
+
+      {:ok, view, _html} = live(conn, ~p"/contents/#{bag}/#{encoded.title}")
+      assert has_element?(view, "#snippet-#{encoded.id}")
+      refute has_element?(view, "#missing-article-modal")
     end
 
     test "dismissing the missing article modal keeps the wiki usable", %{conn: conn, bag: bag} do

@@ -320,16 +320,34 @@ defmodule Snippetwiki.Snippets do
 
   """
   def list_snippets(%Scope{} = scope) do
-    likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
+    scope
+    |> snippets_query()
+    |> Repo.all()
+  end
 
-    query =
-      from s in Snippet,
-        as: :snippet,
-        where: s.bag in ^scope.user.bags,
-        select_merge: %{like_count: subquery(likes_count)},
-        order_by: [desc: :updated_at, desc: :id]
+  @doc """
+  Same row shape as `list_snippets/1` but restricted to the given ids,
+  for refreshing individual snippets without reloading the whole bag.
+  """
+  def list_snippets(%Scope{} = scope, ids) when is_list(ids) do
+    scope
+    |> snippets_query()
+    |> where([s], s.id in ^ids)
+    |> Repo.all()
+  end
 
-    Repo.all(query)
+  # The canonical row shape and ordering for bag listings; every variant
+  # must build on this so individually refreshed rows match full reloads.
+  defp snippets_query(%Scope{} = scope) do
+    from s in Snippet,
+      as: :snippet,
+      where: s.bag in ^scope.user.bags,
+      select_merge: %{like_count: subquery(likes_count_subquery())},
+      order_by: [desc: :updated_at, desc: :id]
+  end
+
+  defp likes_count_subquery do
+    from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
   end
 
   def search_snippets(%Scope{} = scope, query_string \\ nil) do
@@ -427,14 +445,12 @@ defmodule Snippetwiki.Snippets do
   end
 
   def with_content(snippet) do
-    likes_count = from(l in Like, where: l.snippet_id == parent_as(:snippet).id, select: count())
-
     query =
       from s in Snippet,
         as: :snippet,
         where: s.id == ^snippet.id,
         left_join: r in assoc(s, :revisions),
-        select_merge: %{like_count: subquery(likes_count)},
+        select_merge: %{like_count: subquery(likes_count_subquery())},
         select_merge: %{content: r.content, content_type: r.content_type},
         order_by: [desc: r.version],
         limit: 1
@@ -532,6 +548,8 @@ defmodule Snippetwiki.Snippets do
     |> where(id: ^snippet.id)
     |> Repo.update_all(set: [has_draft: true])
 
+    snippet = %{snippet | has_draft: true}
+
     broadcast_snippet(scope, {:updated, snippet})
     {:ok, snippet}
   end
@@ -540,6 +558,8 @@ defmodule Snippetwiki.Snippets do
     Snippet
     |> where(id: ^snippet.id)
     |> Repo.update_all(set: [has_draft: false])
+
+    snippet = %{snippet | has_draft: false}
 
     broadcast_snippet(scope, {:updated, snippet})
     {:ok, snippet}
@@ -574,9 +594,16 @@ defmodule Snippetwiki.Snippets do
   end
 
   def increment_views(%Scope{} = scope, snippet) do
-    Snippet
-    |> where(id: ^snippet.id)
-    |> Repo.update_all(inc: [views: 1])
+    # RETURNING gives the exact post-increment counter even under
+    # concurrent bumps; keep the caller's struct if the row vanished.
+    snippet =
+      case Snippet
+           |> where(id: ^snippet.id)
+           |> select([s], s.views)
+           |> Repo.update_all(inc: [views: 1]) do
+        {1, [views]} -> %{snippet | views: views}
+        _ -> snippet
+      end
 
     broadcast_snippet(scope, {:updated, snippet})
     {:ok, snippet}
@@ -584,6 +611,9 @@ defmodule Snippetwiki.Snippets do
 
   def like_snippet(%Scope{} = scope, snippet) do
     Repo.insert(%Like{snippet: snippet, user_id: scope.user.id}, on_conflict: :nothing)
+
+    like_count = Repo.aggregate(from(l in Like, where: l.snippet_id == ^snippet.id), :count)
+    snippet = %{snippet | like_count: like_count}
 
     broadcast_snippet(scope, {:updated, snippet})
     {:ok, snippet}

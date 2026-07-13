@@ -48,23 +48,12 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
             <% end %>
 
             <%= if length(@open) > 0 do %>
-              <div
-                :for={
-                  snippet <-
-                    Enum.filter(
-                      Enum.map(@open, fn snippet_id ->
-                        Enum.find(@snippets, fn snippet -> snippet_id === snippet.id end)
-                      end),
-                      fn s -> s != nil end
-                    )
-                }
-                id={"snippet-#{snippet.id}"}
-              >
+              <div :for={snippet <- open_snippets(@snippets, @open)} id={"snippet-#{snippet.id}"}>
                 <.live_component
                   module={SnippetwikiWeb.SnippetComponent}
                   id={snippet.id}
                   current_scope={@current_scope}
-                  snippet={Snippets.with_content(snippet)}
+                  snippet={snippet}
                   editing={Enum.member?(@editing, snippet.id)}
                   new_snippet={snippet.id in @new_snippets}
                 />
@@ -136,7 +125,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
   @impl true
   def handle_params(%{"scope" => bag, "title" => title}, _uri, socket) do
-    pending = {bag, URI.decode(title)}
+    # Path params arrive already decoded by the router.
+    pending = {bag, title}
 
     if connected?(socket) do
       {:noreply, socket |> apply_deep_link(pending) |> push_patch(to: ~p"/")}
@@ -160,7 +150,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
   def handle_params(%{"title" => title}, _uri, socket) do
     bag = socket.assigns.current_scope.user.bag
-    pending = {bag, URI.decode(title)}
+    # Path params arrive already decoded by the router.
+    pending = {bag, title}
 
     if connected?(socket) do
       {:noreply, socket |> apply_deep_link(pending) |> push_patch(to: ~p"/")}
@@ -240,7 +231,11 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         title = normalize_open_initial_title(raw_title)
         scope = socket.assigns.current_scope
 
-        case Snippets.find_snippet(scope, title) do
+        # Prefer the caller's bag (wikirag sends an explicit one); fall back
+        # to a cross-bag lookup so hash links still resolve titles that live
+        # outside the default bag.
+        case Snippets.find_snippet_in_bag(scope, title, bag) ||
+               Snippets.find_snippet(scope, title) do
           nil ->
             if bag in scope.user.bags do
               {:noreply, assign(socket, :missing_article, {bag, title})}
@@ -521,36 +516,52 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   end
 
   @impl true
-  def handle_info({type, %Snippetwiki.Snippets.Snippet{}}, socket)
-      when type in [:created, :updated, :deleted] do
-    # {:noreply, stream(socket, :snippets, list_snippets(socket.assigns.current_scope), reset: true)}
-    snippets = list_snippets(socket.assigns.current_scope)
+  def handle_info({:updated, %Snippetwiki.Snippets.Snippet{id: id}}, socket) do
+    # An update touches a single row (view bump, like, draft flag, rename,
+    # bag move), so refresh just that snippet instead of reloading the bag.
+    # The broadcast payload is the pre-update struct, hence the refetch.
+    snippets =
+      case Snippets.list_snippets(socket.assigns.current_scope, [id]) do
+        [fresh] ->
+          socket.assigns.snippets
+          |> Enum.reject(&(&1.id == id))
+          |> List.insert_at(0, fresh)
+          |> sort_snippets()
 
-    {:noreply,
-     socket
-     |> assign(:snippets, snippets)
-     |> assign(
-       :drafts,
-       snippets
-       |> Enum.filter(fn s -> s.has_draft end)
-       |> Enum.map(fn s -> s.id end)
-     )
-     |> assign(
-       :open,
-       socket.assigns.open
-       |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end)
-     )
-     |> assign(
-       :editing,
-       socket.assigns.editing
-       |> Enum.filter(fn id -> Enum.find_value(snippets, false, fn s -> s.id == id end) end)
-     )
-     |> assign(
-       :new_snippets,
-       Enum.filter(socket.assigns.new_snippets, fn id ->
-         Enum.find_value(snippets, false, fn s -> s.id == id end)
-       end)
-     )}
+        [] ->
+          # Moved to a bag outside this scope (or gone): drop it.
+          Enum.reject(socket.assigns.snippets, &(&1.id == id))
+      end
+
+    {:noreply, assign_snippet_state(socket, snippets)}
+  end
+
+  @impl true
+  def handle_info({type, %Snippetwiki.Snippets.Snippet{}}, socket)
+      when type in [:created, :deleted] do
+    {:noreply, assign_snippet_state(socket, list_snippets(socket.assigns.current_scope))}
+  end
+
+  defp assign_snippet_state(socket, snippets) do
+    known = MapSet.new(snippets, & &1.id)
+
+    socket
+    |> assign(:snippets, snippets)
+    |> assign(:drafts, for(s <- snippets, s.has_draft, do: s.id))
+    |> assign(:open, Enum.filter(socket.assigns.open, &MapSet.member?(known, &1)))
+    |> assign(:editing, Enum.filter(socket.assigns.editing, &MapSet.member?(known, &1)))
+    |> assign(:new_snippets, Enum.filter(socket.assigns.new_snippets, &MapSet.member?(known, &1)))
+  end
+
+  # Mirrors the `order_by: [desc: :updated_at, desc: :id]` of list_snippets/1.
+  defp sort_snippets(snippets) do
+    Enum.sort(snippets, fn a, b ->
+      case DateTime.compare(a.updated_at, b.updated_at) do
+        :gt -> true
+        :lt -> false
+        :eq -> a.id >= b.id
+      end
+    end)
   end
 
   defp list_snippets(current_scope) do
@@ -672,7 +683,6 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   end
 
   defp open_article_in_bag(socket, bag, title) do
-    title = URI.decode(title)
     scope = socket.assigns.current_scope
 
     if bag in scope.user.bags do

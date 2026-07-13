@@ -48,7 +48,8 @@ defmodule Snippetwiki.Snippets.Snippet do
   def create_unique_filename(filename) do
     extension = Path.extname(filename)
     basename = Path.basename(filename, extension)
+    suffix = (Enum.to_list(?a..?f) ++ Enum.to_list(?0..?9)) |> Enum.take_random(6)
 
-    "#{basename}_#{IO.inspect((Enum.to_list(?a..?f) ++ Enum.to_list(?0..?9)) |> Enum.take_random(6))}#{extension}"
+    "#{basename}_#{suffix}#{extension}"
   end
 end

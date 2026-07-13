@@ -12,7 +12,7 @@ function currentTheme() {
 }
 
 export function useAppTheme() {
-    const [theme, setTheme] = useState(currentTheme);
+    const [theme, setTheme] = useState(() => currentTheme());
 
     useEffect(() => {
         const observer = new MutationObserver(() => setTheme(currentTheme()));

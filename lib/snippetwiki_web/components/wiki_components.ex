@@ -124,7 +124,7 @@ defmodule SnippetwikiWeb.WikiComponents do
     ~H"""
     <div
       id="user-menu"
-      class="flex h-8 max-w-56 shrink-0 items-center rounded-full border border-base-300 px-3"
+      class="flex h-8 max-w-28 shrink-0 items-center rounded-full border border-base-300 px-3 sm:max-w-56"
       title={@current_scope.user.email}
     >
       <span class="truncate text-sm font-medium">

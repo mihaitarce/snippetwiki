@@ -9,7 +9,7 @@ defmodule SnippetwikiWeb.WikiComponents do
   use SnippetwikiWeb, :html
 
   @doc """
-  Full-width top header bar: logo, add menu, search, Ask toggle and user menu.
+  Full-width top header bar: logo, add menu, Ask toggle and user menu.
   """
   attr :current_scope, :map, required: true
   attr :uploads, :any, required: true
@@ -31,15 +31,7 @@ defmodule SnippetwikiWeb.WikiComponents do
 
       <.add_menu uploads={@uploads} />
 
-      <div class="flex-1 flex justify-center min-w-0 px-1 sm:px-2">
-        <div class="w-full max-w-md min-w-0">
-          <.live_component
-            module={SnippetwikiWeb.SearchComponent}
-            id="wiki-search"
-            current_scope={@current_scope}
-          />
-        </div>
-      </div>
+      <div class="flex-1" />
 
       <button
         type="button"
@@ -50,7 +42,7 @@ defmodule SnippetwikiWeb.WikiComponents do
           @ask_open && "btn-primary",
           !@ask_open && "btn-primary btn-soft"
         ]}
-        title="Ask the wiki (RAG chat and search)"
+        title="Ask the wiki"
       >
         <.icon name="hero-sparkles" class="size-4" /> Ask
       </button>
@@ -154,7 +146,7 @@ defmodule SnippetwikiWeb.WikiComponents do
       id="wiki-sidebar"
       class={[
         "w-full min-h-0 flex-col bg-base-100 border-base-300",
-        "xl:flex xl:w-72 xl:shrink-0 xl:border-r",
+        "xl:flex xl:w-[var(--sidebar-w,18rem)] xl:shrink-0 xl:border-r",
         @mobile_view == "browse" && "flex",
         @mobile_view != "browse" && "hidden"
       ]}
@@ -396,7 +388,7 @@ defmodule SnippetwikiWeb.WikiComponents do
       class={[
         "z-20 min-h-0 flex-col border-base-300 bg-base-100",
         "fixed inset-x-0 top-14 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]",
-        "xl:static xl:inset-auto xl:w-[28rem] 2xl:w-[32rem] xl:shrink-0 xl:border-l",
+        "xl:static xl:inset-auto xl:w-[var(--ask-w,28rem)] xl:shrink-0 xl:border-l",
         @mobile_view == "ask" && "flex",
         @mobile_view != "ask" && "hidden",
         @ask_open && "xl:flex",
@@ -408,7 +400,7 @@ defmodule SnippetwikiWeb.WikiComponents do
           id="wikirag-embed"
           src={@wikirag_embed_url}
           class="block h-full w-full rounded-box border border-base-300"
-          title="Ask/Search"
+          title="Ask"
         />
       </div>
     </aside>

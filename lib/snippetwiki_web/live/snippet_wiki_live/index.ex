@@ -31,6 +31,18 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         draft_snippets={open_snippets(@snippets, @drafts -- @open)}
       />
 
+      <div
+        id="sidebar-resizer"
+        phx-hook="PanelResize"
+        data-panel="sidebar"
+        data-target="wiki-sidebar"
+        data-min="200"
+        data-max="480"
+        class="hidden w-1.5 shrink-0 cursor-col-resize touch-none transition-colors hover:bg-primary/30 active:bg-primary/40 xl:block"
+        title="Drag to resize; double-click to reset"
+      >
+      </div>
+
       <div class={[
         "min-h-0 min-w-0 flex-1 flex-col",
         @mobile_view == "articles" && "flex",
@@ -70,6 +82,23 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
             <% end %>
           </div>
         </div>
+      </div>
+
+      <div
+        id="ask-resizer"
+        phx-hook="PanelResize"
+        data-panel="ask"
+        data-target="ask-panel"
+        data-min="320"
+        data-max="800"
+        data-grow="left"
+        class={[
+          "w-1.5 shrink-0 cursor-col-resize touch-none transition-colors hover:bg-primary/30 active:bg-primary/40",
+          @ask_open && "hidden xl:block",
+          !@ask_open && "hidden"
+        ]}
+        title="Drag to resize; double-click to reset"
+      >
       </div>
 
       <WikiComponents.ask_panel
@@ -652,7 +681,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   end
 
   defp wikirag_embed_url do
-    Application.fetch_env!(:snippetwiki, :wikirag_url)
+    Application.fetch_env!(:snippetwiki, :wikirag_path)
     |> String.trim_trailing("/")
     |> Kernel.<>("/embed.html")
   end
@@ -690,7 +719,10 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     scope = socket.assigns.current_scope
 
     if bag in scope.user.bags do
-      case Snippets.find_snippet_in_bag(scope, title, bag) do
+      # Prefer the requested bag, but fall back to any of the user's bags:
+      # the create prompt should only appear when the title exists nowhere.
+      case Snippets.find_snippet_in_bag(scope, title, bag) ||
+             Snippets.find_snippet(scope, title) do
         nil -> {:error, :not_found}
         snippet -> {:ok, snippet}
       end

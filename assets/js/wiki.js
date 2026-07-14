@@ -295,6 +295,80 @@ export const hooks = {
         }
     },
 
+    // Drag handle that resizes an adjacent panel by driving a CSS variable
+    // on <html> (survives LiveView patches). Width persists per panel in
+    // localStorage; double-click resets to the default.
+    PanelResize: {
+        mounted() {
+            const panel = this.el.dataset.panel
+            const targetId = this.el.dataset.target
+            const min = parseInt(this.el.dataset.min, 10)
+            const max = parseInt(this.el.dataset.max, 10)
+            // The ask handle sits left of its panel, so dragging left grows it.
+            const dir = this.el.dataset.grow === "left" ? -1 : 1
+            const varName = `--${panel}-w`
+            const storageKey = `wiki:${panel}Width`
+
+            const saved = parseInt(localStorage.getItem(storageKey), 10)
+            if (Number.isInteger(saved)) {
+                document.documentElement.style.setProperty(varName, saved + "px")
+            }
+
+            this.onDblClick = () => {
+                document.documentElement.style.removeProperty(varName)
+                localStorage.removeItem(storageKey)
+            }
+
+            this.onPointerDown = (e) => {
+                e.preventDefault()
+
+                const target = document.getElementById(targetId)
+                if (!target) {
+                    return
+                }
+
+                const startX = e.clientX
+                const startWidth = target.getBoundingClientRect().width
+                const iframe = document.getElementById("wikirag-embed")
+                let width = startWidth
+
+                const move = (ev) => {
+                    width = Math.min(max, Math.max(min, startWidth + dir * (ev.clientX - startX)))
+                    document.documentElement.style.setProperty(varName, width + "px")
+                }
+
+                const up = () => {
+                    window.removeEventListener("pointermove", move)
+                    window.removeEventListener("pointerup", up)
+                    document.body.style.userSelect = ""
+                    document.body.style.cursor = ""
+                    if (iframe) iframe.style.pointerEvents = ""
+
+                    try {
+                        localStorage.setItem(storageKey, String(Math.round(width)))
+                    } catch {
+                        // Persistence is best-effort.
+                    }
+                }
+
+                window.addEventListener("pointermove", move)
+                window.addEventListener("pointerup", up)
+                document.body.style.userSelect = "none"
+                document.body.style.cursor = "col-resize"
+                // The iframe would swallow pointer events mid-drag.
+                if (iframe) iframe.style.pointerEvents = "none"
+            }
+
+            this.el.addEventListener("pointerdown", this.onPointerDown)
+            this.el.addEventListener("dblclick", this.onDblClick)
+        },
+
+        destroyed() {
+            this.el.removeEventListener("pointerdown", this.onPointerDown)
+            this.el.removeEventListener("dblclick", this.onDblClick)
+        }
+    },
+
     WikiRagEmbed: {
         mounted() {
             this.onMessage = (event) => {

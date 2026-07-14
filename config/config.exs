@@ -22,7 +22,8 @@ config :snippetwiki, :scopes,
 
 config :snippetwiki,
   ecto_repos: [Snippetwiki.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  wikirag_path: "/wikirag"
 
 # Configure the endpoint
 config :snippetwiki, SnippetwikiWeb.Endpoint,

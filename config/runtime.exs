@@ -46,7 +46,21 @@ unless config_env() == :test do
   end
 end
 
-config :snippetwiki, :wikirag_url, System.get_env("WIKIRAG_URL", "http://localhost:2080/wikirag/")
+# :wikirag_path is compile-time only (the router bakes it into a forward);
+# it is deliberately NOT configurable at runtime — overriding it here would
+# abort boot with a compile-env mismatch. Change it in config/config.exs.
+
+unless config_env() == :test do
+  # Left unset in test so WikiragIndexer no-ops instead of spawning
+  # failing HTTP tasks during the suite.
+  wikirag_url =
+    case System.get_env("WIKIRAG_URL") do
+      nil -> "http://localhost:8611"
+      url -> String.trim_trailing(url, "/")
+    end
+
+  config :snippetwiki, :wikirag_url, wikirag_url
+end
 
 if config_env() == :prod do
   database_url =

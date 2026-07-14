@@ -50,6 +50,8 @@ defmodule SnippetwikiWeb.Endpoint do
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
+    # Keep the raw body available for the WikiRag reverse proxy.
+    body_reader: {SnippetwikiWeb.Plugs.CacheBodyReader, :read_body, []},
     json_decoder: Phoenix.json_library()
 
   plug Plug.MethodOverride

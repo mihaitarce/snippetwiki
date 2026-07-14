@@ -17,6 +17,24 @@ defmodule SnippetwikiWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # WikiRag iframe + API: proxied to the internal service with auth headers
+  # injected from the current scope. No :accepts/:protect_from_forgery — the
+  # proxy forwards bytes as-is; the raw JSON body is preserved by the
+  # body_reader configured on Plug.Parsers in the endpoint.
+  pipeline :wikirag_proxy do
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :fetch_current_scope_for_user
+    plug :require_authenticated_user
+  end
+
+  @wikirag_path Application.compile_env!(:snippetwiki, :wikirag_path)
+
+  scope "/" do
+    pipe_through :wikirag_proxy
+    forward @wikirag_path, SnippetwikiWeb.Plugs.WikiragProxy
+  end
+
   scope "/", SnippetwikiWeb do
     pipe_through [:browser, :require_authenticated_user]
 

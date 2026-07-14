@@ -21,13 +21,14 @@ defmodule SnippetwikiWeb.SnippetWikiLiveTest do
       {:ok, view, _html} = live(conn, ~p"/")
 
       assert has_element?(view, "#wiki-header")
-      assert has_element?(view, "#wiki-search")
       assert has_element?(view, "#user-menu")
       assert has_element?(view, "#wiki-sidebar")
       assert has_element?(view, "#article-stream")
       assert has_element?(view, "#ask-panel")
       assert has_element?(view, "#wikirag-embed")
       assert has_element?(view, "#mobile-nav")
+      assert has_element?(view, "#sidebar-resizer")
+      assert has_element?(view, "#ask-resizer")
     end
 
     test "header shows the signed-in user's full name", %{conn: conn, user: user} do
@@ -237,24 +238,6 @@ defmodule SnippetwikiWeb.SnippetWikiLiveTest do
       render_hook(view, "restore_open", %{"ids" => [snippet.id]})
 
       assert view |> element("#snippet-#{snippet.id}") |> render() =~ "Empty snippet"
-    end
-  end
-
-  describe "search" do
-    setup [:create_article]
-
-    test "finds articles and opens them", %{conn: conn, snippet: snippet} do
-      {:ok, view, _html} = live(conn, ~p"/")
-
-      view
-      |> element(~s{#wiki-search input[name="query"]})
-      |> render_change(%{"query" => "Wiki"})
-
-      assert has_element?(view, "#search-result-#{snippet.id}")
-
-      view |> element("#search-result-#{snippet.id} button") |> render_click()
-
-      assert has_element?(view, "#snippet-#{snippet.id}")
     end
   end
 

@@ -12,6 +12,7 @@ defmodule Snippetwiki.Application do
       Snippetwiki.Repo,
       {DNSCluster, query: Application.get_env(:snippetwiki, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Snippetwiki.PubSub},
+      {Task.Supervisor, name: Snippetwiki.TaskSupervisor},
       # Start a worker by calling: Snippetwiki.Worker.start_link(arg)
       # {Snippetwiki.Worker, arg},
       # Start to serve requests, typically the last entry

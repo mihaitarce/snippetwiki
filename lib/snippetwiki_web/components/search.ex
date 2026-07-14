@@ -1,4 +1,11 @@
 defmodule SnippetwikiWeb.SearchComponent do
+  @moduledoc """
+  Instant title search with a results dropdown.
+
+  NOTE: currently unwired — the header slot it occupied was removed in favor
+  of the WikiRag Ask panel. Kept for reuse if local title search returns;
+  emits `open_snippet` to the parent LiveView when a result is clicked.
+  """
   use SnippetwikiWeb, :live_component
 
   alias Snippetwiki.Snippets

@@ -494,11 +494,18 @@ defmodule Snippetwiki.Snippets do
   """
   def update_snippet(%Scope{} = scope, %Snippet{} = snippet, attrs) do
     true = snippet.bag in scope.user.bags
+    old_bag = snippet.bag
 
     with {:ok, snippet = %Snippet{}} <-
            snippet
            |> Snippet.changeset(attrs, scope)
            |> Repo.update() do
+      if snippet.bag != old_bag do
+        # Moved between bags: add to the new bag's index, drop from the old.
+        Snippetwiki.WikiragIndexer.reindex(snippet)
+        Snippetwiki.WikiragIndexer.reindex(%{snippet | bag: old_bag})
+      end
+
       broadcast_snippet(scope, {:updated, snippet})
       {:ok, snippet}
     end
@@ -521,6 +528,7 @@ defmodule Snippetwiki.Snippets do
 
     with {:ok, snippet = %Snippet{}} <-
            Repo.delete(snippet) do
+      Snippetwiki.WikiragIndexer.reindex(snippet)
       broadcast_snippet(scope, {:deleted, snippet})
       {:ok, snippet}
     end
@@ -588,8 +596,13 @@ defmodule Snippetwiki.Snippets do
                Repo.rollback({:error, changeset})
            end
          end) do
-      {:ok, {:ok, updated_snippet}} -> {:ok, updated_snippet}
-      {:error, {:error, changeset}} -> {:error, changeset}
+      {:ok, {:ok, updated_snippet}} ->
+        # After commit, so WikiRag reads the new revision from Postgres.
+        Snippetwiki.WikiragIndexer.reindex(updated_snippet)
+        {:ok, updated_snippet}
+
+      {:error, {:error, changeset}} ->
+        {:error, changeset}
     end
   end
 

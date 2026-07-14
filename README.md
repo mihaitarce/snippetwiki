@@ -35,11 +35,13 @@ Edit `.env` for your environment:
 | `SECRET_KEY_BASE`  | Phoenix secret key (generate with `mix phx.gen.secret`) |
 | `PHX_HOST`         | Hostname for the Phoenix server             |
 | `PHX_PATH`         | Deployment path for the Phoenix app (`/`)   |
-| `WIKIRAG_URL` | WikiRag base URL; the Ask/Search tab loads `{WIKIRAG_URL}embed.html` |
+| `WIKIRAG_URL` | Internal WikiRag URL for the Phoenix reverse proxy and incremental reindex (default `http://web:8611` in Docker) |
 
-This will start the following services: Postgres on port 5432, Adminer (web-based database admin) on port 8080, the wiki app on port 4000. Database migrations for the wiki app will run automatically when the app container starts.
+WikiRag is mounted at `/wikirag` (compile-time via `config/config.exs`). The Ask panel iframe loads `/wikirag/embed.html` (proxied by Phoenix).
 
-The wiki server (http://localhost:4000) requires (header-based) authentication you will not be able to use it directly.
+This will start the following services: Postgres on port 5432, Adminer (web-based database admin) on port 8080, the wiki app on port 4000, and WikiRag (internal). Database migrations for the wiki app will run automatically when the app container starts.
+
+The wiki server (http://localhost:4000) requires (header-based) authentication you will not be able to use it directly. WikiRag is not exposed separately in dev: Phoenix proxies `/wikirag/*` to the internal WikiRag service and forwards auth headers.
 
 ### 3) Caddy reverse proxy (for authentication)
 
@@ -47,7 +49,7 @@ The wiki server (http://localhost:4000) requires (header-based) authentication y
 caddy run --config Caddyfile -w
 ```
 
-Redirects requests to http://localhost:2080 to the wiki web server, passing in authentication headers (user: caddy-user, group: caddy-group)
+Redirects requests to http://localhost:2080 to the wiki web server, passing in authentication headers (user: caddy-user, group: caddy-group). WikiRag is reached via the Phoenix proxy at `/wikirag/`, so Caddy only needs a single upstream.
 
 ### Article URLs
 

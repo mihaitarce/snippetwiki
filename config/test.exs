@@ -44,3 +44,7 @@ config :phoenix,
   sort_verified_routes_query_params: true
 
 config :snippetwiki, :allowed_hosts, []
+
+# :wikirag_url is intentionally unset in test: WikiragIndexer.reindex/1
+# no-ops without it, keeping the suite free of failing HTTP tasks.
+config :snippetwiki, :wikirag_path, "/wikirag"

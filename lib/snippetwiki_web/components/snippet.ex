@@ -149,6 +149,20 @@ defmodule SnippetwikiWeb.SnippetComponent do
               <% end %>
 
               <%= if is_nil(@snippet.namespace) or @snippet.namespace == "File" do %>
+                <.button
+                  square
+                  id={"permalink-#{@snippet.id}"}
+                  phx-hook="CopyPermalink"
+                  data-url={~p"/contents/#{@snippet.bag}/#{@snippet.title}"}
+                  data-tip="Link copied"
+                  title="Copy link to article"
+                  aria-label={"Copy link to #{@snippet.title}"}
+                >
+                  <.icon name="hero-link" class="size-5" />
+                </.button>
+              <% end %>
+
+              <%= if is_nil(@snippet.namespace) or @snippet.namespace == "File" do %>
                 <%= if @snippet.has_draft do %>
                   <.button
                     square

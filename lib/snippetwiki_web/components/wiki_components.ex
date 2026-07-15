@@ -139,6 +139,7 @@ defmodule SnippetwikiWeb.WikiComponents do
   attr :open, :list, required: true
   attr :open_snippets, :list, required: true
   attr :draft_snippets, :list, required: true
+  attr :collapsed_sections, :any, required: true
 
   def wiki_sidebar(assigns) do
     ~H"""
@@ -204,22 +205,30 @@ defmodule SnippetwikiWeb.WikiComponents do
 
       <div :if={@open != []} id="open-section" class="shrink-0 border-t border-base-300 px-3 py-2">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+          <.section_toggle
+            section="open"
+            collapsed={"open" in @collapsed_sections}
+            class="text-base-content/50"
+          >
             Open ({length(@open_snippets)})
-          </span>
+          </.section_toggle>
           <button type="button" class="btn btn-ghost btn-xs gap-1" phx-click="close_snippets">
             <.icon name="hero-x-mark" class="size-3.5" /> Close all
           </button>
         </div>
-        <ul class="mt-1 max-h-40 overflow-y-auto">
-          <.snippet_link
-            :for={snippet <- @open_snippets}
-            snippet={snippet}
-            dom_id={"open-#{snippet.id}"}
-            open={@open}
-            closable
-          />
-        </ul>
+        <%= if "open" in @collapsed_sections do %>
+          <div class="pb-2"></div>
+        <% else %>
+          <ul class="mt-1 max-h-40 overflow-y-auto pe-2 [scrollbar-gutter:stable]">
+            <.snippet_link
+              :for={snippet <- @open_snippets}
+              snippet={snippet}
+              dom_id={"open-#{snippet.id}"}
+              open={@open}
+              closable
+            />
+          </ul>
+        <% end %>
       </div>
 
       <div
@@ -227,25 +236,59 @@ defmodule SnippetwikiWeb.WikiComponents do
         id="drafts-section"
         class="shrink-0 border-t border-base-300 bg-warning/5 px-3 py-2"
       >
-        <span class="text-xs font-semibold uppercase tracking-wide text-warning">
+        <.section_toggle
+          section="drafts"
+          collapsed={"drafts" in @collapsed_sections}
+          class="text-warning"
+        >
           Drafts ({length(@draft_snippets)})
-        </span>
-        <ul class="mt-1 max-h-32 overflow-y-auto">
-          <li :for={snippet <- @draft_snippets} id={"draft-#{snippet.id}"} class="pb-1">
-            <button
-              type="button"
-              phx-click="edit_snippet"
-              phx-value-id={snippet.id}
-              class="flex w-full items-center gap-2 text-left hover:text-warning transition-colors"
-              title="Resume editing"
-            >
-              <.icon name="hero-pencil" class="size-3.5 shrink-0 text-warning" />
-              <span class="truncate">{snippet.title}</span>
-            </button>
-          </li>
-        </ul>
+        </.section_toggle>
+        <%= if "drafts" in @collapsed_sections do %>
+          <div class="pb-2"></div>
+        <% else %>
+          <ul class="mt-1 max-h-32 overflow-y-auto">
+            <li :for={snippet <- @draft_snippets} id={"draft-#{snippet.id}"} class="pb-1">
+              <button
+                type="button"
+                phx-click="edit_snippet"
+                phx-value-id={snippet.id}
+                class="flex w-full items-center gap-2 text-left hover:text-warning transition-colors"
+                title={snippet.title}
+              >
+                <.icon name="hero-pencil" class="size-3.5 shrink-0 text-warning" />
+                <span class="truncate">{snippet.title}</span>
+              </button>
+            </li>
+          </ul>
+        <% end %>
       </div>
     </aside>
+    """
+  end
+
+  attr :section, :string, required: true
+  attr :collapsed, :boolean, required: true
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+
+  defp section_toggle(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click="toggle_section"
+      phx-value-section={@section}
+      class={[
+        "flex items-center gap-1 text-xs font-semibold uppercase tracking-wide select-none",
+        @class
+      ]}
+      title={if @collapsed, do: "Expand", else: "Collapse"}
+    >
+      <.icon
+        name="hero-chevron-right"
+        class={["size-3 transition-transform", !@collapsed && "rotate-90"]}
+      />
+      {render_slot(@inner_block)}
+    </button>
     """
   end
 
@@ -266,6 +309,7 @@ defmodule SnippetwikiWeb.WikiComponents do
         type="button"
         phx-click="toggle_toc_bag"
         phx-value-bag={bag}
+        title={bag}
         class="flex w-full items-center gap-2 rounded-field px-1 py-1 text-left text-sm font-medium text-base-content/70 hover:bg-base-200 hover:text-base-content transition-colors select-none"
       >
         <.icon
@@ -306,8 +350,10 @@ defmodule SnippetwikiWeb.WikiComponents do
           type="button"
           phx-click="open_snippet"
           phx-value-id={@snippet.id}
+          title={@snippet.title}
           class={[
-            "truncate text-left transition-colors hover:text-primary",
+            "min-w-0 truncate text-left transition-colors hover:text-primary",
+            @closable && "flex-1",
             @snippet.id in @open && "font-semibold text-primary"
           ]}
         >

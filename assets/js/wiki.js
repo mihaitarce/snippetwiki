@@ -143,6 +143,42 @@ export const hooks = {
         }
     },
 
+    // Link button on article cards: copies the absolute permalink and briefly
+    // shows a "Link copied" tooltip as feedback.
+    CopyPermalink: {
+        mounted() {
+            this.onClick = async () => {
+                const url = `${window.location.origin}${this.el.dataset.url}`
+
+                try {
+                    await navigator.clipboard.writeText(url)
+                } catch {
+                    // Clipboard API unavailable (e.g. non-secure context):
+                    // fall back to a temporary input element.
+                    const input = document.createElement("input")
+                    input.value = url
+                    document.body.appendChild(input)
+                    input.select()
+                    document.execCommand("copy")
+                    input.remove()
+                }
+
+                this.el.classList.add("tooltip", "tooltip-open")
+                clearTimeout(this.resetTimer)
+                this.resetTimer = setTimeout(() => {
+                    this.el.classList.remove("tooltip", "tooltip-open")
+                }, 1500)
+            }
+
+            this.el.addEventListener("click", this.onClick)
+        },
+
+        destroyed() {
+            clearTimeout(this.resetTimer)
+            this.el.removeEventListener("click", this.onClick)
+        }
+    },
+
     Editor: {
         mounted() {
             const id = this.el.dataset.id
@@ -304,12 +340,12 @@ export const hooks = {
             const targetId = this.el.dataset.target
             const min = parseInt(this.el.dataset.min, 10)
             const max = parseInt(this.el.dataset.max, 10)
-            // The ask handle sits left of its panel, so dragging left grows it.
             const dir = this.el.dataset.grow === "left" ? -1 : 1
             const varName = `--${panel}-w`
             const storageKey = `wiki:${panel}Width`
 
             const saved = parseInt(localStorage.getItem(storageKey), 10)
+
             if (Number.isInteger(saved)) {
                 document.documentElement.style.setProperty(varName, saved + "px")
             }
@@ -323,6 +359,7 @@ export const hooks = {
                 e.preventDefault()
 
                 const target = document.getElementById(targetId)
+
                 if (!target) {
                     return
                 }
@@ -355,7 +392,6 @@ export const hooks = {
                 window.addEventListener("pointerup", up)
                 document.body.style.userSelect = "none"
                 document.body.style.cursor = "col-resize"
-                // The iframe would swallow pointer events mid-drag.
                 if (iframe) iframe.style.pointerEvents = "none"
             }
 

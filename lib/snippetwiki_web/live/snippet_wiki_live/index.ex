@@ -28,7 +28,8 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         expanded_bags={@expanded_bags}
         open={@open}
         open_snippets={open_snippets(@snippets, @open)}
-        draft_snippets={open_snippets(@snippets, @drafts -- @open)}
+        draft_snippets={open_snippets(@snippets, @drafts)}
+        collapsed_sections={@collapsed_sections}
       />
 
       <div
@@ -112,7 +113,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
       <:bottom>
         <WikiComponents.mobile_nav
           mobile_view={@mobile_view}
-          draft_count={length(@drafts -- @open)}
+          draft_count={length(@drafts)}
         />
       </:bottom>
     </Layouts.wiki>
@@ -142,12 +143,14 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
      |> assign_new(:editing, fn -> [] end)
      |> assign_new(:new_snippets, fn -> [] end)
      |> assign_new(:expanded_bags, fn -> MapSet.new() end)
+     |> assign_new(:collapsed_sections, fn -> MapSet.new() end)
      |> assign_new(:drafts, fn ->
        snippets
        |> Enum.filter(fn s -> s.has_draft end)
        |> Enum.map(fn s -> s.id end)
      end)
      |> assign_new(:pending_deep_link, fn -> nil end)
+     |> assign_new(:deep_linked, fn -> false end)
      |> assign_new(:missing_article, fn -> nil end)
      |> allow_upload(:documents, accept: ~w(.jpg .jpeg .png .webp .pdf), max_entries: 5)}
   end
@@ -205,6 +208,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         {:noreply,
          socket
          |> assign(:snippets, [snippet | socket.assigns.snippets])
+         |> ensure_draft(snippet)
          |> assign(missing_article: nil, bag: bag)
          |> assign(:mobile_view, "articles")
          |> assign(:open, [snippet.id | socket.assigns.open])
@@ -235,6 +239,7 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
         {:noreply,
          socket
          |> assign(:snippets, [snippet | socket.assigns.snippets])
+         |> ensure_draft(snippet)
          |> assign(:mobile_view, "articles")
          |> assign(:open, [snippet.id | socket.assigns.open])
          |> assign(:editing, [snippet.id | socket.assigns.editing])
@@ -293,12 +298,9 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     snippet_id = String.to_integer(id)
     snippet = Snippets.get_snippet!(socket.assigns.current_scope, snippet_id)
 
-    if not snippet.has_draft do
-      {:ok, _} = Snippets.create_draft(socket.assigns.current_scope, snippet)
-    end
-
     socket =
       socket
+      |> ensure_draft(snippet)
       |> assign(:mobile_view, "articles")
       |> assign(:editing, [snippet.id | socket.assigns.editing])
 
@@ -470,6 +472,17 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
 
   @impl true
   def handle_event("restore_open", %{"ids" => ids}, socket) when is_list(ids) do
+    if socket.assigns.deep_linked do
+      # A direct link to an article/file shows only that card, ignoring the
+      # previously saved session (which the client then overwrites with the
+      # single deep-linked card).
+      {:noreply, socket}
+    else
+      restore_open(socket, ids)
+    end
+  end
+
+  defp restore_open(socket, ids) do
     known = MapSet.new(socket.assigns.snippets, & &1.id)
 
     restored =
@@ -507,6 +520,21 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   def handle_event("set_sidebar_mode", %{"mode" => mode}, socket)
       when mode in ["contents", "recent", "files"] do
     {:noreply, assign(socket, :sidebar_mode, mode)}
+  end
+
+  @impl true
+  def handle_event("toggle_section", %{"section" => section}, socket)
+      when section in ["open", "drafts"] do
+    collapsed = socket.assigns.collapsed_sections
+
+    collapsed =
+      if section in collapsed do
+        MapSet.delete(collapsed, section)
+      else
+        MapSet.put(collapsed, section)
+      end
+
+    {:noreply, assign(socket, :collapsed_sections, collapsed)}
   end
 
   @impl true
@@ -584,6 +612,31 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     |> assign(:open, Enum.filter(socket.assigns.open, &MapSet.member?(known, &1)))
     |> assign(:editing, Enum.filter(socket.assigns.editing, &MapSet.member?(known, &1)))
     |> assign(:new_snippets, Enum.filter(socket.assigns.new_snippets, &MapSet.member?(known, &1)))
+  end
+
+  defp ensure_draft(socket, snippet) do
+    if snippet.has_draft do
+      socket
+    else
+      {:ok, draft_snippet} = Snippets.create_draft(socket.assigns.current_scope, snippet)
+
+      snippets =
+        socket.assigns.snippets
+        |> Enum.reject(&(&1.id == draft_snippet.id))
+        |> then(&[draft_snippet | &1])
+
+      drafts =
+        if draft_snippet.id in socket.assigns.drafts do
+          socket.assigns.drafts
+        else
+          [draft_snippet.id | socket.assigns.drafts]
+        end
+
+      socket
+      |> assign(:snippets, snippets)
+      |> assign(:drafts, drafts)
+      |> assign(:collapsed_sections, MapSet.delete(socket.assigns.collapsed_sections, "drafts"))
+    end
   end
 
   # Mirrors the `order_by: [desc: :updated_at, desc: :id]` of list_snippets/1.
@@ -700,13 +753,20 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
   defp apply_deep_link(socket, {bag, title}) do
     case open_article_in_bag(socket, bag, title) do
       {:ok, snippet} ->
+        # A direct link shows only the linked article: mark the socket so the
+        # client's saved session is not restored on top of it.
         socket
-        |> assign(bag: bag, pending_deep_link: nil)
+        |> assign(bag: bag, pending_deep_link: nil, deep_linked: true)
         |> open_snippet_card(snippet)
 
       {:error, :not_found} ->
         socket
-        |> assign(bag: bag, pending_deep_link: nil, missing_article: {bag, title})
+        |> assign(
+          bag: bag,
+          pending_deep_link: nil,
+          deep_linked: true,
+          missing_article: {bag, title}
+        )
 
       {:error, :unknown_scope} ->
         socket
@@ -721,8 +781,10 @@ defmodule SnippetwikiWeb.SnippetWikiLive.Index do
     if bag in scope.user.bags do
       # Prefer the requested bag, but fall back to any of the user's bags:
       # the create prompt should only appear when the title exists nowhere.
+      # File snippets are checked last so their permalinks resolve too.
       case Snippets.find_snippet_in_bag(scope, title, bag) ||
-             Snippets.find_snippet(scope, title) do
+             Snippets.find_snippet(scope, title) ||
+             Snippets.find_snippet(scope, title, "File") do
         nil -> {:error, :not_found}
         snippet -> {:ok, snippet}
       end
